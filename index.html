@@ -71,6 +71,7 @@
       #share { background: var(--ink); color: var(--cream); margin-left: auto; }
       #players .dot { width: 9px; height: 9px; border-radius: 50%; background: #b9ad9c; }
       #players.online .dot { background: #59b86a; }
+      body.solo #share, body.solo #players { display: none; }
       #compass {
         position: fixed; left: 50%; top: calc(62px + var(--sat)); transform: translateX(-50%); pointer-events: none;
         font-size: 13px; font-weight: 700; padding: 6px 12px 6px 8px;

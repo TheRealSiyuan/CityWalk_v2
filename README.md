@@ -117,7 +117,8 @@ depends on the path). A **private** repo only gets Pages on a paid GitHub plan.
   roughly 0.5× so silhouettes read from across the map.
 - **Facts** are limited to well-established ones (see `src/world/data.ts`).
 - `?relay=wss://…` uses your own signalling relay instead of the public ones;
-  `?solo=1` turns networking off.
+  `?solo=1` turns networking off (as does building with `VITE_SOLO=1`, which
+  also hides Share, for hosts that block WebRTC).
 
 ## Known gaps
 

@@ -147,7 +147,10 @@ ui.onName = (name) => {
 // `?relay=wss://…` swaps the public signalling relays for your own (also used by the tests).
 const relayParam = params.get('relay');
 const relays = relayParam && /^wss?:\/\//.test(relayParam) ? [relayParam] : null;
-if (params.get('solo') !== '1') net.start(room, myName, relays);
+// Solo: `?solo=1`, or a build made with VITE_SOLO=1 for hosts that block WebRTC.
+const SOLO = params.get('solo') === '1' || import.meta.env.VITE_SOLO === '1';
+if (SOLO) document.body.classList.add('solo');
+else net.start(room, myName, relays);
 window.addEventListener('pagehide', () => net.leave());
 
 // --- camera rig --------------------------------------------------------------------
