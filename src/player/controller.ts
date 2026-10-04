@@ -37,6 +37,11 @@ export class Player implements Body {
   private swingWasHeld = false;
   private wantAttach = false;
   private lastSafe: V3;
+  /** last position known to be outside every solid */
+  private prev: V3;
+  private stuck = 0;
+  /** how many steps the safety net had to step in (diagnostics) */
+  saves = 0;
 
   constructor(
     private world: World,
@@ -45,6 +50,7 @@ export class Player implements Body {
   ) {
     this.pos = { ...spawn };
     this.lastSafe = { ...spawn };
+    this.prev = { ...spawn };
   }
 
   get speed(): number {
@@ -57,6 +63,9 @@ export class Player implements Body {
     this.pos.z = z;
     this.vel.x = this.vel.y = this.vel.z = 0;
     this.rope = null;
+    this.prev.x = x;
+    this.prev.y = y;
+    this.prev.z = z;
   }
 
   private findAnchor(dirX: number, dirZ: number): V3 | null {
@@ -202,11 +211,34 @@ export class Player implements Body {
       if (v.y < 0) v.y = 0;
       grounded = true;
     }
-    // Stick to gentle downward slopes / steps instead of bouncing off them.
-    if (!grounded && wasGrounded && v.y <= 0 && !this.rope && p.y - gy < 0.35) {
-      p.y = gy;
-      v.y = 0;
-      grounded = true;
+    // Stay glued to the surface when walking down a slope, a pitched roof or a
+    // kerb, instead of becoming airborne for a frame at a time.
+    if (!grounded && wasGrounded && v.y <= 0 && !this.rope) {
+      const support = Math.max(gy, this.world.colliders.topAt(p.x, p.z, p.y + 0.05));
+      if (p.y - support < 0.45) {
+        p.y = support;
+        v.y = 0;
+        grounded = true;
+      }
+    }
+    // Safety net: whatever happened above, the body is never left inside a
+    // solid. If it would be (wedged by a reeling rope, say), stay where we were.
+    if (this.world.colliders.blocked(p.x, p.y + C.playerHeight * 0.5, p.z)) {
+      p.x = this.prev.x;
+      p.y = this.prev.y;
+      p.z = this.prev.z;
+      v.x = v.y = v.z = 0;
+      grounded = wasGrounded;
+      this.saves++;
+      if (this.rope && ++this.stuck > 12) {
+        this.rope = null;
+        this.events.onRelease?.();
+      }
+    } else {
+      this.stuck = 0;
+      this.prev.x = p.x;
+      this.prev.y = p.y;
+      this.prev.z = p.z;
     }
     if (p.x < MAP.minX) { p.x = MAP.minX; if (v.x < 0) v.x = 0; }
     if (p.x > MAP.maxX) { p.x = MAP.maxX; if (v.x > 0) v.x = 0; }

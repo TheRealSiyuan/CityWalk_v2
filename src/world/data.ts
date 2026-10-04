@@ -86,6 +86,12 @@ export const LANDMARKS: Landmark[] = [
     x: 588, z: -22, r: 48, clear: 70,
   },
   {
+    id: 'bttower',
+    name: 'BT Tower',
+    fact: 'Opened in 1965 as the Post Office Tower, it was the tallest building in London until 1980.',
+    x: -590, z: -418, r: 34, clear: 30,
+  },
+  {
     id: 'towerbridge',
     name: 'Tower Bridge',
     fact: 'Completed in 1894. Its roadway splits into two bascules that lift to let tall ships through.',
@@ -93,15 +99,26 @@ export const LANDMARKS: Landmark[] = [
   },
 ];
 
-/** Extra no-build zones (x, z, radius): the Palace of Westminster, plazas, approach roads. */
-export const EXTRA_CLEAR: [number, number, number][] = [
-  [-307, 290, 52],
+/** Scenery that needs its own clear ground (x, z, radius). */
+const EXTRA_CLEAR: [number, number, number][] = [
+  [-307, 290, 52], // Palace of Westminster
   [-307, 330, 40],
-  [205, -95, 34],
-  [-540, 150, 40],
+  [205, -95, 34], // steps down from St Paul's to the bridge
+  [-193, 203, 32], // County Hall
+  [556, -205, 24], // the City cluster
+  [512, -178, 24],
+  [488, -100, 26],
+  [470, -232, 22],
+  [10, 12, 30], // riverside wharf tower
 ];
 
-/** Parks as ellipses (x, z, rx, rz): St James's Park and Green Park. */
+/** Every circle streets and buildings must stay out of: landmarks + extras. */
+export const EXCLUSIONS: [number, number, number][] = [
+  ...LANDMARKS.map((l): [number, number, number] => [l.x, l.z, l.clear]),
+  ...EXTRA_CLEAR,
+];
+
+/** Parks as ellipses (x, z, rx, rz): St James's Park, Green Park and small riverside greens. */
 export const PARKS: [number, number, number, number][] = [
   [-505, 150, 100, 62],
   [-655, 88, 78, 52],
@@ -116,6 +133,27 @@ export function inPark(x: number, z: number): boolean {
     if (dx * dx + dz * dz < 1) return true;
   }
   return false;
+}
+
+/**
+ * Neighbourhoods. Each has its own materials, heights and street character
+ * (see SPECS in streets.ts): Portland-stone Westminster, the brick-and-stucco
+ * West End, the City's stone lanes and glass towers, the South Bank's
+ * warehouses, and terraced streets further south.
+ */
+export type District = 'westminster' | 'westend' | 'holborn' | 'city' | 'southbank' | 'south';
+
+export function districtAt(x: number, z: number): District {
+  const r = riverInfo(x, z);
+  // which bank: the cross product of the river's direction and the offset
+  const north = r.tx * (z - r.cz) - r.tz * (x - r.cx) < 0;
+  if (north) {
+    if (x < -235 && z > -70) return 'westminster';
+    if (x < 40) return 'westend';
+    if (x < 150) return 'holborn';
+    return 'city';
+  }
+  return r.dist < 230 ? 'southbank' : 'south';
 }
 
 /** Plain (non-landmark) Thames crossings: point near the river, colour, style. */

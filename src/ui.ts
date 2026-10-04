@@ -100,7 +100,7 @@ export class UI {
     store.set('citywalk.found', JSON.stringify([...this.found]));
     this.renderProgress();
     const all = this.found.size === LANDMARKS.length;
-    $('card-kicker').textContent = all ? 'All 12 found — London explored!' : `Landmark ${this.found.size} of ${LANDMARKS.length}`;
+    $('card-kicker').textContent = all ? `All ${LANDMARKS.length} found. London explored!` : `Landmark ${this.found.size} of ${LANDMARKS.length}`;
     $('card-name').textContent = l.name;
     $('card-fact').textContent = l.fact;
     $('card').classList.add('on');

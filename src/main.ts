@@ -396,6 +396,7 @@ const debug = {
     return pixelRatio;
   },
   stats: world.stats,
+  roads: world.plan.roads,
   /** dev tools: move the player / pin the camera (pass nothing to unpin) */
   teleport: (x: number, y: number, z: number) => player.teleport(x, y, z),
   view: (pos?: [number, number, number], target?: [number, number, number]) => {

@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import type { Colliders } from './colliders';
+import { Cap, type Colliders, type SolidOpts } from './colliders';
 import type { V3 } from '../physics/swing';
 
 export interface PartOpts {
@@ -79,10 +79,11 @@ export class Builder {
     return m.setPosition(x, y, z);
   }
 
-  solid(x: number, z: number, hx: number, hz: number, y0: number, y1: number, ry = 0): void {
+  /** Register a collision solid in the current local frame. */
+  solid(x: number, z: number, hx: number, hz: number, y0: number, y1: number, ry = 0, extra: SolidOpts = {}): void {
     if (!this.colliders) return;
     const w = this.world(x, z);
-    this.colliders.add(w.x, w.z, hx, hz, y0, y1, this.yaw + ry);
+    this.colliders.add(w.x, w.z, hx, hz, y0, y1, { ...extra, yaw: this.yaw + ry });
   }
 
   anchor(x: number, y: number, z: number): void {
@@ -101,29 +102,35 @@ export class Builder {
   cyl(x: number, y: number, z: number, rTop: number, rBot: number, h: number, color: number, seg = 10, o?: PartOpts): void {
     this.add(new THREE.CylinderGeometry(rTop, rBot, h, seg, 1), color, this.mat(x, y + h / 2, z, o));
     if (o?.solid) {
-      const r = Math.max(rTop, rBot) * 0.9;
-      this.solid(x, z, r, r, y, y + h, o.ry ?? 0);
+      if (rTop < rBot * 0.6) this.solid(x, z, rBot, rBot, y, y, 0, { round: true, cap: Cap.Cone, capH: h, ex: rTop });
+      else this.solid(x, z, (rTop + rBot) / 2, 0, y, y + h, 0, { round: true });
     }
   }
 
   /** Square pyramid aligned with a box of the given full width. */
-  pyr(x: number, y: number, z: number, width: number, h: number, color: number, topWidth = 0, ry = 0): void {
+  pyr(x: number, y: number, z: number, width: number, h: number, color: number, topWidth = 0, ry = 0, solid = false): void {
     const k = Math.SQRT1_2;
     this.add(new THREE.CylinderGeometry(topWidth * k, width * k, h, 4, 1), color, this.mat(x, y + h / 2, z, { ry: Math.PI / 4 + ry }));
+    if (solid) {
+      const e = (width - topWidth) / 2;
+      this.solid(x, z, width / 2, width / 2, y, y, ry, { cap: Cap.Slope, capH: h, ex: e, ez: e });
+    }
   }
 
   /** Sphere centred at (x,y,z), optionally squashed/stretched vertically. */
-  sphere(x: number, y: number, z: number, r: number, color: number, sy = 1, seg = 10): void {
+  sphere(x: number, y: number, z: number, r: number, color: number, sy = 1, seg = 10, solid = false): void {
     const g = new THREE.SphereGeometry(r, seg, Math.max(5, Math.floor(seg * 0.7)));
     if (sy !== 1) g.scale(1, sy, 1);
     this.add(g, color, this.mat(x, y, z));
+    if (solid) this.solid(x, z, r, 0, y, y, 0, { round: true, cap: Cap.Dome, capH: r * sy });
   }
 
   /** Gable roof: `len` along the ridge, `span` across, base at y. */
-  roof(x: number, y: number, z: number, len: number, h: number, span: number, color: number, ry = 0): void {
+  roof(x: number, y: number, z: number, len: number, h: number, span: number, color: number, ry = 0, solid = true): void {
     const g = GABLE.clone();
     g.scale(len, h, span);
     this.add(g, color, this.mat(x, y, z, { ry }));
+    if (solid) this.solid(x, z, len / 2, span / 2, y, y, ry, { cap: Cap.Slope, capH: h, ez: span / 2 });
   }
 
   /** Thin flat disc facing along local x ('x') or z ('z'). */

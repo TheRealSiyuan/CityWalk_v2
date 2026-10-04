@@ -58,8 +58,37 @@ export class Net {
 
   constructor(private handlers: NetHandlers) {}
 
+  private roomCode = '';
+  private relays: string[] | null = null;
+  private joinedAt = 0;
+  private retry = 0;
+
   start(roomCode: string, name: string, relays: string[] | null): void {
     this.name = name;
+    this.roomCode = roomCode;
+    this.relays = relays;
+    this.join();
+    // Trystero announces a few times on joining and then only once a minute.
+    // If that first handshake is missed, a friend who has just opened the link
+    // would stare at an empty street for a minute, so while we are alone we
+    // re-join (and so re-announce) every so often, backing off over time.
+    window.setInterval(() => {
+      if (this.status === 'off' || this.peers.size > 0 || document.hidden) return;
+      const wait = Math.min(60, 18 + this.retry * 6);
+      if (performance.now() / 1000 - this.joinedAt < wait) return;
+      this.retry++;
+      const old = this.room;
+      this.room = null;
+      const again = () => this.join();
+      if (old) old.leave().then(again, again);
+      else again();
+    }, 2000);
+  }
+
+  private join(): void {
+    const roomCode = this.roomCode;
+    const relays = this.relays;
+    this.joinedAt = performance.now() / 1000;
     try {
       this.status = 'connecting';
       const room = joinRoom(
@@ -86,6 +115,7 @@ export class Net {
         const peer: Peer = { id, name: 'Walker', snaps: [] };
         this.peers.set(id, peer);
         this.status = 'online';
+        this.retry = 0;
         this.handlers.onJoin(peer);
         this.sendHello?.({ name: this.name }, id);
       };

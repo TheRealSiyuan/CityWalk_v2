@@ -11,8 +11,8 @@ function side(x: number, z: number): number {
 }
 
 describe('London layout', () => {
-  it('has all twelve landmarks, each with a name and a fact, inside the map', () => {
-    expect(LANDMARKS).toHaveLength(12);
+  it('has the twelve core landmarks plus the BT Tower, each with a name and a fact, inside the map', () => {
+    expect(LANDMARKS).toHaveLength(13);
     for (const l of LANDMARKS) {
       expect(l.name.length).toBeGreaterThan(3);
       expect(l.fact.length).toBeGreaterThan(20);
