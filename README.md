@@ -1,9 +1,9 @@
-**Play:** https://therealsiyuan.github.io/citywalk/  ← live once this repo is pushed and Pages is enabled (see [Deploy](#deploy); it has not been published yet)
+**Play:** https://therealsiyuan.github.io/CityWalk_v2/
 
 # CityWalk — London
 
 Walk, run, jump and swing through a storybook central London in your phone's
-browser. Find all twelve landmarks and learn a fact at each. Send the link to
+browser. Find all thirteen landmarks and learn a fact at each. Send the link to
 a friend and they appear next to you.
 
 No menu, no login, no install, no backend, and no art/audio files: every
@@ -70,14 +70,23 @@ city with a no-skill bot to check a beginner chains swings.
 ## How it is built
 
 - **Three.js + Vite + TypeScript**, static site. JS is ~182 kB gzipped (budget: 2 MB).
-- **Rendering:** about 16 draw calls and ~180k triangles for the whole city. One
-  hand-written cel shader (three light bands, warm light / cool shade, fog
-  into a gradient sky), instanced buildings/trees/lamps, all landmarks merged
-  into one mesh. No real-time shadows. Pixel ratio is capped at 1.5 and
-  drops automatically if the frame rate falls below ~45 fps.
-- **London:** real lat/lon projected onto a ~1.6 km × 1 km map (x east, z
-  south), Thames as a smoothed spline through the real bridge positions.
-  `tests/world.test.ts` checks which bank each landmark is on and their order.
+- **Rendering:** about 20 draw calls and ~175k triangles for the whole city.
+  One hand-written cel shader (three light bands, warm light / cool shade, fog
+  into a gradient sky). All buildings are one merged mesh whose facades (sash
+  windows, front doors, shopfronts, stone bases, curtain walls) are drawn
+  procedurally in the shader. No real-time shadows. Pixel ratio is capped at
+  1.5 and drops automatically if the frame rate falls below ~45 fps.
+- **London:** stylised, not surveyed. Landmarks sit in their real relative
+  positions on a ~1.6 km × 1 km map with the Thames as a spline through the
+  real bridge positions. Streets come from an irregular lattice that is
+  warped and pushed out of the river, parks and plazas (`src/world/streets.ts`),
+  then lined with perimeter terraces in each district's materials: Portland
+  stone in Westminster, stock brick and stucco in the West End, stone lanes
+  and glass towers in the City, warehouse brick on the South Bank.
+- **Collision:** every solid is a footprint plus a cap (gable, mansard,
+  pyramid, dome, cone) so the physics surface is the rendered surface
+  (`src/world/colliders.ts`). `tests/collision.test.ts` drops the player on
+  hundreds of real rooftops and compares against the drawn geometry.
 - **Multiplayer:** [Trystero](https://github.com/dmotz/trystero) (Nostr
   strategy) for serverless peer discovery, then WebRTC data channels.
   Position, facing, animation state and rope anchor go out 12 times a second
@@ -87,18 +96,9 @@ city with a no-skill bot to check a beginner chains swings.
 
 ## Deploy
 
-The repo is ready but has not been pushed (the build session had no GitHub
-credentials for a new repository). From this folder:
-
-```bash
-gh repo create citywalk --public --source=. --remote=origin --push
-gh api -X POST repos/{owner}/citywalk/pages -f build_type=workflow   # Pages source = GitHub Actions
-gh workflow run "Build, test and deploy to GitHub Pages"             # or just push again
-```
-
-The URL will be `https://<your-github-username>.github.io/citywalk/`. If you
-use a different repo name, the URL changes with it (nothing in the build
-depends on the path). A **private** repo only gets Pages on a paid GitHub plan.
+Every push to `main` runs `.github/workflows/deploy.yml`: type-check, build,
+unit tests, then publish `dist/` to GitHub Pages. Browser tests run alongside
+and report without blocking the deploy.
 
 ## Choices made without asking
 
@@ -108,6 +108,7 @@ depends on the path). A **private** repo only gets Pages on a paid GitHub plan.
 - **Spawn** is the east end of Westminster Bridge facing Big Ben, so the
   first frame is recognisably London; County Hall beside you gives the first
   swing somewhere to go.
+- **No transport roundel or other trademarked signage** is drawn.
 - **Bridges are flat and at street level** so you can never get stuck on a ramp.
 - **Lamps on bridges are not anchors** (a swing from one only ends in the
   river); embankment lampposts, bridge masts/towers, cranes and rooftops are.
@@ -137,8 +138,11 @@ depends on the path). A **private** repo only gets Pages on a paid GitHub plan.
   there is no server to refuse them.
 - Rope has no line-of-sight check and can pass through buildings; you collide
   with walls but the rope does not wrap.
-- Trees are scenery only (no collision). The London Eye's wheel turns but its
-  anchors and capsules are not ridable.
+- Trees are scenery only (no collision). The London Eye's wheel turns and is
+  deliberately not solid; thin details (pinnacles, cables, flagpoles) are not
+  solid either.
+- Not built yet: buses, cabs and street furniture; hold-to-chain swinging and
+  rope line-of-sight; landing animation.
 - iOS Safari, pointer-lock mouse look, and the native share sheet are written
   to spec but were not exercised by the automated tests.
 - Sound is a few synthesised blips and wind; no music.
