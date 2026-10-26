@@ -52,6 +52,7 @@ export class Player implements Body {
   private wantAttach = false;
   private rehook = -1;
   private swingWasHeldFrames = 0;
+  private chaining = false;
   private airJumps = 0;
   private lastAnchor: V3 | null = null;
   private lastAnchorT = 0;
@@ -113,7 +114,7 @@ export class Player implements Body {
     // look slightly ahead of where we are, so fast swings aim where we are going
     const probe = { x: this.pos.x + this.vel.x * 0.15, y: this.pos.y + Math.max(0, this.vel.y) * 0.1, z: this.pos.z + this.vel.z * 0.15 };
     const pool = near.slice();
-    for (let tries = 0; tries < 6 && pool.length; tries++) {
+    for (let tries = 0; tries < 16 && pool.length; tries++) {
       const i = selectAnchor(probe, dirX, dirZ, pool, params);
       if (i < 0) return null;
       const a = pool[i];
@@ -124,11 +125,13 @@ export class Player implements Body {
   }
 
   /** Best anchor for a swing; failing that, a level/low one for a zip. */
-  private findAnchor(dirX: number, dirZ: number): V3 | null {
+  private findAnchor(dirX: number, dirZ: number, strict = false): V3 | null {
     const S = CONFIG.swing;
     const near = this.world.anchorsNear(this.pos.x, this.pos.z, S.maxRope);
     this.aimZip = false;
-    const a = this.pickFrom(near, dirX, dirZ, S);
+    // automatic re-grabs (hold-to-chain) only take anchors that are genuinely
+    // ahead, so holding never drags you sideways or back the way you came
+    const a = this.pickFrom(near, dirX, dirZ, strict ? { ...S, aimConeDot: S.chainConeDot } : S);
     if (a) {
       const horiz = Math.hypot(a.x - this.pos.x, a.z - this.pos.z);
       this.aimZip = a.y - this.pos.y < Math.max(4, horiz * 0.3);
@@ -242,12 +245,11 @@ export class Player implements Body {
 
     // --- swing button ------------------------------------------------------
     this.time += dt;
-    if (input.swing && !this.swingWasHeld) {
-      this.wantAttach = true;
-      this.rehook = -1;
-    }
+    // Holding Swing means "keep me on a rope": whenever there is no rope (after
+    // an automatic release, a splash, landing...) it grabs the next good anchor,
+    // apart from a short pause after letting go so the release is felt.
+    if (input.swing && !this.swingWasHeld) this.rehook = -1;
     if (!input.swing) {
-      this.wantAttach = false;
       this.rehook = -1;
       if (this.rope) this.letGo(false);
     }
@@ -255,9 +257,11 @@ export class Player implements Body {
     if (this.rope && input.swing && this.spent(this.rope)) this.letGo(true);
     if (this.rehook >= 0) {
       this.rehook -= dt;
-      if (this.rehook < 0) this.wantAttach = true;
+      if (this.rehook < 0) this.chaining = true;
     }
-    this.aim = this.rope ? null : this.findAnchor(hx, hz);
+    this.wantAttach = input.swing && this.rehook < 0;
+    if (this.rope || !input.swing || this.grounded) this.chaining = false;
+    this.aim = this.rope ? null : this.findAnchor(hx, hz, this.chaining);
     if (this.wantAttach && !this.rope) {
       if (this.aim) this.attach(this.aim, hx, hz);
       else if (input.swing && this.swingWasHeldFrames === 0) this.events.onMiss?.();
@@ -270,6 +274,7 @@ export class Player implements Body {
     if (this.jumpBuf > 0) {
       if (this.rope) {
         this.letGo(false);
+        this.rehook = 0.35; // a jump-off is a deliberate exit: don't instantly re-grab
         v.y += S.jumpOffBoost;
         this.jumpBuf = 0;
         this.wantAttach = false;

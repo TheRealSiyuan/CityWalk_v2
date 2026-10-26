@@ -95,6 +95,7 @@ export class UI {
       $('mute').textContent = `Sound: ${this.muted ? 'off' : 'on'}`;
       this.onMute?.(this.muted);
     });
+    $('version').textContent = `CityWalk v${__APP_VERSION__} · progress is saved on this device only`;
     const dots = $('tut-dots');
     STEPS.forEach(() => dots.appendChild(document.createElement('b')));
   }

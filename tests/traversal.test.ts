@@ -88,3 +88,47 @@ describe('traversal: a beginner chains swings', () => {
     expect(riverDist(p.pos.x, p.pos.z)).toBeGreaterThan(RIVER_HALF_WIDTH);
   });
 });
+
+describe('hold-to-chain: holding Swing alone gets a beginner around', () => {
+  it('just holding Swing and pushing forward travels a long way, almost never backwards', () => {
+    let net = 0;
+    let back = 0;
+    let roped = 0;
+    const roads = world.plan.roads.slice(0, 6);
+    for (const road of roads) {
+      const [a, b] = [road.pts[1], road.pts[2]];
+      const yaw = Math.atan2(-(b[0] - a[0]), -(b[1] - a[1]));
+      const p = new Player(world, { x: a[0], y: 0, z: a[1] });
+      for (let i = 0; i < 60 * 30; i++) {
+        p.step(DT, { mx: 0, my: 1, jump: false, swing: i > 30, camYaw: yaw });
+        if (p.rope) {
+          roped++;
+          if (p.vel.x * p.rope.hx + p.vel.z * p.rope.hz < -1) back++;
+        }
+      }
+      net += Math.hypot(p.pos.x - a[0], p.pos.z - a[1]);
+    }
+    expect(net / roads.length).toBeGreaterThan(150);
+    expect(back / roped).toBeLessThan(0.1);
+  });
+
+  it('after a splash, still holding Swing grabs a rope again without re-pressing', () => {
+    const road = world.plan.roads[1].pts;
+    const yaw = Math.atan2(-(road[2][0] - road[1][0]), -(road[2][1] - road[1][1]));
+    const p = new Player(world, { x: road[1][0], y: 0, z: road[1][1] });
+    const input: MoveInput = { mx: 0, my: 1, jump: false, swing: true, camYaw: yaw };
+    let first = -1;
+    for (let i = 0; i < 600 && first < 0; i++) {
+      p.step(DT, input);
+      if (p.rope) first = i;
+    }
+    expect(first).toBeGreaterThanOrEqual(0);
+    p.teleport(p.pos.x, 0, p.pos.z); // what a splash respawn does
+    let again = false;
+    for (let i = 0; i < 600 && !again; i++) {
+      p.step(DT, input);
+      again = !!p.rope;
+    }
+    expect(again).toBe(true);
+  });
+});

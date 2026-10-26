@@ -50,6 +50,7 @@ export const CONFIG = {
     releaseVy: 2.5, // let go once you are rising slower than this after the low point
     releaseAngle: 1.2, // ...or once you are this far past vertical (radians)
     rehook: 0.18, // seconds after an automatic release before grabbing the next anchor
+    chainConeDot: 0.25, // automatic re-grabs only take anchors at least this far ahead (1 = dead ahead)
     // low anchors (a roof edge across the street) become a quick zip instead of a swing
     zipMaxRope: 34,
     zipSpeed: 28, // m/s the rope reels in during a zip

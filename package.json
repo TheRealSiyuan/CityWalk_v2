@@ -1,7 +1,7 @@
 {
   "name": "citywalk",
   "private": true,
-  "version": "1.0.0",
+  "version": "0.9.0",
   "type": "module",
   "scripts": {
     "dev": "vite",
@@ -9,7 +9,8 @@
     "preview": "vite preview --port 4173 --strictPort",
     "test": "vitest run",
     "relay": "node e2e/relay.mjs",
-    "e2e": "playwright test"
+    "e2e": "playwright test",
+    "package:itch": "VITE_SHARE_BASE=https://therealsiyuan.github.io/CityWalk_v2/ vite build --outDir release/itch --emptyOutDir && cd release/itch && rm -f ../citywalk-itch-$npm_package_version.zip && zip -qr ../citywalk-itch-$npm_package_version.zip . && cd .. && ls -l citywalk-itch-$npm_package_version.zip"
   },
   "dependencies": {
     "three": "^0.186.1",

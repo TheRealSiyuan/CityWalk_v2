@@ -388,12 +388,17 @@ export function buildPlan(seed = 20261004): CityPlan {
 
     // perimeter terraces round a courtyard (pinwheel, so rows do not overlap)
     const D = spec.depth;
+    // One mews passage per block, so a courtyard is never a dead end. (Chosen
+    // from the block position, not the random stream, so the rest of the city
+    // is unchanged.)
+    const h = Math.sin(blk.cx * 12.9898 + blk.cz * 78.233) * 43758.5453;
+    const mews = Math.floor((h - Math.floor(h)) * 4);
     for (let k = 0; k < 4; k++) {
       const e = edges[k];
       // Each row runs from its own corner into the side of the next row, so the
       // corner is closed (no slot a player could be dragged into) and no two
-      // walls are coplanar.
-      const L = e.len - D * 0.5;
+      // walls are coplanar. The mews row stops short, leaving the passage.
+      const L = k === mews ? e.len - D - 6.5 : e.len - D * 0.5;
       if (L < 9) continue;
       const rowWall = rnd() < 0.7 ? wi : Math.floor(rnd() * spec.walls.length);
       const n = Math.max(1, Math.min(3, Math.round(L / 27)));

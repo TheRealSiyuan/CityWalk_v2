@@ -27,7 +27,10 @@ if (params.get('room') !== room) {
     /* sandboxed frame: the Share button still carries the room */
   }
 }
-const shareUrl = (): string => `${location.origin}${location.pathname}?room=${room}`;
+// Builds hosted elsewhere (e.g. inside an itch.io frame, where the page URL
+// cannot carry ?room=) share the public GitHub Pages address instead.
+const SHARE_BASE: string | undefined = import.meta.env.VITE_SHARE_BASE;
+const shareUrl = (): string => `${SHARE_BASE || location.origin + location.pathname}?room=${room}`;
 
 // --- renderer -------------------------------------------------------------------
 const dpr = window.devicePixelRatio || 1;
@@ -368,13 +371,33 @@ const prev = { ...player.pos };
 /** interpolated render position */
 const rp = { ...player.pos };
 
+// Capture mode (dev/marketing tooling): freeze the clock and step it by hand,
+// optionally with an autopilot steering toward a list of landmarks.
+let paused = false;
+let simNow = 0;
+let autopilot: { stops: Landmark[]; i: number } | null = null;
+
 function frame(nowMs: number): void {
   requestAnimationFrame(frame);
-  const now = nowMs / 1000;
   const dt = Math.min(0.1, Math.max(0, (nowMs - last) / 1000));
   last = nowMs;
+  if (paused) return;
+  tick(dt, nowMs / 1000);
+}
 
+function tick(dt: number, now: number): void {
   input.poll();
+  if (autopilot) {
+    const stop = autopilot.stops[autopilot.i];
+    if (stop && Math.hypot(stop.x - player.pos.x, stop.z - player.pos.z) < stop.r) autopilot.i++;
+    const target = autopilot.stops[Math.min(autopilot.i, autopilot.stops.length - 1)];
+    const want = Math.atan2(-(target.x - player.pos.x), -(target.z - player.pos.z));
+    camYaw += Math.atan2(Math.sin(want - camYaw), Math.cos(want - camYaw)) * Math.min(1, dt * 1.8);
+    input.mx = 0;
+    input.my = 1;
+    input.swing = true;
+    input.lastLook = now; // keep the trailing camera from fighting the autopilot
+  }
   if (ui.panelOpen || race.state === 'countdown') {
     input.mx = input.my = 0;
     input.swing = false;
@@ -502,6 +525,19 @@ const debug = {
   get race() {
     return { state: race.state, time: race.time, next: race.next, route: race.route?.id ?? null };
   },
+  /** dev tools: freeze time and step it manually (for capturing smooth footage) */
+  pause: (on: boolean) => {
+    paused = on;
+    simNow = performance.now() / 1000;
+  },
+  advance: (dt: number) => {
+    simNow += dt;
+    tick(dt, simNow);
+  },
+  autopilot: (ids: string[] | null) => {
+    autopilot = ids ? { stops: ids.map((id) => LANDMARKS.find((l) => l.id === id)!).filter(Boolean), i: 0 } : null;
+  },
+  place: (x: number, z: number, yaw: number) => placePlayer(x, z, yaw),
   get fps() {
     return fps;
   },

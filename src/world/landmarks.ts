@@ -499,9 +499,11 @@ function plainBridges(b: Builder): void {
     for (const s of [-1, 1]) {
       b.box(0, 0.5, s * (br.width / 2 - 0.2), L, 0.95, 0.35, br.color);
       for (const px of [-20, 0, 20]) {
-        b.box(px, 0.5, s * (br.width / 2 - 0.2), 0.3, 6, 0.3, DARK);
-        b.sphere(px, 6.7, s * (br.width / 2 - 0.2), 0.5, 0xfff1c2, 1, 6);
-        // No anchors on these low lamps: a swing from one only ends in the river.
+        // tall lamp standards: the only swing points over the water
+        b.box(px, 0.5, s * (br.width / 2 - 0.2), 0.34, 8.6, 0.34, DARK);
+        b.box(px, 0.5, s * (br.width / 2 - 0.2), 0.7, 1.4, 0.7, DARK);
+        b.sphere(px, 9.4, s * (br.width / 2 - 0.2), 0.55, 0xfff1c2, 1.2, 6);
+        b.anchor(px, 9.6, s * (br.width / 2 - 0.2));
       }
     }
     for (const px of [-18, 0, 18]) b.box(px, -4, 0, 5, 3, br.width + 2.4, 0xc4bba6);
