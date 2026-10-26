@@ -21,4 +21,6 @@ Verified work only. Newest first.
 
 **Money earned:** £0 (not yet published on a paying channel).
 
+- Daily scheduled development task configured (05:45 UK, ~40 min cap, no external actions).
+
 **Next task:** owner playtest → itch.io launch on approval → daily challenge.

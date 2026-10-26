@@ -2,6 +2,14 @@
 
 Newest first.
 
+## 2026-10-26 — Daily development task scheduled
+
+A scheduled task "CityWalk v2 daily development" runs every day at 05:45 UK time in the
+cloud, bounded to ~40 minutes. It may only change this repo; it must pass build, unit and
+browser tests before pushing to main (otherwise a `daily/YYYY-MM-DD` branch), and it may not
+publish, pay, post, contact anyone or create accounts. It reports by push notification.
+Pause or delete it from your scheduled tasks list at any time.
+
 ## 2026-10-26 — Launch approval requested (not yet given)
 
 **Request:** publish **CityWalk v0.9.0** on **itch.io** as a free HTML5 game with optional
