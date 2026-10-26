@@ -3,7 +3,7 @@
 # CityWalk — London
 
 Walk, run, jump and swing through a storybook central London in your phone's
-browser. Find all thirteen landmarks and learn a fact at each. Send the link to
+browser. Find all thirteen landmarks, learn a fact at each, and race between them. Send the link to
 a friend and they appear next to you.
 
 No menu, no login, no install, no backend, and no art/audio files: every
@@ -17,8 +17,9 @@ building, character, shader and sound is generated in code.
 |---|---|---|
 | Move | Drag anywhere on the **left** half (push far = run) | `WASD` / arrows (`Shift` = walk) |
 | Look | Drag the **right** half | Click to capture the mouse, then move it |
-| Jump | **Jump** button | `Space` |
-| Swing | **Hold Swing**, release to fly | Hold left click, or hold `E` |
+| Jump | **Jump** button (again in mid-air) | `Space` (again in mid-air) |
+| Swing | **Hold Swing** — keep holding to chain swings; let go to fly | Hold left click, or hold `E` |
+| Race | **Race** button: pick a route, follow the beacon | same |
 
 - A diamond marks the anchor Swing would grab. You don't need to aim: it picks
   the best rooftop, crane, mast or lamppost ahead of and above you.
@@ -26,7 +27,9 @@ building, character, shader and sound is generated in code.
 - Leave the camera alone and it trails your direction of travel, so one thumb
   on the stick plus one on Swing is enough.
 - Fall in the Thames and you are put back on the nearest bank.
-- Tap **0/12 found** for the journal, your name tag, sound, and to replay the tutorial.
+- Tap **0/13 found** for the journal, your name tag, sound, **Back to start**, and to replay the tutorial.
+- **Races:** three timed landmark routes with a countdown, a beacon over the next stop and
+  personal bests saved on your device.
 - **Share** opens the native share sheet (or copies the link). Anyone opening
   it joins your room, up to 8 players.
 
@@ -37,7 +40,8 @@ npm install
 npm run dev        # http://localhost:5173
 npm run build      # type-check (zero errors required) + production build into dist/
 npm test           # unit tests: swing physics, London layout, traversal bot
-npm run e2e        # Playwright: phone viewport + two-player test (needs `npm run build` first)
+npm run e2e        # Playwright: phone + desktop viewports, swing, race, two-player (needs `npm run build` first)
+npm run package:itch  # zip for itch.io in release/ (Share links point at GitHub Pages)
 ```
 
 `npm run e2e` starts the preview server and a tiny local signalling relay
@@ -121,6 +125,12 @@ and report without blocking the deploy.
   `?solo=1` turns networking off (as does building with `VITE_SOLO=1`, which
   also hides Share, for hosts that block WebRTC).
 
+## Project docs
+
+`RELEASE.md` (status, gate, known issues) · `ROADMAP.md` · `DAILY_PROGRESS.md` ·
+`MONETISATION.md` (verified platform terms) · `REVENUE.md` · `DECISIONS.md` · `SECURITY.md` ·
+`marketing/` (listing copy, cover, screenshots, videos, post drafts).
+
 ## Known gaps
 
 - **Not yet tested on a physical phone.** Everything was verified in headless
@@ -141,8 +151,7 @@ and report without blocking the deploy.
 - Trees are scenery only (no collision). The London Eye's wheel turns and is
   deliberately not solid; thin details (pinnacles, cables, flagpoles) are not
   solid either.
-- Not built yet: buses, cabs and street furniture; hold-to-chain swinging and
-  rope line-of-sight; landing animation.
+- Not built yet: buses, cabs and street furniture; landing animation.
 - iOS Safari, pointer-lock mouse look, and the native share sheet are written
   to spec but were not exercised by the automated tests.
 - Sound is a few synthesised blips and wind; no music.
