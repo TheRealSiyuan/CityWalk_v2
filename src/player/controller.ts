@@ -1,5 +1,5 @@
 import { CONFIG } from '../config';
-import { type Body, type Rope, type V3, reelRope, selectAnchor, stepFree, stepSwing } from '../physics/swing';
+import { type AimParams, type Body, type Rope, type V3, reelRope, selectAnchor, stepFree, stepSwing } from '../physics/swing';
 import { MAP, RIVER_HALF_WIDTH, WATER_Y, groundHeight, nearestBank, riverDist } from '../world/river';
 import type { World } from '../world/city';
 import { Anim } from './avatar';
@@ -13,9 +13,23 @@ export interface MoveInput {
   camYaw: number;
 }
 
+/** A rope in use. `anchor` is the physics pivot; `visual` is where it is drawn. */
+export interface ActiveRope extends Rope {
+  target: number;
+  visual: V3;
+  mode: 'swing' | 'zip';
+  /** heading when attached */
+  hx: number;
+  hz: number;
+  age: number;
+  descended: boolean;
+}
+
 export interface PlayerEvents {
   onSplash?(): void;
   onAttach?(): void;
+  /** Swing pressed but nothing in reach */
+  onMiss?(): void;
   onRelease?(): void;
   onJump?(): void;
   onLand?(speed: number): void;
@@ -27,7 +41,7 @@ export class Player implements Body {
   vel: V3 = { x: 0, y: 0, z: 0 };
   yaw = 0;
   grounded = true;
-  rope: (Rope & { target: number }) | null = null;
+  rope: ActiveRope | null = null;
   anim: Anim = Anim.Idle;
   /** best anchor the swing button would grab right now (for the reticle) */
   aim: V3 | null = null;
@@ -36,6 +50,13 @@ export class Player implements Body {
   private jumpBuf = 0;
   private swingWasHeld = false;
   private wantAttach = false;
+  private rehook = -1;
+  private swingWasHeldFrames = 0;
+  private airJumps = 0;
+  private lastAnchor: V3 | null = null;
+  private lastAnchorT = 0;
+  private time = 0;
+  private aimZip = false;
   private lastSafe: V3;
   /** last position known to be outside every solid */
   private prev: V3;
@@ -68,11 +89,121 @@ export class Player implements Body {
     this.prev.z = z;
   }
 
+  /** Is the straight line from the body to this anchor free of buildings? */
+  private clearLine(a: V3): boolean {
+    const p = this.pos;
+    const sx = p.x;
+    const sy = p.y + 1.6;
+    const sz = p.z;
+    const dx = a.x - sx;
+    const dy = a.y - sy;
+    const dz = a.z - sz;
+    const len = Math.hypot(dx, dy, dz);
+    const stop = Math.max(0, len - 1.2); // the anchor itself sits on a roof edge
+    for (let t = 1.5; t < stop; t += 2.5) {
+      const k = t / len;
+      if (this.world.colliders.blocked(sx + dx * k, sy + dy * k, sz + dz * k)) return false;
+    }
+    return true;
+  }
+
+  private pickFrom(near: V3[], dirX: number, dirZ: number, params: AimParams): V3 | null {
+    const S = CONFIG.swing;
+    const skip = this.time - this.lastAnchorT < 0.9 ? this.lastAnchor : null;
+    // look slightly ahead of where we are, so fast swings aim where we are going
+    const probe = { x: this.pos.x + this.vel.x * 0.15, y: this.pos.y + Math.max(0, this.vel.y) * 0.1, z: this.pos.z + this.vel.z * 0.15 };
+    const pool = near.slice();
+    for (let tries = 0; tries < 6 && pool.length; tries++) {
+      const i = selectAnchor(probe, dirX, dirZ, pool, params);
+      if (i < 0) return null;
+      const a = pool[i];
+      if (a !== skip && (!S.lineOfSight || this.clearLine(a))) return a;
+      pool.splice(i, 1);
+    }
+    return null;
+  }
+
+  /** Best anchor for a swing; failing that, a level/low one for a zip. */
   private findAnchor(dirX: number, dirZ: number): V3 | null {
     const S = CONFIG.swing;
     const near = this.world.anchorsNear(this.pos.x, this.pos.z, S.maxRope);
-    const i = selectAnchor(this.pos, dirX, dirZ, near, S);
-    return i < 0 ? null : near[i];
+    this.aimZip = false;
+    const a = this.pickFrom(near, dirX, dirZ, S);
+    if (a) {
+      const horiz = Math.hypot(a.x - this.pos.x, a.z - this.pos.z);
+      this.aimZip = a.y - this.pos.y < Math.max(4, horiz * 0.3);
+      return a;
+    }
+    const z = this.pickFrom(near, dirX, dirZ, { ...S, maxRope: S.zipMaxRope, minAnchorRise: -1.5, aimConeDot: 0.3, idealDist: 16, idealElevation: 0.1 });
+    if (z) this.aimZip = true;
+    return z;
+  }
+
+  /** Start a swing (or zip) from anchor `a`, travelling along (hx,hz). */
+  private attach(a: V3, hx: number, hz: number): void {
+    const S = CONFIG.swing;
+    const p = this.pos;
+    const v = this.vel;
+    const sp = Math.hypot(v.x, v.z);
+    if (sp > 3) {
+      hx = v.x / sp;
+      hz = v.z / sp;
+    }
+    const zip = this.aimZip;
+    let pivot = a;
+    if (!zip && S.straighten > 0) {
+      // slide the pivot sideways toward the line we are travelling along
+      const lat = (a.x - p.x) * -hz + (a.z - p.z) * hx;
+      pivot = { x: a.x + hz * lat * S.straighten, y: a.y, z: a.z - hx * lat * S.straighten };
+    }
+    const dist = Math.hypot(pivot.x - p.x, pivot.y - p.y, pivot.z - p.z);
+    const floor = Math.max(groundHeight(p.x, p.z), 0);
+    const target = zip ? S.minRope : Math.max(S.minRope, Math.min(dist, pivot.y - floor - S.groundClearance));
+    this.rope = { anchor: pivot, visual: a, length: Math.max(dist, S.minRope), target, mode: zip ? 'zip' : 'swing', hx, hz, age: 0, descended: false };
+    this.wantAttach = false;
+    this.rehook = -1;
+    this.airJumps = CONFIG.airJumps;
+    this.swings++;
+    if (this.grounded) {
+      v.y = Math.max(v.y, S.attachHop);
+      this.grounded = false;
+    }
+    this.aim = null;
+    this.events.onAttach?.();
+  }
+
+  private letGo(auto: boolean): void {
+    const r = this.rope;
+    if (!r) return;
+    this.lastAnchor = r.visual;
+    this.lastAnchorT = this.time;
+    if (r.mode === 'zip') this.vel.y = Math.max(this.vel.y, CONFIG.swing.zipPop);
+    this.rope = null;
+    if (auto) this.rehook = CONFIG.swing.rehook;
+    this.events.onRelease?.();
+  }
+
+  /** Should a held rope let go by itself? (hold-to-chain) */
+  private spent(r: ActiveRope): boolean {
+    const S = CONFIG.swing;
+    const p = this.pos;
+    const v = this.vel;
+    if (r.mode === 'zip') {
+      const dx = r.visual.x - p.x;
+      const dz = r.visual.z - p.z;
+      const d = Math.hypot(dx, r.visual.y - p.y, dz);
+      return d < S.minRope + 1.5 || (r.age > 0.15 && dx * r.hx + dz * r.hz < 0) || r.age > 2.5;
+    }
+    if (!S.autoRelease || r.age < 0.3) return false;
+    const ox = p.x - r.anchor.x;
+    const oz = p.z - r.anchor.z;
+    const ahead = ox * r.hx + oz * r.hz; // how far past the pivot along the travel line
+    const below = r.anchor.y - p.y;
+    const angle = Math.atan2(ahead, below);
+    const forward = v.x * r.hx + v.z * r.hz;
+    if (r.descended && v.y > 0 && v.y < S.releaseVy && angle > 0.3) return true;
+    if (angle > S.releaseAngle && v.y > 0) return true;
+    return r.age > 0.9 && forward < 1.5 && Math.hypot(v.x, v.y, v.z) < 4;
   }
 
   step(dt: number, input: MoveInput): void {
@@ -110,47 +241,49 @@ export class Player implements Body {
     hz /= hl;
 
     // --- swing button ------------------------------------------------------
-    if (input.swing && !this.swingWasHeld) this.wantAttach = true;
+    this.time += dt;
+    if (input.swing && !this.swingWasHeld) {
+      this.wantAttach = true;
+      this.rehook = -1;
+    }
     if (!input.swing) {
       this.wantAttach = false;
-      if (this.rope) {
-        this.rope = null;
-        this.events.onRelease?.();
-      }
+      this.rehook = -1;
+      if (this.rope) this.letGo(false);
     }
     this.swingWasHeld = input.swing;
-    this.aim = this.rope ? null : this.findAnchor(hx, hz);
-    if (this.wantAttach && !this.rope && this.aim) {
-      const a = this.aim;
-      const dist = Math.hypot(a.x - p.x, a.y - p.y, a.z - p.z);
-      const floor = Math.max(groundHeight(p.x, p.z), 0);
-      const target = Math.max(S.minRope, Math.min(dist, a.y - floor - S.groundClearance));
-      this.rope = { anchor: a, length: Math.max(dist, S.minRope), target };
-      this.wantAttach = false;
-      this.swings++;
-      if (this.grounded) {
-        v.y = Math.max(v.y, S.attachHop);
-        this.grounded = false;
-      }
-      this.aim = null;
-      this.events.onAttach?.();
+    if (this.rope && input.swing && this.spent(this.rope)) this.letGo(true);
+    if (this.rehook >= 0) {
+      this.rehook -= dt;
+      if (this.rehook < 0) this.wantAttach = true;
     }
+    this.aim = this.rope ? null : this.findAnchor(hx, hz);
+    if (this.wantAttach && !this.rope) {
+      if (this.aim) this.attach(this.aim, hx, hz);
+      else if (input.swing && this.swingWasHeldFrames === 0) this.events.onMiss?.();
+    }
+    this.swingWasHeldFrames = input.swing ? this.swingWasHeldFrames + 1 : 0;
 
     // --- jump ---------------------------------------------------------------
     this.jumpBuf = input.jump ? C.jumpBuffer : this.jumpBuf - dt;
     this.coyote = this.grounded ? C.coyoteTime : this.coyote - dt;
     if (this.jumpBuf > 0) {
       if (this.rope) {
-        this.rope = null;
+        this.letGo(false);
         v.y += S.jumpOffBoost;
         this.jumpBuf = 0;
         this.wantAttach = false;
-        this.events.onRelease?.();
         this.events.onJump?.();
       } else if (this.coyote > 0) {
         v.y = C.jumpSpeed;
         this.grounded = false;
         this.coyote = 0;
+        this.jumpBuf = 0;
+        this.events.onJump?.();
+      } else if (this.airJumps > 0) {
+        // a second jump in mid-air: the recovery move when a swing goes wrong
+        v.y = Math.max(v.y, C.jumpSpeed * C.airJumpScale);
+        this.airJumps--;
         this.jumpBuf = 0;
         this.events.onJump?.();
       }
@@ -160,8 +293,14 @@ export class Player implements Body {
     const wasGrounded = this.grounded;
     const fallSpeed = -v.y;
     if (this.rope) {
-      const reeling = reelRope(this.rope, this.rope.target, S.reelSpeed, dt);
-      stepSwing(this, this.rope, dt, { gravity: C.gravity, damping: S.damping, reelPull: S.reelPull, reelSpeed: S.reelSpeed }, dx * mag * S.pump, dz * mag * S.pump, !reeling);
+      const r = this.rope;
+      r.age += dt;
+      if (v.y < -1.5) r.descended = true;
+      const zip = r.mode === 'zip';
+      const reelSpeed = zip ? S.zipSpeed : S.reelSpeed;
+      const reeling = reelRope(r, r.target, reelSpeed, dt);
+      const pump = zip ? 0 : S.pump;
+      stepSwing(this, r, dt, { gravity: C.gravity, damping: S.damping, reelPull: zip ? S.zipPull : S.reelPull, reelSpeed }, dx * mag * pump, dz * mag * pump, !reeling);
     } else {
       if (this.grounded) {
         const target =
@@ -173,7 +312,10 @@ export class Player implements Body {
         const ex = tx - v.x;
         const ez = tz - v.z;
         const el = Math.hypot(ex, ez);
-        const maxDv = C.groundAccel * dt;
+        // Landing from a swing faster than a run: slide out of it gently rather
+        // than stopping dead, so momentum carries into the next jump or swing.
+        const fast = Math.hypot(v.x, v.z) > C.runSpeed + 0.5 && v.x * dx + v.z * dz > 0;
+        const maxDv = (fast ? C.slideDecel : C.groundAccel) * dt;
         if (el <= maxDv) {
           v.x = tx;
           v.z = tz;
@@ -230,10 +372,7 @@ export class Player implements Body {
       v.x = v.y = v.z = 0;
       grounded = wasGrounded;
       this.saves++;
-      if (this.rope && ++this.stuck > 12) {
-        this.rope = null;
-        this.events.onRelease?.();
-      }
+      if (this.rope && ++this.stuck > 12) this.letGo(false);
     } else {
       this.stuck = 0;
       this.prev.x = p.x;
@@ -245,6 +384,7 @@ export class Player implements Body {
     if (p.z < MAP.minZ) { p.z = MAP.minZ; if (v.z < 0) v.z = 0; }
     if (p.z > MAP.maxZ) { p.z = MAP.maxZ; if (v.z > 0) v.z = 0; }
     this.grounded = grounded;
+    if (grounded) this.airJumps = C.airJumps;
     if (grounded && !wasGrounded && fallSpeed > 4) this.events.onLand?.(fallSpeed);
 
     // --- the Thames never punishes: hop back to the nearest bank -------------

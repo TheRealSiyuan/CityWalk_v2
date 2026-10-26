@@ -42,8 +42,8 @@ interface Step {
 const STEPS: Step[] = [
   { cls: 'tut-move', touch: 'Drag the left side to walk. Push further to run.', desktop: 'WASD to run. Hold Shift to walk.', done: (s) => s.moved > 4, max: 3 },
   { cls: 'tut-look', touch: 'Drag the right side to look around.', desktop: 'Click, then move the mouse to look.', done: (s) => s.looked > 80, max: 2 },
-  { cls: 'tut-jump', touch: 'Tap JUMP.', desktop: 'Press Space to jump.', done: (s) => s.jumped >= 1, max: 2 },
-  { cls: 'tut-swing', touch: 'Hold SWING to rope a rooftop. Let go to fly!', desktop: 'Hold click (or E) to swing. Release to fly!', done: (s) => s.swung >= 1, max: 3 },
+  { cls: 'tut-jump', touch: 'Tap JUMP. Tap again in mid-air for a second jump.', desktop: 'Space to jump. Press it again in mid-air.', done: (s) => s.jumped >= 1, max: 2.5 },
+  { cls: 'tut-swing', touch: 'Hold SWING and keep holding: you swing and grab the next rooftop by yourself. Let go to fly!', desktop: 'Hold click (or E) and keep holding to chain swings. Let go to fly!', done: (s) => s.swung >= 2, max: 5 },
 ];
 
 export class UI {
@@ -56,7 +56,8 @@ export class UI {
   private tutTime = 0;
   private tutBase: TutorialState | null = null;
   private muted = false;
-  private touch = matchMedia('(pointer: coarse)').matches || 'ontouchstart' in window;
+  touch = matchMedia('(pointer: coarse)').matches || 'ontouchstart' in window;
+  onRespawn: (() => void) | null = null;
 
   constructor(private shareUrl: () => string) {
     let saved: string[] = [];
@@ -80,6 +81,15 @@ export class UI {
       this.closePanel();
       this.startTutorial(true);
     });
+    $('respawn').addEventListener('click', () => {
+      this.closePanel();
+      this.onRespawn?.();
+    });
+    if (!this.touch) {
+      document.body.classList.add('desktop');
+      $('keys').hidden = false;
+      window.setTimeout(() => ($('keys').hidden = true), 20000);
+    }
     $('mute').addEventListener('click', () => {
       this.muted = !this.muted;
       $('mute').textContent = `Sound: ${this.muted ? 'off' : 'on'}`;
@@ -181,7 +191,70 @@ export class UI {
   }
 
   get panelOpen(): boolean {
-    return !$('panel').hidden;
+    return !$('panel').hidden || !$('race-panel').hidden || !$('race-done').hidden;
+  }
+
+  // --- races ------------------------------------------------------------------
+  showRoutes(routes: { id: string; name: string; stops: string[] }[], best: (id: string) => string | null, pick: (id: string) => void): void {
+    const ol = $('routes');
+    ol.textContent = '';
+    for (const r of routes) {
+      const li = document.createElement('li');
+      const b = document.createElement('button');
+      const name = document.createElement('b');
+      name.textContent = r.name;
+      const via = document.createElement('small');
+      via.textContent = r.stops.map((id) => LANDMARKS.find((l) => l.id === id)?.name ?? id).join(' → ');
+      const pb = document.createElement('span');
+      pb.className = 'pb';
+      pb.textContent = best(r.id) ?? 'New';
+      b.append(name, pb, via);
+      b.addEventListener('click', () => {
+        $('race-panel').hidden = true;
+        pick(r.id);
+      });
+      li.appendChild(b);
+      ol.appendChild(li);
+    }
+    $('race-done').hidden = true;
+    $('race-panel').hidden = false;
+  }
+
+  hideRoutes(): void {
+    $('race-panel').hidden = true;
+  }
+
+  raceHud(on: boolean): void {
+    $('race-hud').hidden = !on;
+    document.body.classList.toggle('racing', on);
+    if (!on) $('countdown').hidden = true;
+  }
+
+  raceTick(time: string, next: string): void {
+    $('race-time').textContent = time;
+    $('race-next').textContent = next;
+  }
+
+  countdown(n: number): void {
+    const c = $('countdown');
+    c.hidden = false;
+    c.textContent = n > 0 ? String(n) : 'GO!';
+    c.classList.remove('pop');
+    void c.offsetWidth;
+    c.classList.add('pop');
+    if (n === 0) window.setTimeout(() => (c.hidden = true), 800);
+  }
+
+  raceFinished(route: string, time: string, best: string, isNew: boolean): void {
+    $('card').classList.remove('on');
+    $('done-kicker').textContent = isNew ? `${route} · new personal best` : route;
+    $('done-time').textContent = time;
+    $('done-best').textContent = isNew ? 'Best time saved on this device.' : `Your best: ${best}`;
+    $('race-done').hidden = false;
+  }
+
+  hideFinished(): void {
+    $('race-done').hidden = true;
   }
 
   // --- tutorial ---------------------------------------------------------------

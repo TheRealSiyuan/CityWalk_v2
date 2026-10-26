@@ -7,7 +7,7 @@ const url = (room: string) => `/?room=${room}&relay=${encodeURIComponent(RELAY)}
 
 interface PlayerState { x: number; y: number; z: number; anim: number; roped: boolean; grounded: boolean; swings: number }
 interface PeerState { id: string; name: string; seen: boolean; x: number; y: number; z: number }
-type Debug = { ready: boolean; room: string; player: PlayerState; peers: PeerState[] };
+type Debug = { ready: boolean; room: string; player: PlayerState; peers: PeerState[]; race: { state: string; time: number; next: number; route: string | null }; teleport(x: number, y: number, z: number): void };
 declare global {
   interface Window { __citywalk: Debug }
 }
@@ -179,4 +179,76 @@ test('multiplayer: two browsers on the same room link see each other move', asyn
   expect(errB).toEqual([]);
   await ctxA.close();
   await ctxB.close();
+});
+
+test('race: pick a route, count down, take every checkpoint, finish and keep a personal best', async ({ page }) => {
+  const errors = trackErrors(page);
+  await page.goto(url('racetest'));
+  await ready(page);
+  await page.locator('#tut-skip').tap();
+  await page.locator('#race-btn').tap();
+  await expect(page.locator('#race-panel')).toBeVisible();
+  await page.locator('#routes button').first().tap();
+  await expect(page.locator('#race-hud')).toBeVisible();
+  await expect(page.locator('#countdown')).toBeVisible();
+  await expect.poll(async () => (await page.evaluate(() => window.__citywalk.race)).state, { timeout: 10_000 }).toBe('running');
+  const t0 = (await page.evaluate(() => window.__citywalk.race)).time;
+  await page.waitForTimeout(800);
+  expect((await page.evaluate(() => window.__citywalk.race)).time).toBeGreaterThan(t0);
+  await expect(page.locator('#race-next')).toContainText('1/');
+
+  // restart puts the clock back to a countdown
+  await page.locator('#race-restart').tap();
+  await expect.poll(async () => (await page.evaluate(() => window.__citywalk.race)).state).toBe('countdown');
+  await expect.poll(async () => (await page.evaluate(() => window.__citywalk.race)).state, { timeout: 10_000 }).toBe('running');
+
+  // arrive at each stop in turn (teleporting stands in for the journey)
+  const route = ['bigben', 'abbey', 'palace', 'trafalgar'];
+  const where: Record<string, [number, number]> = { bigben: [-311, 222], abbey: [-372, 270], palace: [-610, 208], trafalgar: [-380, 40] };
+  for (const id of route) {
+    await page.evaluate(([x, z]) => window.__citywalk.teleport(x, 0.5, z), where[id]);
+    await page.waitForTimeout(400);
+  }
+  await expect(page.locator('#race-done')).toBeVisible();
+  await expect(page.locator('#done-kicker')).toContainText('new personal best');
+  await page.screenshot({ path: 'screenshots/race-finish.png' });
+  const best = await page.evaluate(() => localStorage.getItem('citywalk.best.westminster'));
+  expect(Number(best)).toBeGreaterThan(0);
+
+  // the route list now shows that best time
+  await page.locator('#done-routes').tap();
+  await expect(page.locator('#routes .pb').first()).toHaveText(/\d:\d\d\.\d/);
+  await page.locator('#race-close').tap();
+  expect(errors).toEqual([]);
+});
+
+test('desktop: no touch buttons, key hints shown, WASD and Space work', async ({ browser }) => {
+  const ctx = await browser.newContext({ viewport: { width: 1280, height: 720 }, hasTouch: false, isMobile: false, baseURL: 'http://localhost:4173' });
+  const page = await ctx.newPage();
+  const errors = trackErrors(page);
+  await page.goto(url('desktoptest'));
+  await ready(page);
+  await expect(page.locator('#btn-swing')).toBeHidden();
+  await expect(page.locator('#btn-jump')).toBeHidden();
+  await expect(page.locator('#keys')).toBeVisible();
+  await page.locator('#tut-skip').click();
+  const before = await player(page);
+  // software rendering at 1280x720 is slow, so hold W until the player has run a few metres
+  await page.keyboard.down('KeyW');
+  await expect
+    .poll(async () => {
+      const now = await player(page);
+      return Math.hypot(now.x - before.x, now.z - before.z);
+    }, { timeout: 20_000 })
+    .toBeGreaterThan(3);
+  await page.keyboard.up('KeyW');
+  await page.keyboard.press('Space');
+  await expect.poll(async () => (await player(page)).grounded, { timeout: 2000 }).toBe(false);
+  // hold E to swing
+  await page.keyboard.down('KeyE');
+  await expect.poll(async () => (await player(page)).roped, { timeout: 5000 }).toBe(true);
+  await page.keyboard.up('KeyE');
+  await page.screenshot({ path: 'screenshots/desktop-1280x720.png' });
+  expect(errors).toEqual([]);
+  await ctx.close();
 });

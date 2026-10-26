@@ -8,6 +8,7 @@ import { Sfx } from './audio';
 import { UI, store } from './ui';
 import { buildWorld } from './world/city';
 import { LANDMARKS, SPAWN, type Landmark } from './world/data';
+import { ROUTES, Race, formatTime, type Route } from './race';
 import { WATER_Y, groundHeight } from './world/river';
 
 // We author colours as final display values, so skip three's colour management.
@@ -85,8 +86,97 @@ const player = new Player(world, spawn, {
     tut.jumped++;
   },
   onLand: () => sfx.land(),
+  onMiss: () => {
+    sfx.miss();
+    document.getElementById('btn-swing')?.classList.add('miss');
+    window.setTimeout(() => document.getElementById('btn-swing')?.classList.remove('miss'), 250);
+  },
 });
 player.yaw = SPAWN.yaw + Math.PI;
+
+// --- landmark races ----------------------------------------------------------------
+const bestKey = (id: string) => `citywalk.best.${id}`;
+const race = new Race(
+  {
+    get: (id) => {
+      const v = Number(store.get(bestKey(id)));
+      return Number.isFinite(v) && v > 0 ? v : null;
+    },
+    set: (id, t) => store.set(bestKey(id), t.toFixed(2)),
+  },
+  {
+    onCountdown: (n) => {
+      ui.countdown(n);
+      sfx.tick(n);
+    },
+    onCheckpoint: (i, stop, t) => {
+      sfx.checkpoint();
+      const total = race.route?.stops.length ?? 0;
+      if (i < total - 1) ui.toast(`${stop.name}  ${formatTime(t)}`);
+    },
+    onFinish: (t, best, isNew) => {
+      sfx.discover();
+      ui.raceHud(false);
+      beacon.visible = false;
+      ui.raceFinished(race.route?.name ?? 'Race', formatTime(t), best !== null ? formatTime(best) : '', isNew);
+    },
+  },
+);
+let lastRoute: Route = ROUTES[0];
+function placePlayer(x: number, z: number, yaw: number): void {
+  player.teleport(x, Math.max(groundHeight(x, z), world.colliders.topAt(x, z)) + 0.05, z);
+  player.yaw = yaw + Math.PI;
+  camYaw = yaw;
+  camPitch = 0.2;
+  camTarget.set(player.pos.x, player.pos.y + CONFIG.camera.height, player.pos.z);
+}
+function startRace(route: Route): void {
+  lastRoute = route;
+  ui.hideFinished();
+  ui.hideRoutes();
+  placePlayer(route.start.x, route.start.z, route.start.yaw);
+  race.start(route);
+  ui.raceHud(true);
+  if (ui.tutorialActive) ui.endTutorial();
+}
+const openRaces = () => ui.showRoutes(ROUTES, (id) => {
+  const b = race.bestFor(id);
+  return b === null ? null : formatTime(b);
+}, (id) => startRace(ROUTES.find((r) => r.id === id) ?? ROUTES[0]));
+document.getElementById('race-btn')!.addEventListener('click', openRaces);
+document.getElementById('race-close')!.addEventListener('click', () => ui.hideRoutes());
+document.getElementById('race-restart')!.addEventListener('click', () => startRace(lastRoute));
+document.getElementById('race-quit')!.addEventListener('click', () => {
+  race.quit();
+  ui.raceHud(false);
+  beacon.visible = false;
+});
+document.getElementById('done-again')!.addEventListener('click', () => startRace(lastRoute));
+document.getElementById('done-routes')!.addEventListener('click', openRaces);
+document.getElementById('done-close')!.addEventListener('click', () => {
+  race.quit();
+  ui.hideFinished();
+});
+ui.onRespawn = () => {
+  race.quit();
+  ui.raceHud(false);
+  beacon.visible = false;
+  placePlayer(SPAWN.x, SPAWN.z, SPAWN.yaw);
+};
+// a tall light over the next stop, visible from across the city
+const beacon = new THREE.Group();
+{
+  const mat = new THREE.MeshBasicMaterial({ color: 0xffd36b, transparent: true, opacity: 0.32, depthWrite: false, side: THREE.DoubleSide, fog: false });
+  const column = new THREE.Mesh(new THREE.CylinderGeometry(4, 4, 420, 20, 1, true), mat);
+  column.position.y = 210;
+  const ring = new THREE.Mesh(new THREE.RingGeometry(0.85, 1, 48), new THREE.MeshBasicMaterial({ color: 0xffe08a, transparent: true, opacity: 0.6, depthWrite: false, side: THREE.DoubleSide }));
+  ring.rotation.x = -Math.PI / 2;
+  ring.position.y = 0.3;
+  ring.name = 'ring';
+  beacon.add(column, ring);
+  beacon.visible = false;
+  beacon.renderOrder = 4;
+}
 
 const ADJ = ['Brisk', 'Foggy', 'Jolly', 'Swift', 'Sunny', 'Lucky', 'Plucky', 'Dapper'];
 const NOUN = ['Fox', 'Pigeon', 'Raven', 'Corgi', 'Swan', 'Badger', 'Robin', 'Otter'];
@@ -100,6 +190,8 @@ const colorFor = (id: string): number => {
   for (let i = 0; i < id.length; i++) h = (h * 31 + id.charCodeAt(i)) >>> 0;
   return PLAYER_COLORS[h % PLAYER_COLORS.length];
 };
+
+scene.add(beacon);
 
 // --- multiplayer --------------------------------------------------------------------
 interface Remote {
@@ -239,7 +331,12 @@ function updateLandmarks(dt: number): void {
   compassTimer -= dt;
   if (compassTimer <= 0) {
     compassTimer = 0.1;
-    if (nearest && !ui.tutorialActive) {
+    const stop = race.active ? race.stop : null;
+    if (stop) {
+      const bearing = Math.atan2(stop.x - p.x, -(stop.z - p.z));
+      const facing = Math.atan2(-Math.sin(camYaw), Math.cos(camYaw));
+      ui.setCompass(stop, bearing - facing, Math.hypot(stop.x - p.x, stop.z - p.z));
+    } else if (nearest && !ui.tutorialActive) {
       // bearing relative to where the camera looks
       const bearing = Math.atan2(nearest.x - p.x, -(nearest.z - p.z));
       const facing = Math.atan2(-Math.sin(camYaw), Math.cos(camYaw));
@@ -278,7 +375,7 @@ function frame(nowMs: number): void {
   last = nowMs;
 
   input.poll();
-  if (ui.panelOpen) {
+  if (ui.panelOpen || race.state === 'countdown') {
     input.mx = input.my = 0;
     input.swing = false;
   }
@@ -317,9 +414,22 @@ function frame(nowMs: number): void {
   if (player.grounded) tut.moved += Math.hypot(player.pos.x - px, player.pos.z - pz);
   tut.looked = input.lookTotal;
 
-  avatar.update(dt, rp.x, rp.y, rp.z, player.yaw, player.anim, player.speed, player.rope ? player.rope.anchor : null);
+  avatar.update(dt, rp.x, rp.y, rp.z, player.yaw, player.anim, player.speed, player.rope ? player.rope.visual : null);
   updateCamera(dt, now);
   updateLandmarks(dt);
+  race.update(dt, player.pos.x, player.pos.z);
+  if (race.active) {
+    const stop = race.stop;
+    if (stop) {
+      beacon.visible = true;
+      beacon.position.set(stop.x, 0, stop.z);
+      const ring = beacon.getObjectByName('ring')!;
+      ring.scale.setScalar(stop.r);
+      const total = race.route!.stops.length;
+      const d = Math.hypot(stop.x - player.pos.x, stop.z - player.pos.z);
+      ui.raceTick(formatTime(race.time), `${race.next + 1}/${total} · ${stop.name} · ${Math.round(d / 5) * 5} m`);
+    }
+  }
   updateReticle();
   ui.updateTutorial(dt, tut);
   sfx.setWind(Math.hypot(player.vel.x, player.vel.y, player.vel.z));
@@ -339,7 +449,7 @@ function frame(nowMs: number): void {
   if (sendTimer <= 0) {
     sendTimer += 1 / CONFIG.net.sendHz;
     if (sendTimer < 0) sendTimer = 0;
-    net.send(player.pos.x, player.pos.y, player.pos.z, player.yaw, player.anim, player.speed, player.rope ? player.rope.anchor : null);
+    net.send(player.pos.x, player.pos.y, player.pos.z, player.yaw, player.anim, player.speed, player.rope ? player.rope.visual : null);
   }
 
   world.update(now, camera);
@@ -388,6 +498,9 @@ const debug = {
   },
   get found() {
     return [...ui.found];
+  },
+  get race() {
+    return { state: race.state, time: race.time, next: race.next, route: race.route?.id ?? null };
   },
   get fps() {
     return fps;

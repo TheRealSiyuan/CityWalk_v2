@@ -25,6 +25,9 @@ export const CONFIG = {
 
   // --- air ----------------------------------------------------------------
   airControl: 10, // steering acceleration while falling
+  airJumps: 1, // extra jumps in mid-air (refilled on landing or attaching a rope)
+  airJumpScale: 0.85, // an air jump is this fraction of a ground jump
+  slideDecel: 9, // landing faster than a run, you slow down this gently (m/s²)
 
   // --- swinging -----------------------------------------------------------
   swing: {
@@ -41,6 +44,18 @@ export const CONFIG = {
     pump: 8, // forward acceleration from pushing the stick mid-swing
     damping: 0, // 0 = ideal pendulum; raise for a heavier feel
     jumpOffBoost: 5, // extra upward speed when you jump out of a swing
+    straighten: 0.6, // 0..1: pulls the swing's pivot over your line of travel so swings run down streets, not into walls
+    // holding Swing chains automatically: let go near the top of each arc and grab the next anchor
+    autoRelease: true,
+    releaseVy: 2.5, // let go once you are rising slower than this after the low point
+    releaseAngle: 1.2, // ...or once you are this far past vertical (radians)
+    rehook: 0.18, // seconds after an automatic release before grabbing the next anchor
+    // low anchors (a roof edge across the street) become a quick zip instead of a swing
+    zipMaxRope: 34,
+    zipSpeed: 28, // m/s the rope reels in during a zip
+    zipPull: 0.9, // share of that speed kept as momentum
+    zipPop: 7.5, // upward kick at the end of a zip, to clear the ledge
+    lineOfSight: true, // never attach through a building
   },
 
   // --- camera -------------------------------------------------------------

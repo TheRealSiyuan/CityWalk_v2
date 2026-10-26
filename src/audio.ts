@@ -69,6 +69,9 @@ export class Sfx {
   release(): void { this.tone(700, 380, 0.12, 'triangle', 0.05); }
   land(): void { this.tone(140, 70, 0.1, 'sine', 0.12); }
   splash(): void { this.tone(500, 90, 0.35, 'sawtooth', 0.05); }
+  tick(n: number): void { this.tone(n > 0 ? 660 : 990, n > 0 ? 660 : 1320, n > 0 ? 0.12 : 0.3, 'square', 0.05); }
+  checkpoint(): void { [784, 1175].forEach((f, i) => this.tone(f, f, 0.2, 'triangle', 0.09, i * 0.08)); }
+  miss(): void { this.tone(220, 180, 0.08, 'sine', 0.05); }
   discover(): void {
     [523, 659, 784, 1047].forEach((f, i) => this.tone(f, f, 0.32, 'triangle', 0.09, i * 0.09));
   }
