@@ -14,6 +14,7 @@ Verified work only. Newest first.
 - Build: 0 TS errors. Unit: 42 passed (new: a year of daily routes are deterministic, valid,
   within leg limits and varied; per-day bests). Browser: 6 passed (new daily test; the fixed
   race test now picks Westminster Dash by name since the daily is listed first).
+- GitHub Actions run 9 (commit 0668dca): build, e2e and deploy jobs all succeeded.
 - Not verified: whether generated routes are fun or fairly paced — needs a human playtest.
 
 **Money earned:** £0 (not yet published on a paying channel).
