@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { LANDMARKS } from '../src/world/data';
-import { ROUTES, Race, formatTime, type BestStore } from '../src/race';
+import { CONFIG } from '../src/config';
+import { ROUTES, Race, dailyRoute, dayKey, formatTime, type BestStore } from '../src/race';
 
 const memStore = (): BestStore & { data: Record<string, number> } => {
   const data: Record<string, number> = {};
@@ -57,5 +58,56 @@ describe('landmark race', () => {
   it('formats times as m:ss.s', () => {
     expect(formatTime(0)).toBe('0:00.0');
     expect(formatTime(65.43)).toBe('1:05.4');
+  });
+
+  it('daily route: same for everyone on a day, valid landmarks at sensible distances, changes day to day', () => {
+    expect(dayKey(new Date(Date.UTC(2026, 9, 27, 23, 59)))).toBe('2026-10-27');
+    expect(dailyRoute('2026-10-27')).toEqual(dailyRoute('2026-10-27'));
+    const { stops: n, minLeg, maxLeg } = CONFIG.daily;
+    const seen = new Set<string>();
+    const day0 = Date.UTC(2026, 0, 1);
+    for (let i = 0; i < 365; i++) {
+      const key = dayKey(new Date(day0 + i * 86400_000));
+      const r = dailyRoute(key);
+      expect(r.id).toBe(`daily-${key}`);
+      expect(r.name).toMatch(/^Daily · \d{1,2} [A-Z][a-z]{2}$/);
+      expect(r.stops.length, key).toBe(n);
+      expect(new Set(r.stops).size).toBe(n);
+      let px = r.start.x;
+      let pz = r.start.z;
+      for (const id of r.stops) {
+        const l = at(id);
+        expect(l, `${key}:${id}`).toBeDefined();
+        const d = Math.hypot(l.x - px, l.z - pz);
+        expect(d, `${key}:${id}`).toBeGreaterThanOrEqual(minLeg);
+        expect(d, `${key}:${id}`).toBeLessThanOrEqual(maxLeg);
+        px = l.x;
+        pz = l.z;
+      }
+      // starts on a hand-made route start (known clear ground), facing the first stop
+      expect(ROUTES.some((h) => h.start.x === r.start.x && h.start.z === r.start.z)).toBe(true);
+      const first = at(r.stops[0]);
+      const dx = first.x - r.start.x;
+      const dz = first.z - r.start.z;
+      const len = Math.hypot(dx, dz);
+      expect(-Math.sin(r.start.yaw) * (dx / len) - Math.cos(r.start.yaw) * (dz / len)).toBeCloseTo(1, 6);
+      seen.add(r.stops.join('>'));
+    }
+    expect(seen.size).toBeGreaterThan(100); // plenty of variety across a year
+  });
+
+  it('daily personal bests are kept per day', () => {
+    const store = memStore();
+    const race = new Race(store);
+    const r = dailyRoute('2026-10-27');
+    race.start(r);
+    for (let i = 0; i < 200; i++) race.update(1 / 60, r.start.x, r.start.z);
+    for (const id of r.stops) {
+      race.update(4, 9999, 9999);
+      race.update(1 / 60, at(id).x, at(id).z);
+    }
+    expect(race.state).toBe('finished');
+    expect(store.data['daily-2026-10-27']).toBeGreaterThan(0);
+    expect(race.bestFor(dailyRoute('2026-10-28').id)).toBeNull();
   });
 });

@@ -6,8 +6,9 @@ Ordered by impact on getting real players and the first revenue.
 
 1. **Owner playtest on phone + desktop**, fix anything it surfaces.
 2. **itch.io launch** (awaiting approval — `DECISIONS.md`).
-3. **Daily challenge:** one route per day, same for everyone, best time on device.
-4. **CrazyGames build variant:** no external links or other-portal branding; then Basic Launch (approval needed).
+3. **CrazyGames build variant:** no external links or other-portal branding; then Basic Launch (approval needed).
+4. **Daily challenge polish:** "Share today's time" button (copy text, no backend); show the
+   daily on the title/first screen so returning players see it.
 
 ## Next
 

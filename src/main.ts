@@ -8,7 +8,7 @@ import { Sfx } from './audio';
 import { UI, store } from './ui';
 import { buildWorld } from './world/city';
 import { LANDMARKS, SPAWN, type Landmark } from './world/data';
-import { ROUTES, Race, formatTime, type Route } from './race';
+import { ROUTES, Race, dailyRoute, formatTime, type Route } from './race';
 import { WATER_Y, groundHeight } from './world/river';
 
 // We author colours as final display values, so skip three's colour management.
@@ -142,10 +142,14 @@ function startRace(route: Route): void {
   ui.raceHud(true);
   if (ui.tutorialActive) ui.endTutorial();
 }
-const openRaces = () => ui.showRoutes(ROUTES, (id) => {
-  const b = race.bestFor(id);
-  return b === null ? null : formatTime(b);
-}, (id) => startRace(ROUTES.find((r) => r.id === id) ?? ROUTES[0]));
+const openRaces = () => {
+  // regenerated each time so a session left open past midnight UTC gets the new day's route
+  const routes = [dailyRoute(), ...ROUTES];
+  ui.showRoutes(routes, (id) => {
+    const b = race.bestFor(id);
+    return b === null ? null : formatTime(b);
+  }, (id) => startRace(routes.find((r) => r.id === id) ?? ROUTES[0]));
+};
 document.getElementById('race-btn')!.addEventListener('click', openRaces);
 document.getElementById('race-close')!.addEventListener('click', () => ui.hideRoutes());
 document.getElementById('race-restart')!.addEventListener('click', () => startRace(lastRoute));

@@ -2,6 +2,24 @@
 
 Verified work only. Newest first.
 
+## 2026-10-27
+
+**Implemented**
+- Daily challenge: the Race menu now opens with "Daily · <date>", a 4-stop landmark route
+  generated from the UTC date (same for every player that day), starting from a known-clear
+  route start and facing the first stop. Legs are 150–600 m (`CONFIG.daily`). Best time is
+  kept per day on the device; tomorrow starts fresh at "New".
+
+**Verified**
+- Build: 0 TS errors. Unit: 42 passed (new: a year of daily routes are deterministic, valid,
+  within leg limits and varied; per-day bests). Browser: 6 passed (new daily test; the fixed
+  race test now picks Westminster Dash by name since the daily is listed first).
+- Not verified: whether generated routes are fun or fairly paced — needs a human playtest.
+
+**Money earned:** £0 (not yet published on a paying channel).
+
+**Next task:** CrazyGames no-external-links build variant.
+
 ## 2026-10-26
 
 **Implemented**

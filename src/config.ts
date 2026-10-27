@@ -73,6 +73,14 @@ export const CONFIG = {
     speedFov: 14, // extra FOV at full swing speed
   },
 
+  // --- daily challenge ---------------------------------------------------
+  // one generated route per UTC day, the same for every player
+  daily: {
+    stops: 4, // landmarks per daily route
+    minLeg: 150, // metres: each stop is at least this far from the previous point
+    maxLeg: 600, // ...and at most this far
+  },
+
   // --- multiplayer --------------------------------------------------------
   net: {
     sendHz: 12,

@@ -210,6 +210,12 @@ export class UI {
       pb.className = 'pb';
       pb.textContent = best(r.id) ?? 'New';
       b.append(name, pb, via);
+      if (r.id.startsWith('daily-')) {
+        li.className = 'daily';
+        const tag = document.createElement('em');
+        tag.textContent = 'Today’s challenge · same route for everyone';
+        b.prepend(tag);
+      }
       b.addEventListener('click', () => {
         $('race-panel').hidden = true;
         pick(r.id);

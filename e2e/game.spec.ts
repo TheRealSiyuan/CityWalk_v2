@@ -188,7 +188,8 @@ test('race: pick a route, count down, take every checkpoint, finish and keep a p
   await page.locator('#tut-skip').tap();
   await page.locator('#race-btn').tap();
   await expect(page.locator('#race-panel')).toBeVisible();
-  await page.locator('#routes button').first().tap();
+  // the daily challenge is listed first; this test runs the fixed Westminster Dash
+  await page.locator('#routes button', { hasText: 'Westminster Dash' }).tap();
   await expect(page.locator('#race-hud')).toBeVisible();
   await expect(page.locator('#countdown')).toBeVisible();
   await expect.poll(async () => (await page.evaluate(() => window.__citywalk.race)).state, { timeout: 10_000 }).toBe('running');
@@ -217,7 +218,30 @@ test('race: pick a route, count down, take every checkpoint, finish and keep a p
 
   // the route list now shows that best time
   await page.locator('#done-routes').tap();
-  await expect(page.locator('#routes .pb').first()).toHaveText(/\d:\d\d\.\d/);
+  await expect(page.locator('#routes button', { hasText: 'Westminster Dash' }).locator('.pb')).toHaveText(/\d:\d\d\.\d/);
+  await page.locator('#race-close').tap();
+  expect(errors).toEqual([]);
+});
+
+test('daily challenge: listed first, starts a 4-stop route for today', async ({ page }) => {
+  const errors = trackErrors(page);
+  await page.goto(url('dailytest'));
+  await ready(page);
+  await page.locator('#tut-skip').tap();
+  await page.locator('#race-btn').tap();
+  const first = page.locator('#routes li').first();
+  await expect(first).toHaveClass(/daily/);
+  await expect(first).toContainText('Today’s challenge');
+  await expect(first.locator('.pb')).toHaveText('New');
+  await first.locator('button').tap();
+  await expect(page.locator('#race-hud')).toBeVisible();
+  await expect.poll(async () => (await page.evaluate(() => window.__citywalk.race)).state, { timeout: 10_000 }).toBe('running');
+  const today = new Date().toISOString().slice(0, 10);
+  expect((await page.evaluate(() => window.__citywalk.race)).route).toBe(`daily-${today}`);
+  await expect(page.locator('#race-next')).toContainText('1/4');
+  await page.locator('#race-quit').tap();
+  await page.locator('#race-btn').tap();
+  await page.screenshot({ path: 'screenshots/daily-challenge.png' });
   await page.locator('#race-close').tap();
   expect(errors).toEqual([]);
 });
