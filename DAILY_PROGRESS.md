@@ -18,6 +18,8 @@ Verified work only. Newest first.
 - CrazyGames build opened in headless Chromium (phone viewport): renders, Share and player
   count hidden, no `<a href>` links, zero requests or websockets to any non-local host, no
   page errors. itch.io package still points Share at GitHub Pages (unchanged).
+- GitHub Actions run 40640431927 (commit fb3e03f): build (incl. the CrazyGames scan), e2e and
+  deploy jobs all succeeded.
 - Not verified: inside CrazyGames' own iframe/QA tool (needs a CrazyGames developer account).
 
 **Money earned:** £0 (not yet published on a paying channel).
