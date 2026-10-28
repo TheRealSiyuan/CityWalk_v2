@@ -2,6 +2,28 @@
 
 Verified work only. Newest first.
 
+## 2026-10-28
+
+**Implemented**
+- CrazyGames build variant: `npm run package:crazygames` → `release/citywalk-crazygames-0.9.0.zip`
+  (~198 kB). Built with `VITE_PORTAL=crazygames` (`src/portal.ts`): no Share button, no
+  player count, no room link, solo play (a room nobody can be invited to is pointless, and
+  it makes no relay or peer connections). Gameplay is otherwise identical.
+- `tools/check-portal-build.mjs` scans the build and fails on any external URL, GitHub,
+  itch.io or other-portal string; the share-URL code is compiled out of that build.
+- CI build job now packages and scans the CrazyGames variant on every push.
+
+**Verified**
+- Build: 0 TS errors. Unit: 45 passed (new: portal rules, link scanner). Browser: 6 passed.
+- CrazyGames build opened in headless Chromium (phone viewport): renders, Share and player
+  count hidden, no `<a href>` links, zero requests or websockets to any non-local host, no
+  page errors. itch.io package still points Share at GitHub Pages (unchanged).
+- Not verified: inside CrazyGames' own iframe/QA tool (needs a CrazyGames developer account).
+
+**Money earned:** £0 (not yet published on a paying channel).
+
+**Next task:** daily challenge polish — "Share today's time" text and show the daily on first screen.
+
 ## 2026-10-27
 
 **Implemented**

@@ -10,6 +10,7 @@ import { buildWorld } from './world/city';
 import { LANDMARKS, SPAWN, type Landmark } from './world/data';
 import { ROUTES, Race, dailyRoute, formatTime, type Route } from './race';
 import { WATER_Y, groundHeight } from './world/river';
+import { parsePortal, portalRules } from './portal';
 
 // We author colours as final display values, so skip three's colour management.
 THREE.ColorManagement.enabled = false;
@@ -29,8 +30,16 @@ if (params.get('room') !== room) {
 }
 // Builds hosted elsewhere (e.g. inside an itch.io frame, where the page URL
 // cannot carry ?room=) share the public GitHub Pages address instead.
-const SHARE_BASE: string | undefined = import.meta.env.VITE_SHARE_BASE;
-const shareUrl = (): string => `${SHARE_BASE || location.origin + location.pathname}?room=${room}`;
+const PORTAL = parsePortal(import.meta.env.VITE_PORTAL);
+const RULES = portalRules(PORTAL);
+document.body.classList.add(`portal-${PORTAL}`);
+const SHARE_BASE: string | undefined = RULES.externalLinks ? import.meta.env.VITE_SHARE_BASE : undefined;
+// Written against the raw build constant so a no-links build drops the URL code entirely
+// (tools/check-portal-build.mjs verifies that). The button is hidden there anyway.
+const shareUrl = (): string =>
+  import.meta.env.VITE_PORTAL === 'crazygames' || !RULES.externalLinks
+    ? ''
+    : `${SHARE_BASE || location.origin + location.pathname}?room=${room}`;
 
 // --- renderer -------------------------------------------------------------------
 const dpr = window.devicePixelRatio || 1;
@@ -247,7 +256,8 @@ ui.onName = (name) => {
 const relayParam = params.get('relay');
 const relays = relayParam && /^wss?:\/\//.test(relayParam) ? [relayParam] : null;
 // Solo: `?solo=1`, or a build made with VITE_SOLO=1 for hosts that block WebRTC.
-const SOLO = params.get('solo') === '1' || import.meta.env.VITE_SOLO === '1';
+// Portal builds without shareable room links are solo too.
+const SOLO = params.get('solo') === '1' || import.meta.env.VITE_SOLO === '1' || !RULES.multiplayer;
 if (SOLO) document.body.classList.add('solo');
 else net.start(room, myName, relays);
 window.addEventListener('pagehide', () => net.leave());

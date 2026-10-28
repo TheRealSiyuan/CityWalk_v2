@@ -2,6 +2,17 @@
 
 Newest first.
 
+## 2026-10-28 — CrazyGames Basic Launch approval requested (not yet given)
+
+**Request:** submit `release/citywalk-crazygames-0.9.0.zip` to CrazyGames Basic Launch
+(free, non-exclusive, no ads or monetisation during Basic Launch; 7–21 days of KPI data).
+- **Build:** solo, no external links or other-portal branding (CI-checked). No SDK yet.
+- **Cost:** £0. **Terms:** CrazyGames developer terms (18.08.2025, see `MONETISATION.md`);
+  auto-renewing 1-year, non-exclusive unless you opt into exclusivity later.
+- **What you do:** create/sign in to a CrazyGames developer account, accept the terms, upload
+  the zip with the listing copy and cover from `marketing/`. Suggested order: after itch.io.
+- **Risk:** untested in CrazyGames' QA iframe; their review may request changes.
+
 ## 2026-10-26 — Daily development task scheduled
 
 A scheduled task "CityWalk v2 daily development" runs every day at 05:45 UK time in the

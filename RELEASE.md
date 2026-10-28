@@ -7,6 +7,7 @@
 | Live (public) | https://therealsiyuan.github.io/CityWalk_v2/ — serves `main`; deploys on every push |
 | Last verified live | 2026-10-26: the live page served the commit that added races (strings "Race", "Restart", "Quit", "Other races" present). Fetched over the web from this environment; not opened on a physical phone. |
 | itch.io package | `npm run package:itch` → `release/citywalk-itch-0.9.0.zip` (~200 kB, `index.html` + one JS file) |
+| CrazyGames package | `npm run package:crazygames` → `release/citywalk-crazygames-0.9.0.zip` (~198 kB, solo, no external links; scanned in CI) |
 | Listing copy | `marketing/LISTING.md` |
 | Media | `marketing/cover-630x500.png`, `marketing/screenshots/`, `marketing/citywalk-short-vertical.mp4` (23 s, 720×1280), `marketing/citywalk-gameplay-1280x720.mp4` (20 s) |
 
@@ -32,5 +33,7 @@ anywhere except the existing GitHub Pages site.
 - Rope can pass the London Eye wheel and thin details (not solid by design).
 - Holding Swing in big open plazas (Trafalgar Square, Buckingham Palace forecourt) finds
   nothing to grab; you run across them.
+- The CrazyGames build is solo only (no shareable room links there); multiplayer would need
+  the CrazyGames SDK invite links (Full Launch work).
 - On itch.io the page URL cannot carry a room code, so Share links point at the GitHub
   Pages address; friends join there.

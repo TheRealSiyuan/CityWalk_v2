@@ -28,6 +28,8 @@ jobs:
         run: npm run build
       - name: Unit tests (swing physics, world layout, traversal bot)
         run: npm test
+      - name: CrazyGames variant builds with no external links
+        run: npm run package:crazygames
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3
         with:

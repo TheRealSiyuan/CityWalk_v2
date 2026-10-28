@@ -10,6 +10,7 @@
     "test": "vitest run",
     "relay": "node e2e/relay.mjs",
     "e2e": "playwright test",
+    "package:crazygames": "VITE_PORTAL=crazygames vite build --outDir release/crazygames --emptyOutDir && node tools/check-portal-build.mjs release/crazygames && cd release/crazygames && rm -f ../citywalk-crazygames-$npm_package_version.zip && zip -qr ../citywalk-crazygames-$npm_package_version.zip . && cd .. && ls -l citywalk-crazygames-$npm_package_version.zip",
     "package:itch": "VITE_SHARE_BASE=https://therealsiyuan.github.io/CityWalk_v2/ vite build --outDir release/itch --emptyOutDir && cd release/itch && rm -f ../citywalk-itch-$npm_package_version.zip && zip -qr ../citywalk-itch-$npm_package_version.zip . && cd .. && ls -l citywalk-itch-$npm_package_version.zip"
   },
   "dependencies": {

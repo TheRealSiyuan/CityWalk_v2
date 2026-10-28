@@ -42,6 +42,7 @@ npm run build      # type-check (zero errors required) + production build into d
 npm test           # unit tests: swing physics, London layout, traversal bot
 npm run e2e        # Playwright: phone + desktop viewports, swing, race, two-player (needs `npm run build` first)
 npm run package:itch  # zip for itch.io in release/ (Share links point at GitHub Pages)
+npm run package:crazygames  # solo zip with no external links; fails if any link slips in
 ```
 
 `npm run e2e` starts the preview server and a tiny local signalling relay
