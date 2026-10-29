@@ -17,6 +17,8 @@ Verified work only. Newest first.
   given). Browser: 6 passed (daily test now finishes the daily, checks the badge appears
   then clears, the button shares the expected text; fixed race shows no share button).
 - CrazyGames package rebuilt: scanner clean, no external links.
+- GitHub Actions run 40825906884 (commit 3c01323): build (incl. CrazyGames scan), e2e and
+  deploy jobs all succeeded.
 - Top bar with the badge checked in a 390 px-wide phone screenshot; not checked on narrower
   phones or real devices.
 
