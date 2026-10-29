@@ -56,6 +56,7 @@ export class UI {
   private tutTime = 0;
   private tutBase: TutorialState | null = null;
   private muted = false;
+  private doneShare = '';
   touch = matchMedia('(pointer: coarse)').matches || 'ontouchstart' in window;
   onRespawn: (() => void) | null = null;
 
@@ -70,6 +71,7 @@ export class UI {
     this.renderProgress();
 
     $('share').addEventListener('click', () => void this.share());
+    $('done-share').addEventListener('click', () => void this.shareDaily());
     $('progress').addEventListener('click', () => this.openPanel());
     $('close').addEventListener('click', () => this.closePanel());
     $('panel').addEventListener('click', (e) => {
@@ -252,12 +254,39 @@ export class UI {
     if (n === 0) window.setTimeout(() => (c.hidden = true), 800);
   }
 
-  raceFinished(route: string, time: string, best: string, isNew: boolean): void {
+  /** `shareText` (daily races only) shows a "Share today's time" button that copies it. */
+  raceFinished(route: string, time: string, best: string, isNew: boolean, shareText = ''): void {
+    this.doneShare = shareText;
+    $('done-share').hidden = !shareText;
     $('card').classList.remove('on');
     $('done-kicker').textContent = isNew ? `${route} · new personal best` : route;
     $('done-time').textContent = time;
     $('done-best').textContent = isNew ? 'Best time saved on this device.' : `Your best: ${best}`;
     $('race-done').hidden = false;
+  }
+
+  /** "Daily" badge on the Race button while today's challenge has no time on this device. */
+  setDailyBadge(on: boolean): void {
+    $('daily-badge').hidden = !on;
+  }
+
+  private async shareDaily(): Promise<void> {
+    const text = this.doneShare;
+    if (!text) return;
+    try {
+      if (navigator.share && this.touch) {
+        await navigator.share({ text });
+        return;
+      }
+    } catch (e) {
+      if ((e as Error).name === 'AbortError') return;
+    }
+    try {
+      await navigator.clipboard.writeText(text);
+      this.toast('Time copied — paste it to a friend');
+    } catch {
+      window.prompt('Copy your time:', text);
+    }
   }
 
   hideFinished(): void {

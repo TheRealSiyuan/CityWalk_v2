@@ -8,12 +8,10 @@ Ordered by impact on getting real players and the first revenue.
 2. **itch.io launch** (awaiting approval — `DECISIONS.md`).
 3. **CrazyGames Basic Launch** (awaiting approval — `DECISIONS.md`). The no-external-links
    build is done (`npm run package:crazygames`).
-4. **Daily challenge polish:** "Share today's time" button (copy text, no backend); show the
-   daily on the title/first screen so returning players see it.
+4. **Ghost of your best race run** to chase (most player-visible next step for races).
 
 ## Next
 
-- Ghost of your best race run to chase.
 - Multiplayer race: everyone in a room races the same route.
 - Measure real-phone frame rate (ask testers), tune quality presets.
 - Swing feel: anchor preview line, rope tension sound, landing roll animation.

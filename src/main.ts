@@ -8,7 +8,7 @@ import { Sfx } from './audio';
 import { UI, store } from './ui';
 import { buildWorld } from './world/city';
 import { LANDMARKS, SPAWN, type Landmark } from './world/data';
-import { ROUTES, Race, dailyRoute, formatTime, type Route } from './race';
+import { ROUTES, Race, dailyRoute, dailyShareText, formatTime, type Route } from './race';
 import { WATER_Y, groundHeight } from './world/river';
 import { parsePortal, portalRules } from './portal';
 
@@ -130,11 +130,18 @@ const race = new Race(
       sfx.discover();
       ui.raceHud(false);
       beacon.visible = false;
-      ui.raceFinished(race.route?.name ?? 'Race', formatTime(t), best !== null ? formatTime(best) : '', isNew);
+      const name = race.route?.name ?? 'Race';
+      const daily = race.route?.id.startsWith('daily-') ?? false;
+      // the link is compiled out of no-external-links builds (shareUrl() is '' there)
+      const share = daily ? dailyShareText(name, formatTime(t), shareUrl()) : '';
+      ui.raceFinished(name, formatTime(t), best !== null ? formatTime(best) : '', isNew, share);
+      refreshDailyBadge();
     },
   },
 );
 let lastRoute: Route = ROUTES[0];
+const refreshDailyBadge = () => ui.setDailyBadge(race.bestFor(dailyRoute().id) === null);
+refreshDailyBadge();
 function placePlayer(x: number, z: number, yaw: number): void {
   player.teleport(x, Math.max(groundHeight(x, z), world.colliders.topAt(x, z)) + 0.05, z);
   player.yaw = yaw + Math.PI;
@@ -152,6 +159,7 @@ function startRace(route: Route): void {
   if (ui.tutorialActive) ui.endTutorial();
 }
 const openRaces = () => {
+  refreshDailyBadge();
   // regenerated each time so a session left open past midnight UTC gets the new day's route
   const routes = [dailyRoute(), ...ROUTES];
   ui.showRoutes(routes, (id) => {
@@ -537,7 +545,8 @@ const debug = {
     return [...ui.found];
   },
   get race() {
-    return { state: race.state, time: race.time, next: race.next, route: race.route?.id ?? null };
+    const stops = (race.route?.stops ?? []).map((id) => LANDMARKS.find((l) => l.id === id)!).map((l) => [l.x, l.z] as [number, number]);
+    return { state: race.state, time: race.time, next: race.next, route: race.route?.id ?? null, stops };
   },
   /** dev tools: freeze time and step it manually (for capturing smooth footage) */
   pause: (on: boolean) => {

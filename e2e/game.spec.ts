@@ -7,7 +7,7 @@ const url = (room: string) => `/?room=${room}&relay=${encodeURIComponent(RELAY)}
 
 interface PlayerState { x: number; y: number; z: number; anim: number; roped: boolean; grounded: boolean; swings: number }
 interface PeerState { id: string; name: string; seen: boolean; x: number; y: number; z: number }
-type Debug = { ready: boolean; room: string; player: PlayerState; peers: PeerState[]; race: { state: string; time: number; next: number; route: string | null }; teleport(x: number, y: number, z: number): void };
+type Debug = { ready: boolean; room: string; player: PlayerState; peers: PeerState[]; race: { state: string; time: number; next: number; route: string | null; stops: [number, number][] }; teleport(x: number, y: number, z: number): void };
 declare global {
   interface Window { __citywalk: Debug }
 }
@@ -212,6 +212,7 @@ test('race: pick a route, count down, take every checkpoint, finish and keep a p
   }
   await expect(page.locator('#race-done')).toBeVisible();
   await expect(page.locator('#done-kicker')).toContainText('new personal best');
+  await expect(page.locator('#done-share')).toBeHidden(); // sharing is for the daily only
   await page.screenshot({ path: 'screenshots/race-finish.png' });
   const best = await page.evaluate(() => localStorage.getItem('citywalk.best.westminster'));
   expect(Number(best)).toBeGreaterThan(0);
@@ -240,9 +241,35 @@ test('daily challenge: listed first, starts a 4-stop route for today', async ({ 
   expect((await page.evaluate(() => window.__citywalk.race)).route).toBe(`daily-${today}`);
   await expect(page.locator('#race-next')).toContainText('1/4');
   await page.locator('#race-quit').tap();
+  await expect(page.locator('#daily-badge')).toBeVisible(); // no daily time yet
   await page.locator('#race-btn').tap();
   await page.screenshot({ path: 'screenshots/daily-challenge.png' });
-  await page.locator('#race-close').tap();
+
+  // finish today's route: a "Share today's time" button appears and shares plain text
+  await page.locator('#routes li').first().locator('button').tap();
+  await expect.poll(async () => (await page.evaluate(() => window.__citywalk.race)).state, { timeout: 10_000 }).toBe('running');
+  const stops = (await page.evaluate(() => window.__citywalk.race)).stops;
+  for (const [x, z] of stops) {
+    await page.evaluate(([x, z]) => window.__citywalk.teleport(x, 0.5, z), [x, z]);
+    await page.waitForTimeout(400);
+  }
+  await expect(page.locator('#race-done')).toBeVisible();
+  await expect(page.locator('#done-share')).toBeVisible();
+  await page.evaluate(() => {
+    const w = window as unknown as { __shared: string[] };
+    w.__shared = [];
+    const capture = async (d: { text?: string }) => void w.__shared.push(d.text ?? '');
+    Object.defineProperty(navigator, 'share', { value: capture, configurable: true });
+    Object.defineProperty(navigator, 'clipboard', { value: { writeText: (t: string) => capture({ text: t }) }, configurable: true });
+  });
+  await page.locator('#done-share').tap();
+  const shared = await page.evaluate(() => (window as unknown as { __shared: string[] }).__shared);
+  expect(shared).toHaveLength(1);
+  expect(shared[0]).toMatch(/CityWalk Daily · \d+ \w+: I raced it in \d:\d\d\.\d/);
+  expect(shared[0]).toContain('?room=');
+  await page.screenshot({ path: 'screenshots/daily-share.png' });
+  await page.locator('#done-close').tap();
+  await expect(page.locator('#daily-badge')).toBeHidden(); // today's time is set
   expect(errors).toEqual([]);
 });
 

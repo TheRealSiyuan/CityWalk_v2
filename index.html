@@ -205,6 +205,10 @@
       .sheet.done .kicker { font-size: 12px; font-weight: 800; letter-spacing: 0.14em; text-transform: uppercase; color: var(--coral); }
       #done-time { font-size: 52px; font-weight: 900; font-variant-numeric: tabular-nums; margin: 4px 0; }
       #done-best { margin: 0; font-weight: 700; opacity: 0.75; }
+      #done-share { margin-top: 12px; width: 100%; padding: 11px 10px; border-radius: 14px; font-weight: 800; background: var(--gold); }
+      #done-share[hidden] { display: none; }
+      #daily-badge { background: var(--coral); color: var(--cream); border-radius: 999px; padding: 2px 7px; font-size: 11px; font-weight: 900; letter-spacing: 0.03em; }
+      #daily-badge[hidden] { display: none; }
       #keys {
         position: fixed; left: calc(12px + var(--sal)); bottom: calc(12px + var(--sab)); background: var(--paper); border-radius: 12px; padding: 8px 12px;
         font-weight: 700; font-size: 13px; pointer-events: none; opacity: 0.9;
@@ -230,7 +234,7 @@
     <div id="top">
       <button class="chip" id="progress" aria-label="Landmarks found"><span id="count">0/13</span> <small>found</small></button>
       <div class="chip" id="players" title="Players in this room"><span class="dot"></span><span id="pcount">1</span></div>
-      <button class="chip" id="race-btn">Race</button>
+      <button class="chip" id="race-btn">Race<span id="daily-badge" hidden>Daily</span></button>
       <button class="chip" id="share">Share</button>
     </div>
     <div id="race-hud" hidden>
@@ -288,6 +292,7 @@
         <div class="kicker" id="done-kicker"></div>
         <div id="done-time"></div>
         <p id="done-best"></p>
+        <button id="done-share" hidden>Share today’s time</button>
         <div class="row"><button class="primary" id="done-again">Race again</button><button id="done-routes">Other races</button><button id="done-close">Free roam</button></div>
       </div>
     </div>

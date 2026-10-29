@@ -2,6 +2,28 @@
 
 Verified work only. Newest first.
 
+## 2026-10-29
+
+**Implemented**
+- "Share today's time": finishing the daily race shows a button that shares (phone share
+  sheet) or copies a plain-text line, e.g. "CityWalk Daily · 29 Oct: I raced it in 1:23.4.
+  Same route for everyone today. Can you beat it?" plus the game link. The CrazyGames build
+  shares the text without any link. Fixed routes do not show the button.
+- First screen: the Race button carries a "Daily" badge until today's challenge has a time
+  on this device, so returning players see there is a new route.
+
+**Verified**
+- Build: 0 TS errors. Unit: 46 passed (new: share text names day and time, link only when
+  given). Browser: 6 passed (daily test now finishes the daily, checks the badge appears
+  then clears, the button shares the expected text; fixed race shows no share button).
+- CrazyGames package rebuilt: scanner clean, no external links.
+- Top bar with the badge checked in a 390 px-wide phone screenshot; not checked on narrower
+  phones or real devices.
+
+**Money earned:** £0 (not yet published on a paying channel).
+
+**Next task:** owner playtest fixes if any; otherwise ghost of your best race run.
+
 ## 2026-10-28
 
 **Implemented**

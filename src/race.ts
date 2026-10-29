@@ -158,3 +158,12 @@ export function dailyRoute(key: string = dayKey()): Route {
   const fallback = ROUTES[Math.floor(rnd() * ROUTES.length)];
   return { ...fallback, id: `daily-${key}`, name };
 }
+
+/**
+ * Text for "Share today's time". Plain text only; `url` is omitted in builds that may not
+ * link to other sites, so the message still makes sense on its own.
+ */
+export function dailyShareText(routeName: string, time: string, url = ''): string {
+  const text = `CityWalk ${routeName}: I raced it in ${time}. Same route for everyone today. Can you beat it?`;
+  return url ? `${text} ${url}` : text;
+}
