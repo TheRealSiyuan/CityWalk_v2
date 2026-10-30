@@ -99,6 +99,21 @@ export class Avatar {
     this.rope.frustumCulled = false;
   }
 
+  /** Render see-through, for the replay of your best race run. Call once, before setName. */
+  setGhost(opacity: number): void {
+    const ghostMat = mat.clone();
+    ghostMat.transparent = true;
+    ghostMat.opacity = opacity;
+    ghostMat.depthWrite = false;
+    const ghostRope = ropeMat.clone();
+    ghostRope.transparent = true;
+    ghostRope.opacity = opacity;
+    this.body.traverse((o) => {
+      if (o instanceof THREE.Mesh) o.material = ghostMat;
+    });
+    this.rope.material = ghostRope;
+  }
+
   setName(name: string): void {
     if (this.tag) {
       this.root.remove(this.tag);

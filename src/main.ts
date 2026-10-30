@@ -8,6 +8,7 @@ import { Sfx } from './audio';
 import { UI, store } from './ui';
 import { buildWorld } from './world/city';
 import { LANDMARKS, SPAWN, type Landmark } from './world/data';
+import { GhostRecorder, decodeGhost, encodeGhost, ghostPose, splitDelta, type Ghost, type GhostPose } from './ghost';
 import { ROUTES, Race, dailyRoute, dailyShareText, formatTime, type Route } from './race';
 import { WATER_Y, groundHeight } from './world/river';
 import { parsePortal, portalRules } from './portal';
@@ -108,6 +109,18 @@ player.yaw = SPAWN.yaw + Math.PI;
 
 // --- landmark races ----------------------------------------------------------------
 const bestKey = (id: string) => `citywalk.best.${id}`;
+// ghost of your best run on each route: recorded during the race, saved with a new best
+const ghostKey = (id: string) => `citywalk.ghost.${id}`;
+const ghostRec = new GhostRecorder();
+let ghost: Ghost | null = null;
+let splits: number[] = [];
+const ghostNow: GhostPose = { x: 0, y: 0, z: 0, yaw: 0, anim: 0, speed: 0, anchor: null };
+function saveGhost(routeId: string, g: Ghost): void {
+  // keep only today's daily ghost; yesterday's route will never be raced again
+  if (routeId.startsWith('daily-')) for (const k of store.keys('citywalk.ghost.daily-')) if (k !== ghostKey(routeId)) store.remove(k);
+  store.set(ghostKey(routeId), encodeGhost(g));
+}
+const signed = (d: number) => `${d >= 0 ? '−' : '+'}${Math.abs(d).toFixed(1)} s`;
 const race = new Race(
   {
     get: (id) => {
@@ -124,12 +137,18 @@ const race = new Race(
     onCheckpoint: (i, stop, t) => {
       sfx.checkpoint();
       const total = race.route?.stops.length ?? 0;
-      if (i < total - 1) ui.toast(`${stop.name}  ${formatTime(t)}`);
+      const d = splitDelta(t, ghost?.splits, i);
+      splits.push(t);
+      if (i < total - 1) ui.toast(`${stop.name}  ${formatTime(t)}${d === null ? '' : `  ${signed(d)}`}`);
     },
     onFinish: (t, best, isNew) => {
       sfx.discover();
       ui.raceHud(false);
       beacon.visible = false;
+      if (isNew && race.route) {
+        const g = ghostRec.finish(t, splits);
+        if (g) saveGhost(race.route.id, g);
+      }
       const name = race.route?.name ?? 'Race';
       const daily = race.route?.id.startsWith('daily-') ?? false;
       // the link is compiled out of no-external-links builds (shareUrl() is '' there)
@@ -154,6 +173,9 @@ function startRace(route: Route): void {
   ui.hideFinished();
   ui.hideRoutes();
   placePlayer(route.start.x, route.start.z, route.start.yaw);
+  ghostRec.reset();
+  splits = [];
+  ghost = decodeGhost(store.get(ghostKey(route.id)));
   race.start(route);
   ui.raceHud(true);
   if (ui.tutorialActive) ui.endTutorial();
@@ -253,6 +275,11 @@ const net = new Net({
 });
 const avatar = new Avatar(colorFor(net.id));
 scene.add(avatar.root, avatar.rope);
+const ghostAvatar = new Avatar(0xcfe8ff);
+ghostAvatar.setGhost(CONFIG.ghost.opacity);
+ghostAvatar.setName('Your best');
+ghostAvatar.root.visible = false;
+scene.add(ghostAvatar.root, ghostAvatar.rope);
 ui.onName = (name) => {
   const n = cleanName(name);
   if (!n || n === myName) return;
@@ -463,6 +490,16 @@ function tick(dt: number, now: number): void {
   updateCamera(dt, now);
   updateLandmarks(dt);
   race.update(dt, player.pos.x, player.pos.z);
+  if (race.state === 'running') {
+    ghostRec.record(race.time, { x: player.pos.x, y: player.pos.y, z: player.pos.z, yaw: player.yaw, anim: player.anim, speed: player.speed, anchor: player.rope ? player.rope.visual : null });
+  }
+  // the ghost runs alongside you, and steps aside a second after it finishes
+  const showGhost = !!ghost && race.active && race.time <= ghost.time + 1;
+  ghostAvatar.root.visible = showGhost;
+  if (showGhost) {
+    const g = ghostPose(ghost!, race.time, ghostNow);
+    ghostAvatar.update(dt, g.x, g.y, g.z, g.yaw, g.anim as Anim, g.speed, g.anchor);
+  } else ghostAvatar.rope.visible = false;
   if (race.active) {
     const stop = race.stop;
     if (stop) {
@@ -547,6 +584,9 @@ const debug = {
   get race() {
     const stops = (race.route?.stops ?? []).map((id) => LANDMARKS.find((l) => l.id === id)!).map((l) => [l.x, l.z] as [number, number]);
     return { state: race.state, time: race.time, next: race.next, route: race.route?.id ?? null, stops };
+  },
+  get ghost() {
+    return { loaded: !!ghost, time: ghost?.time ?? null, visible: ghostAvatar.root.visible, x: ghostAvatar.root.position.x, z: ghostAvatar.root.position.z };
   },
   /** dev tools: freeze time and step it manually (for capturing smooth footage) */
   pause: (on: boolean) => {

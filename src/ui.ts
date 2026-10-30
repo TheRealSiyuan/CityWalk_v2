@@ -17,6 +17,20 @@ const store = {
       /* private mode: progress just is not saved */
     }
   },
+  remove(key: string): void {
+    try {
+      localStorage.removeItem(key);
+    } catch {
+      /* nothing to remove */
+    }
+  },
+  keys(prefix: string): string[] {
+    try {
+      return Object.keys(localStorage).filter((k) => k.startsWith(prefix));
+    } catch {
+      return [];
+    }
+  },
 };
 export { store };
 

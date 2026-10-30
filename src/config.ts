@@ -81,6 +81,14 @@ export const CONFIG = {
     maxLeg: 600, // ...and at most this far
   },
 
+  // --- race ghost ---------------------------------------------------------
+  // your best run on each route replays as a translucent runner to chase
+  ghost: {
+    sampleHz: 10, // recorded poses per second of race time
+    maxFrames: 6000, // runs longer than this (10 min at 10 Hz) keep no ghost
+    opacity: 0.4,
+  },
+
   // --- multiplayer --------------------------------------------------------
   net: {
     sendHz: 12,

@@ -2,6 +2,32 @@
 
 Verified work only. Newest first.
 
+## 2026-10-30
+
+**Implemented**
+- Ghost of your best race run: finishing any route (fixed or daily) with a new personal best
+  saves a compact recording of the run (10 poses/s, ~0.1 m precision) on the device. Racing
+  that route again shows a see-through runner labelled "Your best" replaying it, rope and all;
+  it waits at the start during the countdown and steps aside a second after its finish.
+- Checkpoint toasts now compare with the ghost, e.g. "Big Ben 0:41.2 +1.3 s" (behind) or
+  "−0.8 s" (ahead).
+- Only today's daily ghost is kept (older daily ghosts are deleted); runs over 10 minutes keep
+  no ghost. Tuning in `CONFIG.ghost`. New file `src/ghost.ts`.
+
+**Verified**
+- Build: 0 TS errors. Unit: 51 passed (new: fixed-rate recording at any frame rate, replay
+  interpolation/rope/end hold, storage round trip and malformed-data rejection, length cap,
+  split sign). Browser: 6 passed (race test now checks the ghost is saved with 4 splits, is
+  visible on the next attempt starting at the route start, the split toast appears, and the
+  ghost hides on Quit). The multiplayer test failed once in the first full run and passed
+  alone and in a second full run — looks like a timing flake under load, not this change.
+- CrazyGames package rebuilt: scanner clean.
+- Not verified: how the ghost looks and feels to a player (needs a human); real phones.
+
+**Money earned:** £0 (not yet published on a paying channel).
+
+**Next task:** owner playtest fixes if any; otherwise ghost polish (live gap on the race HUD).
+
 ## 2026-10-29
 
 **Implemented**

@@ -7,7 +7,7 @@ const url = (room: string) => `/?room=${room}&relay=${encodeURIComponent(RELAY)}
 
 interface PlayerState { x: number; y: number; z: number; anim: number; roped: boolean; grounded: boolean; swings: number }
 interface PeerState { id: string; name: string; seen: boolean; x: number; y: number; z: number }
-type Debug = { ready: boolean; room: string; player: PlayerState; peers: PeerState[]; race: { state: string; time: number; next: number; route: string | null; stops: [number, number][] }; teleport(x: number, y: number, z: number): void };
+type Debug = { ready: boolean; room: string; player: PlayerState; peers: PeerState[]; race: { state: string; time: number; next: number; route: string | null; stops: [number, number][] }; ghost: { loaded: boolean; time: number | null; visible: boolean; x: number; z: number }; teleport(x: number, y: number, z: number): void };
 declare global {
   interface Window { __citywalk: Debug }
 }
@@ -220,7 +220,23 @@ test('race: pick a route, count down, take every checkpoint, finish and keep a p
   // the route list now shows that best time
   await page.locator('#done-routes').tap();
   await expect(page.locator('#routes button', { hasText: 'Westminster Dash' }).locator('.pb')).toHaveText(/\d:\d\d\.\d/);
-  await page.locator('#race-close').tap();
+
+  // the best run was saved as a ghost; racing again replays it alongside you
+  const saved = await page.evaluate(() => JSON.parse(localStorage.getItem('citywalk.ghost.westminster') ?? 'null'));
+  expect(saved?.frames.length).toBeGreaterThan(2);
+  expect(saved?.splits).toHaveLength(4);
+  await page.locator('#routes button', { hasText: 'Westminster Dash' }).tap();
+  await expect.poll(async () => (await page.evaluate(() => window.__citywalk.ghost)).visible).toBe(true);
+  const g = await page.evaluate(() => window.__citywalk.ghost);
+  expect(g.loaded).toBe(true);
+  expect(Math.hypot(g.x - -311, g.z - 222)).toBeGreaterThan(1); // starts at the route start, not at Big Ben
+  await expect.poll(async () => (await page.evaluate(() => window.__citywalk.race)).state, { timeout: 10_000 }).toBe('running');
+  // first checkpoint toast compares with the ghost's split
+  await page.evaluate(() => window.__citywalk.teleport(-311, 0.5, 222));
+  await expect(page.locator('#toast')).toContainText(/[+−]\d+\.\d s/);
+  await page.screenshot({ path: 'screenshots/race-ghost.png' });
+  await page.locator('#race-quit').tap();
+  await expect.poll(async () => (await page.evaluate(() => window.__citywalk.ghost)).visible).toBe(false);
   expect(errors).toEqual([]);
 });
 
