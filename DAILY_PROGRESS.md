@@ -22,6 +22,7 @@ Verified work only. Newest first.
   ghost hides on Quit). The multiplayer test failed once in the first full run and passed
   alone and in a second full run — looks like a timing flake under load, not this change.
 - CrazyGames package rebuilt: scanner clean.
+- GitHub Actions run 41011039663 (commit 2043a75): build, e2e and deploy all succeeded.
 - Not verified: how the ghost looks and feels to a player (needs a human); real phones.
 
 **Money earned:** £0 (not yet published on a paying channel).
