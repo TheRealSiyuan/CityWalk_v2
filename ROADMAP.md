@@ -8,8 +8,10 @@ Ordered by impact on getting real players and the first revenue.
 2. **itch.io launch** (awaiting approval — `DECISIONS.md`).
 3. **CrazyGames Basic Launch** (awaiting approval — `DECISIONS.md`). The no-external-links
    build is done (`npm run package:crazygames`).
-4. **Ghost polish** (done 2026-10-30: ghost of your best run + checkpoint splits): show the
-   ghost's lead/gap on the race HUD between checkpoints, and "share a ghost" for the daily.
+4. **Ghost polish**: live gap to the ghost on the race HUD (done 2026-10-31). Remaining:
+   "share a ghost" for the daily (needs a compact share code; link-free builds can't share it).
+5. **First-run polish**: make the first 60 seconds lead new players into a race (the
+   strongest hook so far) — smallest version: suggest the daily after the tutorial.
 
 ## Next
 

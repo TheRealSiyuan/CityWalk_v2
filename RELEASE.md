@@ -31,6 +31,8 @@ anywhere except the existing GitHub Pages site.
 - Multiplayer over the public internet is unverified from the build environment; strict
   NATs without TURN fall back to solo.
 - Rope can pass the London Eye wheel and thin details (not solid by design).
+- The live gap to your ghost is an estimate (where your best run passed closest to you on the
+  current leg); it hides when you take a path more than 60 m from your best run's.
 - Holding Swing in big open plazas (Trafalgar Square, Buckingham Palace forecourt) finds
   nothing to grab; you run across them.
 - The CrazyGames build is solo only (no shareable room links there); multiplayer would need

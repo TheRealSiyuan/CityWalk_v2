@@ -169,6 +169,9 @@
         font-weight: 900; font-size: 34px; color: var(--cream); font-variant-numeric: tabular-nums; letter-spacing: 0.01em;
         text-shadow: 0 3px 0 rgba(58, 44, 37, 0.45), 0 0 18px rgba(58, 44, 37, 0.35);
       }
+      #race-gap { border-radius: 999px; padding: 3px 10px; font-weight: 900; font-size: 14px; font-variant-numeric: tabular-nums; color: #fff; background: #c8553d; }
+      #race-gap[hidden] { display: none; }
+      #race-gap.ahead { background: #3f8f5a; }
       #race-next { background: var(--paper); border-radius: 999px; padding: 6px 12px; font-weight: 800; font-size: 13px; white-space: nowrap; }
       #race-actions { display: flex; gap: 6px; pointer-events: auto; }
       #race-actions .chip { padding: 6px 12px; font-size: 13px; }
@@ -239,6 +242,7 @@
     </div>
     <div id="race-hud" hidden>
       <div id="race-time">0:00.0</div>
+      <div id="race-gap" hidden></div>
       <div id="race-next"></div>
       <div id="race-actions"><button class="chip" id="race-restart">Restart</button><button class="chip" id="race-quit">Quit</button></div>
     </div>

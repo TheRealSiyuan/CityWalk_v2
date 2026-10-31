@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { CONFIG } from '../src/config';
-import { GhostRecorder, decodeGhost, encodeGhost, ghostPose, splitDelta, type GhostPose } from '../src/ghost';
+import { GhostRecorder, decodeGhost, encodeGhost, ghostPose, liveDelta, splitDelta, type GhostPose } from '../src/ghost';
 
 const pose = (x: number, roped = false): GhostPose => ({ x, y: 1, z: -x, yaw: 0.5, anim: roped ? 4 : 2, speed: 11, anchor: roped ? { x, y: 30, z: 0 } : null });
 const blank = (): GhostPose => ({ x: 0, y: 0, z: 0, yaw: 0, anim: 0, speed: 0, anchor: null });
@@ -55,5 +55,23 @@ describe('race ghost', () => {
     expect(splitDelta(23, [12, 20], 1)).toBe(-3);
     expect(splitDelta(5, [12], 1)).toBeNull();
     expect(splitDelta(5, undefined, 0)).toBeNull();
+  });
+
+  it('gives a live gap between checkpoints: ahead (+), behind (-), none when off the path', () => {
+    // ghost: waits 1 s at the start, runs +x at 10 m/s to a checkpoint at x=50 (t=6), then +z
+    const rec = new GhostRecorder();
+    for (let t = 0; t <= 11.0001; t += 1 / 60) {
+      const x = t < 1 ? 0 : Math.min(50, (t - 1) * 10);
+      const z = t <= 6 ? 0 : (t - 6) * 10;
+      rec.record(t, { x, y: 0, z, yaw: 0, anim: 2, speed: 10, anchor: null });
+    }
+    const g = rec.finish(11, [6, 11])!;
+    expect(liveDelta(g, 0, 30, 0, 3)).toBeCloseTo(1, 1); // ghost reached x=30 at 4 s: you are 1 s up
+    expect(liveDelta(g, 0, 30, 0, 5.5)).toBeCloseTo(-1.5, 1); // 1.5 s down
+    expect(liveDelta(g, 0, 0, 0, 0.5)).toBeCloseTo(0, 5); // both still at the start: level
+    expect(liveDelta(g, 1, 50, 20, 9)).toBeCloseTo(-1, 1); // second leg uses the second window
+    expect(liveDelta(g, 0, 30, 500, 3)).toBeNull(); // nowhere near the ghost's path
+    expect(liveDelta(g, 2, 30, 0, 3)).toBeNull(); // past the last checkpoint
+    expect(liveDelta({ ...g, splits: undefined }, 0, 30, 0, 3)).toBeNull();
   });
 });

@@ -197,6 +197,7 @@ test('race: pick a route, count down, take every checkpoint, finish and keep a p
   await page.waitForTimeout(800);
   expect((await page.evaluate(() => window.__citywalk.race)).time).toBeGreaterThan(t0);
   await expect(page.locator('#race-next')).toContainText('1/');
+  await expect(page.locator('#race-gap')).toBeHidden(); // no ghost yet on a first run
 
   // restart puts the clock back to a countdown
   await page.locator('#race-restart').tap();
@@ -231,12 +232,16 @@ test('race: pick a route, count down, take every checkpoint, finish and keep a p
   expect(g.loaded).toBe(true);
   expect(Math.hypot(g.x - -311, g.z - 222)).toBeGreaterThan(1); // starts at the route start, not at Big Ben
   await expect.poll(async () => (await page.evaluate(() => window.__citywalk.race)).state, { timeout: 10_000 }).toBe('running');
+  // the HUD shows a live gap to the ghost between checkpoints
+  await expect(page.locator('#race-gap')).toBeVisible();
+  await expect(page.locator('#race-gap')).toHaveText(/^[+−]\d+\.\d s$/);
   // first checkpoint toast compares with the ghost's split
   await page.evaluate(() => window.__citywalk.teleport(-311, 0.5, 222));
   await expect(page.locator('#toast')).toContainText(/[+−]\d+\.\d s/);
   await page.screenshot({ path: 'screenshots/race-ghost.png' });
   await page.locator('#race-quit').tap();
   await expect.poll(async () => (await page.evaluate(() => window.__citywalk.ghost)).visible).toBe(false);
+  await expect(page.locator('#race-gap')).toBeHidden();
   expect(errors).toEqual([]);
 });
 

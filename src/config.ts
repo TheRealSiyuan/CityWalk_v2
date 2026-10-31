@@ -87,6 +87,9 @@ export const CONFIG = {
     sampleHz: 10, // recorded poses per second of race time
     maxFrames: 6000, // runs longer than this (10 min at 10 Hz) keep no ghost
     opacity: 0.4,
+    liveHz: 4, // how often the HUD gap to the ghost refreshes
+    liveMaxOffPath: 60, // metres: further than this from the ghost's path, no live gap is shown
+    liveTieMetres: 0.3, // ghost poses this close to its nearest are treated as the same spot
   },
 
   // --- multiplayer --------------------------------------------------------

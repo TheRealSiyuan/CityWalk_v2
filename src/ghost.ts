@@ -110,3 +110,27 @@ export function splitDelta(mine: number, ghostSplits: number[] | undefined, inde
   const g = ghostSplits?.[index];
   return g === undefined ? null : g - mine;
 }
+
+/**
+ * Live gap to the ghost between checkpoints: seconds ahead (+) or behind (-), or null when it
+ * can't be judged (no splits, or you are far off the ghost's path). Finds where the ghost
+ * passed closest to you on the current leg and compares the clocks there; when the ghost
+ * lingered in one spot, the moment nearest your own clock is used, so standing together reads 0.
+ */
+export function liveDelta(g: Ghost, leg: number, x: number, z: number, t: number): number | null {
+  if (!g.splits || leg < 0 || leg >= g.splits.length) return null;
+  const last = g.frames.length - 1;
+  const from = Math.max(0, Math.floor((leg > 0 ? g.splits[leg - 1] : 0) / g.dt));
+  const to = Math.min(last, Math.ceil(g.splits[leg] / g.dt));
+  if (to < from) return null;
+  const d2 = (i: number) => (g.frames[i][0] - x) ** 2 + (g.frames[i][2] - z) ** 2;
+  let min = Infinity;
+  for (let i = from; i <= to; i++) min = Math.min(min, d2(i));
+  if (Math.sqrt(min) > CONFIG.ghost.liveMaxOffPath) return null;
+  const tol = (Math.sqrt(min) + CONFIG.ghost.liveTieMetres) ** 2;
+  let best = -1;
+  for (let i = from; i <= to; i++) {
+    if (d2(i) <= tol && (best < 0 || Math.abs(i * g.dt - t) < Math.abs(best * g.dt - t))) best = i;
+  }
+  return best * g.dt - t;
+}

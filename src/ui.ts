@@ -251,11 +251,22 @@ export class UI {
     $('race-hud').hidden = !on;
     document.body.classList.toggle('racing', on);
     if (!on) $('countdown').hidden = true;
+    if (!on) this.raceGap(null);
   }
 
   raceTick(time: string, next: string): void {
     $('race-time').textContent = time;
     $('race-next').textContent = next;
+  }
+
+  /** Gap to your best run's ghost: null hides it. */
+  raceGap(text: string | null, ahead = false): void {
+    const el = $('race-gap');
+    el.hidden = text === null;
+    if (text === null) return;
+    el.textContent = text;
+    el.classList.toggle('ahead', ahead);
+    el.title = ahead ? 'Ahead of your best' : 'Behind your best';
   }
 
   countdown(n: number): void {

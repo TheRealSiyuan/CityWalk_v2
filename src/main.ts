@@ -8,7 +8,7 @@ import { Sfx } from './audio';
 import { UI, store } from './ui';
 import { buildWorld } from './world/city';
 import { LANDMARKS, SPAWN, type Landmark } from './world/data';
-import { GhostRecorder, decodeGhost, encodeGhost, ghostPose, splitDelta, type Ghost, type GhostPose } from './ghost';
+import { GhostRecorder, decodeGhost, encodeGhost, ghostPose, liveDelta, splitDelta, type Ghost, type GhostPose } from './ghost';
 import { ROUTES, Race, dailyRoute, dailyShareText, formatTime, type Route } from './race';
 import { WATER_Y, groundHeight } from './world/river';
 import { parsePortal, portalRules } from './portal';
@@ -114,6 +114,7 @@ const ghostKey = (id: string) => `citywalk.ghost.${id}`;
 const ghostRec = new GhostRecorder();
 let ghost: Ghost | null = null;
 let splits: number[] = [];
+let gapClock = 0; // seconds until the HUD gap to the ghost refreshes
 const ghostNow: GhostPose = { x: 0, y: 0, z: 0, yaw: 0, anim: 0, speed: 0, anchor: null };
 function saveGhost(routeId: string, g: Ghost): void {
   // keep only today's daily ghost; yesterday's route will never be raced again
@@ -178,6 +179,8 @@ function startRace(route: Route): void {
   ghost = decodeGhost(store.get(ghostKey(route.id)));
   race.start(route);
   ui.raceHud(true);
+  ui.raceGap(null);
+  gapClock = 0;
   if (ui.tutorialActive) ui.endTutorial();
 }
 const openRaces = () => {
@@ -510,6 +513,13 @@ function tick(dt: number, now: number): void {
       const total = race.route!.stops.length;
       const d = Math.hypot(stop.x - player.pos.x, stop.z - player.pos.z);
       ui.raceTick(formatTime(race.time), `${race.next + 1}/${total} · ${stop.name} · ${Math.round(d / 5) * 5} m`);
+      // live gap to your best run, refreshed a few times a second so it reads steadily
+      gapClock -= dt;
+      if (gapClock <= 0) {
+        gapClock = 1 / CONFIG.ghost.liveHz;
+        const gap = ghost && race.state === 'running' ? liveDelta(ghost, race.next, player.pos.x, player.pos.z, race.time) : null;
+        ui.raceGap(gap === null ? null : signed(gap), gap !== null && gap >= 0);
+      }
     }
   }
   updateReticle();
