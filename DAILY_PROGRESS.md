@@ -2,6 +2,32 @@
 
 Verified work only. Newest first.
 
+## 2026-10-31
+
+**Implemented**
+- Live gap to your ghost on the race HUD: under the clock, a pill shows how far ahead
+  (green, "−1.2 s") or behind (red, "+0.8 s") of your best run you are between checkpoints,
+  refreshed 4×/s. It finds where your best run passed closest to you on the current leg and
+  compares clocks there; it hides on a first run (no ghost) and when you are more than 60 m
+  from your best run's path. Tuning in `CONFIG.ghost` (`liveHz`, `liveMaxOffPath`,
+  `liveTieMetres`); logic `liveDelta()` in `src/ghost.ts`.
+
+**Verified**
+- Build: 0 TS errors. Unit: 52 passed (new: ahead/behind values, standing together reads
+  level, second leg uses its own window, off-path and past-last-checkpoint give no gap).
+  Browser: 6 passed (race test checks the gap is hidden on a first run, shows a signed value
+  when racing the ghost, and hides on Quit). Phone screenshot (390 px) checked: pill fits
+  between the clock and the next-stop line.
+- CrazyGames package rebuilt: scanner clean.
+- GitHub Actions run 41174170877 (commit 1455c4c): build, e2e and deploy succeeded.
+- Not verified: whether the gap reads steadily and feels fair in real play (needs a human);
+  real phones.
+
+**Money earned:** £0 (not yet published on a paying channel).
+
+**Next task:** owner playtest fixes if any; otherwise first-run polish (lead new players
+into the daily race after the tutorial).
+
 ## 2026-10-30
 
 **Implemented**
