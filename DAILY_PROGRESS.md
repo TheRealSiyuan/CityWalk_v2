@@ -17,6 +17,7 @@ Verified work only. Newest first.
   or on a tutorial replay; Not now dismisses it without starting a race). Phone screenshot
   (390 px) checked: card fits below the top bar, clear of the Jump/Swing buttons.
 - CrazyGames package rebuilt: scanner clean.
+- GitHub Actions run 41278480266 (commit 0c53024): build, e2e and deploy succeeded.
 - Not verified: whether new players actually take the race (no analytics by design; needs
   playtesters); real phones.
 
