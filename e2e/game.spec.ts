@@ -294,6 +294,46 @@ test('daily challenge: listed first, starts a 4-stop route for today', async ({ 
   expect(errors).toEqual([]);
 });
 
+test('first run: after the tutorial, one tap starts today\'s daily race; not offered again', async ({ page }) => {
+  const errors = trackErrors(page);
+  await page.goto(url('firstruntest'));
+  await ready(page);
+  await expect(page.locator('#next-up')).toBeHidden(); // not during the tutorial
+  await page.locator('#tut-skip').tap();
+  await expect(page.locator('#next-up')).toBeVisible();
+  await expect(page.locator('#next-route')).not.toBeEmpty();
+  await page.screenshot({ path: 'screenshots/first-run-next-up.png' });
+  await page.locator('#next-go').tap();
+  await expect(page.locator('#next-up')).toBeHidden();
+  await expect(page.locator('#race-hud')).toBeVisible();
+  const today = new Date().toISOString().slice(0, 10);
+  await expect.poll(async () => (await page.evaluate(() => window.__citywalk.race)).route).toBe(`daily-${today}`);
+  await page.locator('#race-quit').tap();
+
+  // a returning player gets no tutorial and no nudge; replaying the tutorial does not nudge either
+  await page.reload();
+  await ready(page);
+  await expect(page.locator('#tutorial')).toBeHidden();
+  await page.waitForTimeout(500);
+  await expect(page.locator('#next-up')).toBeHidden();
+  await page.locator('#progress').tap();
+  await page.locator('#replay').tap();
+  await page.locator('#tut-skip').tap();
+  await page.waitForTimeout(300);
+  await expect(page.locator('#next-up')).toBeHidden();
+
+  // "Not now" dismisses it
+  await page.evaluate(() => localStorage.removeItem('citywalk.tutorial'));
+  await page.reload();
+  await ready(page);
+  await page.locator('#tut-skip').tap();
+  await expect(page.locator('#next-up')).toBeVisible();
+  await page.locator('#next-no').tap();
+  await expect(page.locator('#next-up')).toBeHidden();
+  expect((await page.evaluate(() => window.__citywalk.race)).state).toBe('idle');
+  expect(errors).toEqual([]);
+});
+
 test('desktop: no touch buttons, key hints shown, WASD and Space work', async ({ browser }) => {
   const ctx = await browser.newContext({ viewport: { width: 1280, height: 720 }, hasTouch: false, isMobile: false, baseURL: 'http://localhost:4173' });
   const page = await ctx.newPage();

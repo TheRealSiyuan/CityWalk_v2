@@ -124,6 +124,16 @@
       #tut-dots b.done { background: var(--teal); }
       #tut-dots b.now { background: var(--gold); }
       #tut-skip { pointer-events: auto; background: transparent; font-weight: 800; font-size: 13px; text-decoration: underline; padding: 6px 4px; opacity: 0.7; }
+      #next-up {
+        position: fixed; left: 50%; top: calc(64px + var(--sat)); transform: translateX(-50%); width: min(330px, calc(100vw - 36px)); text-align: center;
+        background: var(--paper); border-radius: 20px; padding: 12px 16px; box-shadow: 0 5px 0 rgba(58, 44, 37, 0.14), 0 12px 28px rgba(58, 44, 37, 0.22); z-index: 3;
+      }
+      #next-up[hidden] { display: none; }
+      #next-up .kicker { margin: 0; font-size: 11px; font-weight: 800; letter-spacing: 0.12em; text-transform: uppercase; color: var(--coral); }
+      #next-route { margin: 3px 0 10px; font-size: 19px; font-weight: 900; line-height: 1.15; }
+      #next-row { display: flex; justify-content: center; align-items: center; gap: 14px; }
+      #next-go { background: var(--gold); color: var(--ink); font-weight: 900; font-size: 16px; padding: 9px 22px; border-radius: 999px; box-shadow: 0 4px 0 rgba(58, 44, 37, 0.22); }
+      #next-no { background: transparent; font-weight: 800; font-size: 13px; text-decoration: underline; padding: 6px 4px; opacity: 0.7; }
       .ghost { position: fixed; pointer-events: none; opacity: 0; transition: opacity 0.2s; }
       #ghost-move { left: 24vw; bottom: calc(110px + var(--sab)); width: 112px; height: 112px; margin-left: -56px; border-radius: 50%; border: 3px dashed var(--cream); }
       #ghost-move::after { content: ''; position: absolute; left: 31px; top: 31px; width: 44px; height: 44px; border-radius: 50%; background: var(--cream); animation: nudge 1.2s ease-in-out infinite; }
@@ -263,6 +273,11 @@
     <div id="tutorial" hidden>
       <p id="tut-text"></p>
       <div id="tut-row"><div id="tut-dots"></div><button id="tut-skip">Skip</button></div>
+    </div>
+    <div id="next-up" hidden>
+      <p class="kicker">Ready? Try today's daily race</p>
+      <p id="next-route"></p>
+      <div id="next-row"><button id="next-go">Race it</button><button id="next-no">Not now</button></div>
     </div>
     <div class="ghost" id="ghost-move"></div>
     <div class="ghost" id="ghost-look"></div>

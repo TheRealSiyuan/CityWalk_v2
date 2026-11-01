@@ -2,6 +2,29 @@
 
 Verified work only. Newest first.
 
+## 2026-11-01
+
+**Implemented**
+- First-run nudge into a race: when a new player's first tutorial ends (finished or skipped),
+  a card under the top bar says "Ready? Try today's daily race", names today's route and
+  offers **Race it** (starts the daily straight away) or **Not now**. It hides itself after
+  15 s (`CONFIG.firstRun.suggestSeconds`), when any race starts, and never appears for
+  returning players, on a tutorial replay, or if today's daily already has a time.
+
+**Verified**
+- Build: 0 TS errors. Unit: 52 passed. Browser: 7 passed (new first-run test: card hidden
+  during the tutorial, shown after Skip, Race it starts `daily-<today>`; no card after reload
+  or on a tutorial replay; Not now dismisses it without starting a race). Phone screenshot
+  (390 px) checked: card fits below the top bar, clear of the Jump/Swing buttons.
+- CrazyGames package rebuilt: scanner clean.
+- Not verified: whether new players actually take the race (no analytics by design; needs
+  playtesters); real phones.
+
+**Money earned:** £0 (not yet published on a paying channel).
+
+**Next task:** owner playtest fixes if any; otherwise first-countdown race hint, then
+"share a ghost" code for the daily.
+
 ## 2026-10-31
 
 **Implemented**

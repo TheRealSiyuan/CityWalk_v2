@@ -92,6 +92,11 @@ export const CONFIG = {
     liveTieMetres: 0.3, // ghost poses this close to its nearest are treated as the same spot
   },
 
+  // --- first run ----------------------------------------------------------
+  firstRun: {
+    suggestSeconds: 15, // after a first tutorial, the "race today's daily" card hides itself after this
+  },
+
   // --- multiplayer --------------------------------------------------------
   net: {
     sendHz: 12,

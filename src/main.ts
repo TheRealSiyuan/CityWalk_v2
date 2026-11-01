@@ -182,7 +182,14 @@ function startRace(route: Route): void {
   ui.raceGap(null);
   gapClock = 0;
   if (ui.tutorialActive) ui.endTutorial();
+  ui.hideNextUp();
 }
+// first run: lead straight from the tutorial into today's daily, unless already racing or done it
+ui.onFirstTutorialEnd = () => {
+  const daily = dailyRoute();
+  if (race.active || race.bestFor(daily.id) !== null) return;
+  ui.showNextUp(daily.name, () => startRace(dailyRoute()));
+};
 const openRaces = () => {
   refreshDailyBadge();
   // regenerated each time so a session left open past midnight UTC gets the new day's route

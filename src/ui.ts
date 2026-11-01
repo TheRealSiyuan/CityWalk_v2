@@ -1,3 +1,4 @@
+import { CONFIG } from './config';
 import { LANDMARKS, type Landmark } from './world/data';
 
 const $ = <T extends HTMLElement = HTMLElement>(id: string): T => document.getElementById(id) as T;
@@ -73,6 +74,10 @@ export class UI {
   private doneShare = '';
   touch = matchMedia('(pointer: coarse)').matches || 'ontouchstart' in window;
   onRespawn: (() => void) | null = null;
+  /** Called when a first-ever tutorial ends (finished or skipped); not on a replay. */
+  onFirstTutorialEnd: (() => void) | null = null;
+  private tutFirst = false;
+  private nextTimer = 0;
 
   constructor(private shareUrl: () => string) {
     let saved: string[] = [];
@@ -93,6 +98,7 @@ export class UI {
     });
     $('card').addEventListener('click', () => $('card').classList.remove('on'));
     $('tut-skip').addEventListener('click', () => this.endTutorial());
+    $('next-no').addEventListener('click', () => this.hideNextUp());
     $('replay').addEventListener('click', () => {
       this.closePanel();
       this.startTutorial(true);
@@ -321,6 +327,7 @@ export class UI {
   // --- tutorial ---------------------------------------------------------------
   startTutorial(force = false): void {
     if (!force && store.get('citywalk.tutorial') === '1') return;
+    this.tutFirst = store.get('citywalk.tutorial') !== '1';
     this.tutStep = 0;
     this.tutTime = 0;
     this.tutBase = null;
@@ -339,10 +346,32 @@ export class UI {
   }
 
   endTutorial(): void {
+    if (this.tutStep < 0) return;
     this.tutStep = -1;
     $('tutorial').hidden = true;
     document.body.classList.remove(...STEPS.map((x) => x.cls));
     store.set('citywalk.tutorial', '1');
+    if (this.tutFirst) {
+      this.tutFirst = false;
+      this.onFirstTutorialEnd?.();
+    }
+  }
+
+  /** First-run nudge after the tutorial: "Race today's daily" with one tap. */
+  showNextUp(routeName: string, onRace: () => void): void {
+    $('next-route').textContent = routeName;
+    $('next-go').onclick = () => {
+      this.hideNextUp();
+      onRace();
+    };
+    $('next-up').hidden = false;
+    clearTimeout(this.nextTimer);
+    this.nextTimer = window.setTimeout(() => this.hideNextUp(), CONFIG.firstRun.suggestSeconds * 1000);
+  }
+
+  hideNextUp(): void {
+    clearTimeout(this.nextTimer);
+    $('next-up').hidden = true;
   }
 
   get tutorialActive(): boolean {
