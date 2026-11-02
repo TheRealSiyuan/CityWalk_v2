@@ -179,6 +179,7 @@ function startRace(route: Route): void {
   ghost = decodeGhost(store.get(ghostKey(route.id)));
   race.start(route);
   ui.raceHud(true);
+  ui.raceHint();
   ui.raceGap(null);
   gapClock = 0;
   if (ui.tutorialActive) ui.endTutorial();

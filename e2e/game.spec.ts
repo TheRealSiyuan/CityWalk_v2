@@ -334,6 +334,57 @@ test('first run: after the tutorial, one tap starts today\'s daily race; not off
   expect(errors).toEqual([]);
 });
 
+test('first race: a how-races-work hint shows once, clear of the HUD and the countdown', async ({ page, browser }) => {
+  const errors = trackErrors(page);
+  await page.goto(url('racehinttest'));
+  await ready(page);
+  await page.locator('#tut-skip').tap();
+  const hint = page.locator('#race-hint');
+  await expect(hint).toBeHidden(); // not before a race
+  await page.locator('#next-go').tap();
+  await expect(hint).toBeVisible();
+  await expect(hint).toContainText('beacon');
+  const box = (await hint.boundingBox())!;
+  const hud = (await page.locator('#race-hud').boundingBox())!;
+  expect(box.y).toBeGreaterThanOrEqual(hud.y + hud.height); // below Restart/Quit
+  expect(box.y + box.height).toBeLessThan(844 / 2 - 60); // above the big countdown digit
+  await page.screenshot({ path: 'screenshots/race-hint.png' });
+  // it hides itself shortly after GO, and a restart does not bring it back
+  await expect.poll(async () => (await page.evaluate(() => window.__citywalk.race)).state, { timeout: 15_000 }).toBe('running');
+  await expect(hint).toBeHidden({ timeout: 15_000 });
+  await page.locator('#race-restart').tap();
+  await page.waitForTimeout(300);
+  await expect(hint).toBeHidden();
+  await page.locator('#race-quit').tap();
+  // nor does a later race on this device
+  await page.reload();
+  await ready(page);
+  await page.locator('#race-btn').tap();
+  await page.locator('#routes button', { hasText: 'Westminster Dash' }).tap();
+  await expect(page.locator('#race-hud')).toBeVisible();
+  await page.waitForTimeout(300);
+  await expect(hint).toBeHidden();
+  expect(errors).toEqual([]);
+
+  // Quit during the countdown takes the hint with it; on a short landscape phone it clears the HUD too
+  const ctx = await browser.newContext({ viewport: { width: 844, height: 390 }, hasTouch: true, isMobile: true });
+  const land = await ctx.newPage();
+  await land.goto(url('racehintland'));
+  await ready(land);
+  await land.locator('#tut-skip').tap();
+  await land.locator('#next-go').tap();
+  const lh = land.locator('#race-hint');
+  await expect(lh).toBeVisible();
+  const lb = (await lh.boundingBox())!;
+  const lhud = (await land.locator('#race-hud').boundingBox())!;
+  expect(lb.y).toBeGreaterThanOrEqual(lhud.y + lhud.height);
+  expect(lb.y + lb.height).toBeLessThanOrEqual(390);
+  await land.screenshot({ path: 'screenshots/race-hint-landscape.png' });
+  await land.locator('#race-quit').tap();
+  await expect(lh).toBeHidden();
+  await ctx.close();
+});
+
 test('desktop: no touch buttons, key hints shown, WASD and Space work', async ({ browser }) => {
   const ctx = await browser.newContext({ viewport: { width: 1280, height: 720 }, hasTouch: false, isMobile: false, baseURL: 'http://localhost:4173' });
   const page = await ctx.newPage();

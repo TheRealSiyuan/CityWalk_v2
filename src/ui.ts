@@ -78,6 +78,7 @@ export class UI {
   onFirstTutorialEnd: (() => void) | null = null;
   private tutFirst = false;
   private nextTimer = 0;
+  private hintTimer = 0;
 
   constructor(private shareUrl: () => string) {
     let saved: string[] = [];
@@ -258,6 +259,21 @@ export class UI {
     document.body.classList.toggle('racing', on);
     if (!on) $('countdown').hidden = true;
     if (!on) this.raceGap(null);
+    if (!on) this.hideRaceHint();
+  }
+
+  /** "How races work", once per device: only before a player's very first race. */
+  raceHint(): void {
+    if (store.get('citywalk.raceHint') === '1' || store.keys('citywalk.best.').length > 0) return;
+    store.set('citywalk.raceHint', '1');
+    $('race-hint').hidden = false;
+    clearTimeout(this.hintTimer);
+    this.hintTimer = window.setTimeout(() => this.hideRaceHint(), CONFIG.firstRun.raceHintSeconds * 1000);
+  }
+
+  hideRaceHint(): void {
+    clearTimeout(this.hintTimer);
+    $('race-hint').hidden = true;
   }
 
   raceTick(time: string, next: string): void {

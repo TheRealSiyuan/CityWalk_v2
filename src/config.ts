@@ -95,6 +95,7 @@ export const CONFIG = {
   // --- first run ----------------------------------------------------------
   firstRun: {
     suggestSeconds: 15, // after a first tutorial, the "race today's daily" card hides itself after this
+    raceHintSeconds: 6, // the "how races work" hint on a first race: the 3 s countdown plus a moment after GO
   },
 
   // --- multiplayer --------------------------------------------------------

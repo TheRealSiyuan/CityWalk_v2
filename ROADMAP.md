@@ -11,8 +11,8 @@ Ordered by impact on getting real players and the first revenue.
 4. **Ghost polish**: live gap to the ghost on the race HUD (done 2026-10-31). Remaining:
    "share a ghost" for the daily (needs a compact share code; link-free builds can't share it).
 5. **First-run polish**: after a first tutorial (finished or skipped) a card offers today's
-   daily race in one tap (done 2026-11-01). Remaining: a short "how races work" hint on the
-   first countdown; consider auto-hiding the compass while the card shows.
+   daily race in one tap (done 2026-11-01); a "how races work" hint on the first countdown
+   (done 2026-11-02). Remaining: consider auto-hiding the compass while the card shows.
 
 ## Next
 

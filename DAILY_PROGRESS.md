@@ -2,6 +2,27 @@
 
 Verified work only. Newest first.
 
+## 2026-11-02
+
+**Implemented**
+- First-race hint: during the countdown of a player's very first race a small card says
+  "Reach the golden beacon at each stop, in order. The clock stops at the last one." It hides
+  itself after 6 s (`CONFIG.firstRun.raceHintSeconds`) or on Quit, and never returns on this
+  device (nor shows for anyone who already has a best time).
+- Short landscape screens: the hint sits at the bottom between the thumb controls, and the
+  countdown digit is smaller and lower so it no longer covers Restart/Quit.
+
+**Verified**
+- Build: 0 TS errors. Unit: 52 passed. Browser: 8 passed (new test: hint hidden before a race,
+  shown on the first countdown, clear of HUD and digit at 390x844, gone after GO, not back on
+  Restart or a later race; at 844x390 clear of the HUD, Quit removes it). Phone and landscape
+  screenshots checked. CrazyGames package rebuilt: scanner clean.
+- Not verified: whether the wording helps new players (needs playtesters); real phones.
+
+**Money earned:** £0 (not yet published on a paying channel).
+
+**Next task:** owner playtest fixes if any; otherwise "share a ghost" code for the daily.
+
 ## 2026-11-01
 
 **Implemented**
