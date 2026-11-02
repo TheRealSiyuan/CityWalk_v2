@@ -17,6 +17,7 @@ Verified work only. Newest first.
   shown on the first countdown, clear of HUD and digit at 390x844, gone after GO, not back on
   Restart or a later race; at 844x390 clear of the HUD, Quit removes it). Phone and landscape
   screenshots checked. CrazyGames package rebuilt: scanner clean.
+- GitHub Actions run 41396607728 (commit 984857a): build, e2e and deploy succeeded.
 - Not verified: whether the wording helps new players (needs playtesters); real phones.
 
 **Money earned:** £0 (not yet published on a paying channel).
