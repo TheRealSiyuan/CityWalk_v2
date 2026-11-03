@@ -121,5 +121,6 @@ describe('daily share text', () => {
     expect(plain).toContain('1:23.4');
     expect(plain).not.toMatch(/https?:|\?room=/);
     expect(dailyShareText(route.name, '1:23.4', 'https://example.test/')).toMatch(/ https:\/\/example\.test\/$/);
+    expect(dailyShareText(route.name, '1:23.4', 'https://example.test/#c=abc', true)).toMatch(/Race my ghost.* https:\/\/example\.test\/#c=abc$/);
   });
 });

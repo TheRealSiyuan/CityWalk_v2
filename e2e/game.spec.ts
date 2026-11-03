@@ -1,5 +1,7 @@
 import { expect, test, type CDPSession, type Page } from '@playwright/test';
 import { mkdirSync } from 'node:fs';
+import { encodeChallenge } from '../src/challenge';
+import { dailyRoute } from '../src/race';
 
 // Signalling goes through the local relay started by playwright.config.ts.
 const RELAY = 'ws://localhost:7447';
@@ -383,6 +385,107 @@ test('first race: a how-races-work hint shows once, clear of the HUD and the cou
   await land.locator('#race-quit').tap();
   await expect(lh).toBeHidden();
   await ctx.close();
+});
+
+test('challenge link: a finished daily shares a ghost a friend can race, old and broken links are safe', async ({ page, browser }) => {
+  const errors = trackErrors(page);
+  await page.goto(url('challengetest'));
+  await ready(page);
+  await page.locator('#tut-skip').tap();
+  await page.locator('#next-go').tap();
+  await expect.poll(async () => (await page.evaluate(() => window.__citywalk.race)).state, { timeout: 10_000 }).toBe('running');
+  const stops = (await page.evaluate(() => window.__citywalk.race)).stops;
+  for (const [x, z] of stops) {
+    await page.waitForTimeout(500);
+    await page.evaluate(([x, z]) => window.__citywalk.teleport(x, 0.5, z), [x, z]);
+    await page.waitForTimeout(300);
+  }
+  await expect(page.locator('#done-share')).toHaveText('Challenge a friend');
+  await expect(page.locator('#done-rival')).toBeHidden(); // nobody to compare with
+  const myTime = (await page.evaluate(() => window.__citywalk.race)).time;
+  await page.evaluate(() => {
+    const w = window as unknown as { __shared: string[] };
+    w.__shared = [];
+    Object.defineProperty(navigator, 'share', { value: async (d: { text: string }) => void w.__shared.push(d.text), configurable: true });
+  });
+  await page.locator('#done-share').tap();
+  const text = (await page.evaluate(() => (window as unknown as { __shared: string[] }).__shared))[0];
+  expect(text).toContain('Race my ghost');
+  const link = text.slice(text.indexOf('http'));
+  expect(link).toMatch(/\?room=challengetest#c=[\w-]+$/);
+  expect(link.length).toBeLessThan(2000);
+  await page.close(); // software rendering: one game at a time, so the friend's clock runs at speed
+
+  // a new player opens it: tutorial first, then the offer, which waits for an answer
+  const ctx = await browser.newContext({ viewport: { width: 390, height: 844 }, hasTouch: true, isMobile: true });
+  const friend = await ctx.newPage();
+  const friendErrors = trackErrors(friend);
+  await friend.goto(link.replace('?room=challengetest', `?room=challengefriend&relay=${encodeURIComponent(RELAY)}`));
+  await ready(friend);
+  await expect(friend.locator('#next-up')).toBeHidden();
+  await friend.locator('#tut-skip').tap();
+  await expect(friend.locator('#next-up')).toBeVisible();
+  await expect(friend.locator('#next-kicker')).toContainText('friend challenged you');
+  await expect(friend.locator('#next-route')).toContainText('Daily');
+  await expect(friend.locator('#next-route')).toContainText('beat');
+  await expect(friend.locator('#compass')).toBeHidden(); // nothing peeking through the card
+  await friend.screenshot({ path: 'screenshots/challenge-offer.png' });
+  await friend.locator('#next-go').tap();
+  await expect.poll(async () => (await friend.evaluate(() => window.__citywalk.race)).state, { timeout: 10_000 }).toBe('running');
+  const today = new Date().toISOString().slice(0, 10);
+  expect((await friend.evaluate(() => window.__citywalk.race)).route).toBe(`daily-${today}`);
+  const g = await friend.evaluate(() => window.__citywalk.ghost);
+  expect(g.loaded).toBe(true);
+  expect(g.time).toBeCloseTo(myTime, 1);
+  expect(g.visible).toBe(true);
+  expect(friend.url()).not.toContain('#c='); // accepted: a reload won't offer it again
+  await friend.screenshot({ path: 'screenshots/challenge-race.png' });
+  for (const [x, z] of stops) {
+    await friend.evaluate(([x, z]) => window.__citywalk.teleport(x, 0.5, z), [x, z]);
+    await friend.waitForTimeout(300);
+  }
+  await expect(friend.locator('#done-rival')).toHaveText(/friend/);
+  await friend.screenshot({ path: 'screenshots/challenge-result.png' });
+
+  // "Race again" still races the friend; a returning player is offered at once
+  await friend.locator('#done-again').tap();
+  await expect.poll(async () => (await friend.evaluate(() => window.__citywalk.ghost)).time).toBeCloseTo(myTime, 1);
+  await friend.locator('#race-quit').tap();
+  await friend.goto(link.replace('?room=challengetest', `?room=challengefriend2&relay=${encodeURIComponent(RELAY)}`));
+  await ready(friend);
+  await expect(friend.locator('#next-up')).toBeVisible();
+  await friend.locator('#next-no').tap();
+  await expect(friend.locator('#next-up')).toBeHidden();
+  expect(friend.url()).not.toContain('#c=');
+  expect((await friend.evaluate(() => window.__citywalk.race)).state).toBe('idle');
+
+  // yesterday's link still works: it races that day's route and leaves today's own ghost alone
+  const oldDay = '2026-10-01';
+  const oldRoute = dailyRoute(oldDay);
+  const frames = Array.from({ length: 50 }, (_, i) => [oldRoute.start.x + i, 0.5, oldRoute.start.z, 0, 2, 5]);
+  const oldCode = encodeChallenge(oldDay, { v: 1, dt: 0.1, time: 5, frames, splits: oldRoute.stops.map((_, i) => i + 1) })!;
+  await friend.goto(`${url('challengeold')}#c=${oldCode}`);
+  await ready(friend);
+  await friend.locator('#next-go').tap();
+  await expect.poll(async () => (await friend.evaluate(() => window.__citywalk.race)).state, { timeout: 10_000 }).toBe('running');
+  const old = await friend.evaluate(() => window.__citywalk.race);
+  expect(old.route).toBe(`daily-${oldDay}`);
+  for (const [x, z] of old.stops) {
+    await friend.evaluate(([x, z]) => window.__citywalk.teleport(x, 0.5, z), [x, z]);
+    await friend.waitForTimeout(300);
+  }
+  await expect(friend.locator('#race-done')).toBeVisible();
+  const ghostKeys = await friend.evaluate(() => Object.keys(localStorage).filter((k) => k.startsWith('citywalk.ghost.')));
+  expect(ghostKeys).toContain(`citywalk.ghost.daily-${today}`);
+
+  // a broken link is ignored without an error
+  await friend.goto(`${url('challengebroken')}#c=not_a_real_code`);
+  await ready(friend);
+  await friend.waitForTimeout(300);
+  await expect(friend.locator('#next-up')).toBeHidden();
+  await ctx.close();
+  expect(errors).toEqual([]);
+  expect(friendErrors).toEqual([]);
 });
 
 test('desktop: no touch buttons, key hints shown, WASD and Space work', async ({ browser }) => {

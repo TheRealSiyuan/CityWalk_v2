@@ -92,6 +92,12 @@ export const CONFIG = {
     liveTieMetres: 0.3, // ghost poses this close to its nearest are treated as the same spot
   },
 
+  // --- daily-race challenge links ----------------------------------------
+  challenge: {
+    frameSteps: [2, 3, 5, 10], // keep 1 in N ghost frames: the first of these that fits a link is used
+    maxChars: 1800, // longest code we put in a link (messaging apps can mangle much longer ones)
+  },
+
   // --- first run ----------------------------------------------------------
   firstRun: {
     suggestSeconds: 15, // after a first tutorial, the "race today's daily" card hides itself after this

@@ -99,7 +99,6 @@ export class UI {
     });
     $('card').addEventListener('click', () => $('card').classList.remove('on'));
     $('tut-skip').addEventListener('click', () => this.endTutorial());
-    $('next-no').addEventListener('click', () => this.hideNextUp());
     $('replay').addEventListener('click', () => {
       this.closePanel();
       this.startTutorial(true);
@@ -281,14 +280,14 @@ export class UI {
     $('race-next').textContent = next;
   }
 
-  /** Gap to your best run's ghost: null hides it. */
+  /** Gap to the ghost you are racing: null hides it. */
   raceGap(text: string | null, ahead = false): void {
     const el = $('race-gap');
     el.hidden = text === null;
     if (text === null) return;
     el.textContent = text;
     el.classList.toggle('ahead', ahead);
-    el.title = ahead ? 'Ahead of your best' : 'Behind your best';
+    el.title = ahead ? 'Ahead of the ghost' : 'Behind the ghost';
   }
 
   countdown(n: number): void {
@@ -301,10 +300,16 @@ export class UI {
     if (n === 0) window.setTimeout(() => (c.hidden = true), 800);
   }
 
-  /** `shareText` (daily races only) shows a "Share today's time" button that copies it. */
-  raceFinished(route: string, time: string, best: string, isNew: boolean, shareText = ''): void {
+  /**
+   * `shareText` (daily races only) shows a button that shares it, labelled for a ghost link
+   * when `challenge` is set. `rival` says how the run compares with a friend's.
+   */
+  raceFinished(route: string, time: string, best: string, isNew: boolean, shareText = '', challenge = false, rival = ''): void {
     this.doneShare = shareText;
     $('done-share').hidden = !shareText;
+    $('done-share').textContent = challenge ? 'Challenge a friend' : 'Share today’s time';
+    $('done-rival').hidden = !rival;
+    $('done-rival').textContent = rival;
     $('card').classList.remove('on');
     $('done-kicker').textContent = isNew ? `${route} · new personal best` : route;
     $('done-time').textContent = time;
@@ -330,7 +335,7 @@ export class UI {
     }
     try {
       await navigator.clipboard.writeText(text);
-      this.toast('Time copied — paste it to a friend');
+      this.toast('Copied — paste it to a friend');
     } catch {
       window.prompt('Copy your time:', text);
     }
@@ -373,16 +378,25 @@ export class UI {
     }
   }
 
-  /** First-run nudge after the tutorial: "Race today's daily" with one tap. */
-  showNextUp(routeName: string, onRace: () => void): void {
+  /**
+   * One-tap race card: the first-run nudge after the tutorial, or a friend's challenge. A
+   * `kicker` marks it as a challenge, which waits for an answer instead of hiding itself;
+   * `onNo` runs if the player declines.
+   */
+  showNextUp(routeName: string, onRace: () => void, kicker?: string, onNo?: () => void): void {
+    $('next-kicker').textContent = kicker ?? 'Ready? Try today\'s daily race';
     $('next-route').textContent = routeName;
+    $('next-no').onclick = () => {
+      this.hideNextUp();
+      onNo?.();
+    };
     $('next-go').onclick = () => {
       this.hideNextUp();
       onRace();
     };
     $('next-up').hidden = false;
     clearTimeout(this.nextTimer);
-    this.nextTimer = window.setTimeout(() => this.hideNextUp(), CONFIG.firstRun.suggestSeconds * 1000);
+    if (!kicker) this.nextTimer = window.setTimeout(() => this.hideNextUp(), CONFIG.firstRun.suggestSeconds * 1000);
   }
 
   hideNextUp(): void {

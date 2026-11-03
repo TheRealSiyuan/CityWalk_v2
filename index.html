@@ -129,6 +129,7 @@
         background: var(--paper); border-radius: 20px; padding: 12px 16px; box-shadow: 0 5px 0 rgba(58, 44, 37, 0.14), 0 12px 28px rgba(58, 44, 37, 0.22); z-index: 3;
       }
       #next-up[hidden] { display: none; }
+      body:has(#next-up:not([hidden])) #compass { display: none; }
       #next-up .kicker { margin: 0; font-size: 11px; font-weight: 800; letter-spacing: 0.12em; text-transform: uppercase; color: var(--coral); }
       #next-route { margin: 3px 0 10px; font-size: 19px; font-weight: 900; line-height: 1.15; }
       #next-row { display: flex; justify-content: center; align-items: center; gap: 14px; }
@@ -228,6 +229,8 @@
       .sheet.done .kicker { font-size: 12px; font-weight: 800; letter-spacing: 0.14em; text-transform: uppercase; color: var(--coral); }
       #done-time { font-size: 52px; font-weight: 900; font-variant-numeric: tabular-nums; margin: 4px 0; }
       #done-best { margin: 0; font-weight: 700; opacity: 0.75; }
+      #done-rival { margin: 6px 0 0; font-weight: 900; color: var(--teal); }
+      #done-rival[hidden] { display: none; }
       #done-share { margin-top: 12px; width: 100%; padding: 11px 10px; border-radius: 14px; font-weight: 800; background: var(--gold); }
       #done-share[hidden] { display: none; }
       #daily-badge { background: var(--coral); color: var(--cream); border-radius: 999px; padding: 2px 7px; font-size: 11px; font-weight: 900; letter-spacing: 0.03em; }
@@ -286,7 +289,7 @@
       <div id="tut-row"><div id="tut-dots"></div><button id="tut-skip">Skip</button></div>
     </div>
     <div id="next-up" hidden>
-      <p class="kicker">Ready? Try today's daily race</p>
+      <p class="kicker" id="next-kicker">Ready? Try today's daily race</p>
       <p id="next-route"></p>
       <div id="next-row"><button id="next-go">Race it</button><button id="next-no">Not now</button></div>
     </div>
@@ -322,6 +325,7 @@
         <div class="kicker" id="done-kicker"></div>
         <div id="done-time"></div>
         <p id="done-best"></p>
+        <p id="done-rival" hidden></p>
         <button id="done-share" hidden>Share today’s time</button>
         <div class="row"><button class="primary" id="done-again">Race again</button><button id="done-routes">Other races</button><button id="done-close">Free roam</button></div>
       </div>

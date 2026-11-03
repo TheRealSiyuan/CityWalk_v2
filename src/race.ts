@@ -163,7 +163,8 @@ export function dailyRoute(key: string = dayKey()): Route {
  * Text for "Share today's time". Plain text only; `url` is omitted in builds that may not
  * link to other sites, so the message still makes sense on its own.
  */
-export function dailyShareText(routeName: string, time: string, url = ''): string {
-  const text = `CityWalk ${routeName}: I raced it in ${time}. Same route for everyone today. Can you beat it?`;
+export function dailyShareText(routeName: string, time: string, url = '', withGhost = false): string {
+  const dare = withGhost ? 'Race my ghost on the same route. Can you beat it?' : 'Same route for everyone today. Can you beat it?';
+  const text = `CityWalk ${routeName}: I raced it in ${time}. ${dare}`;
   return url ? `${text} ${url}` : text;
 }

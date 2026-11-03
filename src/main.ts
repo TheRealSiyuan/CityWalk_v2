@@ -8,6 +8,7 @@ import { Sfx } from './audio';
 import { UI, store } from './ui';
 import { buildWorld } from './world/city';
 import { LANDMARKS, SPAWN, type Landmark } from './world/data';
+import { challengeFromHash, decodeChallenge, encodeChallenge, rivalLine, type Challenge } from './challenge';
 import { GhostRecorder, decodeGhost, encodeGhost, ghostPose, liveDelta, splitDelta, type Ghost, type GhostPose } from './ghost';
 import { ROUTES, Race, dailyRoute, dailyShareText, formatTime, type Route } from './race';
 import { WATER_Y, groundHeight } from './world/river';
@@ -117,8 +118,8 @@ let splits: number[] = [];
 let gapClock = 0; // seconds until the HUD gap to the ghost refreshes
 const ghostNow: GhostPose = { x: 0, y: 0, z: 0, yaw: 0, anim: 0, speed: 0, anchor: null };
 function saveGhost(routeId: string, g: Ghost): void {
-  // keep only today's daily ghost; yesterday's route will never be raced again
-  if (routeId.startsWith('daily-')) for (const k of store.keys('citywalk.ghost.daily-')) if (k !== ghostKey(routeId)) store.remove(k);
+  // keep only today's daily ghost; an older day is only reachable through a friend's link
+  if (routeId === dailyRoute().id) for (const k of store.keys('citywalk.ghost.daily-')) if (k !== ghostKey(routeId)) store.remove(k);
   store.set(ghostKey(routeId), encodeGhost(g));
 }
 const signed = (d: number) => `${d >= 0 ? '−' : '+'}${Math.abs(d).toFixed(1)} s`;
@@ -146,20 +147,39 @@ const race = new Race(
       sfx.discover();
       ui.raceHud(false);
       beacon.visible = false;
-      if (isNew && race.route) {
-        const g = ghostRec.finish(t, splits);
-        if (g) saveGhost(race.route.id, g);
-      }
+      const run = ghostRec.finish(t, splits);
+      if (isNew && race.route && run) saveGhost(race.route.id, run);
       const name = race.route?.name ?? 'Race';
-      const daily = race.route?.id.startsWith('daily-') ?? false;
+      const routeId = race.route?.id ?? '';
+      const daily = routeId.startsWith('daily-');
       // the link is compiled out of no-external-links builds (shareUrl() is '' there)
-      const share = daily ? dailyShareText(name, formatTime(t), shareUrl()) : '';
-      ui.raceFinished(name, formatTime(t), best !== null ? formatTime(best) : '', isNew, share);
+      const url = daily ? shareUrl() : '';
+      const code = url && run ? encodeChallenge(routeId.slice('daily-'.length), run) : null;
+      const share = daily ? dailyShareText(name, formatTime(t), code ? `${url}#c=${code}` : url, !!code) : '';
+      const vs = rival && rival.route.id === routeId ? rivalLine(t, rival.ghost.time) : '';
+      ui.raceFinished(name, formatTime(t), best !== null ? formatTime(best) : '', isNew, share, !!code, vs);
       refreshDailyBadge();
     },
   },
 );
 let lastRoute: Route = ROUTES[0];
+// a friend's run from a challenge link: raced instead of your own best on its route, this visit
+let rival: Challenge | null = null;
+let ghostLabel = 'Your best';
+const invite = RULES.externalLinks ? decodeChallenge(challengeFromHash(location.hash)) : null;
+const clearInvite = () => {
+  try {
+    history.replaceState(null, '', `${location.pathname}${location.search}`); // a reload won't re-offer it
+  } catch {
+    /* sandboxed frame */
+  }
+};
+const offerInvite = (c: Challenge) =>
+  ui.showNextUp(`${c.route.name} · beat ${formatTime(c.ghost.time)}`, () => {
+    clearInvite();
+    rival = c;
+    startRace(c.route);
+  }, 'A friend challenged you', clearInvite);
 const refreshDailyBadge = () => ui.setDailyBadge(race.bestFor(dailyRoute().id) === null);
 refreshDailyBadge();
 function placePlayer(x: number, z: number, yaw: number): void {
@@ -176,7 +196,10 @@ function startRace(route: Route): void {
   placePlayer(route.start.x, route.start.z, route.start.yaw);
   ghostRec.reset();
   splits = [];
-  ghost = decodeGhost(store.get(ghostKey(route.id)));
+  const vsFriend = rival?.route.id === route.id;
+  ghost = vsFriend ? rival!.ghost : decodeGhost(store.get(ghostKey(route.id)));
+  const label = vsFriend ? 'Friend' : 'Your best';
+  if (label !== ghostLabel) ghostAvatar.setName((ghostLabel = label));
   race.start(route);
   ui.raceHud(true);
   ui.raceHint();
@@ -187,6 +210,7 @@ function startRace(route: Route): void {
 }
 // first run: lead straight from the tutorial into today's daily, unless already racing or done it
 ui.onFirstTutorialEnd = () => {
+  if (invite) return offerInvite(invite);
   const daily = dailyRoute();
   if (race.active || race.bestFor(daily.id) !== null) return;
   ui.showNextUp(daily.name, () => startRace(dailyRoute()));
@@ -582,6 +606,7 @@ requestAnimationFrame((t) => {
   frame(t);
   document.getElementById('loading')!.classList.add('gone');
   ui.startTutorial();
+  if (invite && !ui.tutorialActive) offerInvite(invite);
   debug.ready = true;
 });
 

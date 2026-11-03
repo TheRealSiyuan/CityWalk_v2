@@ -8,11 +8,11 @@ Ordered by impact on getting real players and the first revenue.
 2. **itch.io launch** (awaiting approval — `DECISIONS.md`).
 3. **CrazyGames Basic Launch** (awaiting approval — `DECISIONS.md`). The no-external-links
    build is done (`npm run package:crazygames`).
-4. **Ghost polish**: live gap to the ghost on the race HUD (done 2026-10-31). Remaining:
-   "share a ghost" for the daily (needs a compact share code; link-free builds can't share it).
-5. **First-run polish**: after a first tutorial (finished or skipped) a card offers today's
-   daily race in one tap (done 2026-11-01); a "how races work" hint on the first countdown
-   (done 2026-11-02). Remaining: consider auto-hiding the compass while the card shows.
+4. **Ghost polish**: live gap to the ghost (done 2026-10-31); challenge links for the daily
+   (done 2026-11-03). Remaining: show the rope on a friend's ghost; links for the fixed routes.
+5. **First-run polish**: daily-race card after a first tutorial (done 2026-11-01); "how races
+   work" hint on the first countdown (done 2026-11-02); compass hides while the card shows
+   (done 2026-11-03).
 
 ## Next
 

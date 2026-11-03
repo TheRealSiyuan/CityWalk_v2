@@ -2,6 +2,40 @@
 
 Verified work only. Newest first.
 
+## 2026-11-03
+
+**Implemented**
+- Challenge links ("share a ghost") for the daily race. Finishing a daily now shows
+  **Challenge a friend**, which shares a link carrying that run in the URL fragment (not sent
+  to any server). Opening it offers "A friend challenged you · Daily · <date> · beat <time>"
+  (after the tutorial for new players; at once otherwise), then races the friend's ghost,
+  labelled "Friend", with the existing splits and live gap. The result card adds "You beat
+  your friend by 1.3 s" or "Your friend was 1.3 s faster"; Race again keeps the friend's ghost.
+- Links survive midnight: the route is generated from the day in the code, so an older link
+  races that day's route, and doing so leaves today's own ghost alone.
+- Codec in `src/challenge.ts`, tuning in `CONFIG.challenge` (longest code 1800 characters,
+  kept frame rate drops as runs get longer). The compact form drops the rope and rebuilds
+  facing and speed from the path, so a friend's ghost swings without a visible rope.
+- Off in the no-external-links build (no link, no offer). Malformed links are ignored.
+- The compass pill now hides while the card is up (it showed through the card).
+
+**Verified**
+- Build: 0 TS errors. Unit: 61 passed (9 new: round trip, rebuilt facing and speed, size limit
+  up to 5 min runs, truncated and random codes, mismatched splits). Browser: 9 passed (new test:
+  real link from a finished daily opened in a second browser context, tutorial then offer,
+  ghost loaded and visible, result line, Race again, Not now, an older day's link, a broken link).
+  Phone screenshots of the offer and result checked. CrazyGames package rebuilt: scanner clean,
+  challenge offer text absent from that build.
+- GitHub Actions: DEPLOY_RESULT
+- Not verified: link length and ghost smoothness from real human runs (tests use a synthetic
+  run and teleports); whether messaging apps keep links this long intact; whether anyone
+  shares them (no analytics by design); real phones.
+
+**Money earned:** £0 (not yet published on a paying channel).
+
+**Next task:** owner playtest fixes if any; otherwise keep the rope on a friend's ghost, or
+challenge links for the fixed routes.
+
 ## 2026-11-02
 
 **Implemented**
