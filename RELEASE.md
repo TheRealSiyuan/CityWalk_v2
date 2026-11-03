@@ -28,7 +28,7 @@ anywhere except the existing GitHub Pages site.
 ## Known issues (v0.9.0)
 
 - Frame rate on real phones is unmeasured (tests use software rendering).
-- The multiplayer browser test failed intermittently on 2026-11-03 (3 of 11 runs of the current
+- The multiplayer browser test failed intermittently on 2026-11-03 (3 of 15 runs of the current
   code, 0 of 5 of the previous commit; cause unknown), so joins may sometimes be slow or fail.
 - Multiplayer over the public internet is unverified from the build environment; strict
   NATs without TURN fall back to solo.
