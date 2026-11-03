@@ -26,14 +26,21 @@ Verified work only. Newest first.
   ghost loaded and visible, result line, Race again, Not now, an older day's link, a broken link).
   Phone screenshots of the offer and result checked. CrazyGames package rebuilt: scanner clean,
   challenge offer text absent from that build.
-- GitHub Actions: DEPLOY_RESULT
+- GitHub Actions run 41587099776 (commit 679f5a9): attempt 1: build and deploy succeeded, e2e
+  FAILED (multiplayer test: peers never saw each other within 45 s; the new test passed). Failed
+  job re-run, attempt 2: all green. The site deployed in attempt 1 either way: deploy does not
+  wait for e2e.
+- Multiplayer test is intermittent and the cause is unknown. On this commit, repeated locally:
+  3/5 then 5/5 passed. On the previous commit: 5/5. `src/net.ts` is unchanged and nothing in
+  this change touches rooms or peers, but a regression is not ruled out.
 - Not verified: link length and ghost smoothness from real human runs (tests use a synthetic
   run and teleports); whether messaging apps keep links this long intact; whether anyone
   shares them (no analytics by design); real phones.
 
 **Money earned:** £0 (not yet published on a paying channel).
 
-**Next task:** owner playtest fixes if any; otherwise keep the rope on a friend's ghost, or
+**Next task:** find out why the multiplayer test fails intermittently, and whether deploy should
+wait for e2e; then owner playtest fixes if any; then keep the rope on a friend's ghost, or
 challenge links for the fixed routes.
 
 ## 2026-11-02
