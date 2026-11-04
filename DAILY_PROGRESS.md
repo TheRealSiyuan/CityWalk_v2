@@ -26,6 +26,7 @@ Verified work only. Newest first.
   traced to it.
 - Build: 0 TS errors. Unit: 66 passed (5 new in `tests/net.test.ts`, using a fake room). Browser:
   9 passed, then the multiplayer test 3/3. CrazyGames package rebuilt: scanner clean.
+- GitHub Actions run 41784626801 (commit af925a4): build, deploy and e2e all succeeded.
 - Not verified: public relays or real phones (all tests use a local relay). A friend arriving
   exactly during a re-join can still wait up to about 27 s; that delay is not fixed.
 
