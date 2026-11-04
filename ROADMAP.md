@@ -4,8 +4,8 @@ Ordered by impact on getting real players and the first revenue.
 
 ## Now (v0.9 → v1.0)
 
-0. **Multiplayer test fails intermittently** (first seen 2026-11-03; cause unknown): find out
-   whether real joins are affected. Also decide whether deploy should wait for e2e (it doesn't).
+0. **Multiplayer joins**: stuck joins fixed (2026-11-04). Remaining: friends arriving during a
+   re-join can wait up to about 27 s; decide whether deploy should wait for e2e (it doesn't).
 1. **Owner playtest on phone + desktop**, fix anything it surfaces.
 2. **itch.io launch** (awaiting approval — `DECISIONS.md`).
 3. **CrazyGames Basic Launch** (awaiting approval — `DECISIONS.md`). The no-external-links

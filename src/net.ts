@@ -62,6 +62,10 @@ export class Net {
   private relays: string[] | null = null;
   private joinedAt = 0;
   private retry = 0;
+  /** Bumped on every (re-)join, so a room being left can no longer add peers. */
+  private generation = 0;
+  /** Peers we have not yet heard a word from, with when they joined (seconds). */
+  private unconfirmed = new Map<string, number>();
 
   start(roomCode: string, name: string, relays: string[] | null): void {
     this.name = name;
@@ -73,10 +77,12 @@ export class Net {
     // would stare at an empty street for a minute, so while we are alone we
     // re-join (and so re-announce) every so often, backing off over time.
     window.setInterval(() => {
+      this.dropSilentPeers();
       if (this.status === 'off' || this.peers.size > 0 || document.hidden) return;
       const wait = Math.min(60, 18 + this.retry * 6);
       if (performance.now() / 1000 - this.joinedAt < wait) return;
       this.retry++;
+      this.generation++;
       const old = this.room;
       this.room = null;
       const again = () => this.join();
@@ -85,7 +91,30 @@ export class Net {
     }, 2000);
   }
 
+  /**
+   * A peer can arrive during a re-join: it finishes connecting to the room being
+   * left, the library's second handshake then never completes on one side, and
+   * the other side believes it is connected for good (both show an empty street).
+   * Every real peer says hello as soon as it joins, even from a background tab, so
+   * a peer that stays silent gets its connection closed. That resets both ends,
+   * and whoever is left alone then re-joins as usual.
+   */
+  private dropSilentPeers(): void {
+    const now = performance.now() / 1000;
+    for (const [id, joined] of this.unconfirmed) {
+      if (now - joined < CONFIG.net.helloTimeout) continue;
+      this.unconfirmed.delete(id);
+      try {
+        this.room?.getPeers()[id]?.close();
+      } catch {
+        // Already gone: nothing to close.
+      }
+      if (this.peers.delete(id)) this.handlers.onLeave(id);
+    }
+  }
+
   private join(): void {
+    const generation = ++this.generation;
     const roomCode = this.roomCode;
     const relays = this.relays;
     this.joinedAt = performance.now() / 1000;
@@ -110,25 +139,33 @@ export class Net {
       };
 
       room.onPeerJoin = (id) => {
+        if (generation !== this.generation) return;
         // Rooms are capped: extra peers are simply not shown or synced.
         if (this.peers.size >= CONFIG.net.maxPlayers - 1) return;
         const peer: Peer = { id, name: 'Walker', snaps: [] };
         this.peers.set(id, peer);
+        this.unconfirmed.set(id, performance.now() / 1000);
         this.status = 'online';
         this.retry = 0;
         this.handlers.onJoin(peer);
         this.sendHello?.({ name: this.name }, id);
       };
       room.onPeerLeave = (id) => {
+        if (generation !== this.generation) return;
+        this.unconfirmed.delete(id);
         if (this.peers.delete(id)) this.handlers.onLeave(id);
       };
       hello.onMessage = (d, ctx) => {
+        if (generation !== this.generation) return;
+        this.unconfirmed.delete(ctx.peerId);
         const peer = this.peers.get(ctx.peerId);
         if (!peer || !d || typeof d.name !== 'string') return;
         peer.name = d.name.replace(/[^\p{L}\p{N} _-]/gu, '').slice(0, 14) || 'Walker';
         this.handlers.onName(peer);
       };
       state.onMessage = (raw, ctx) => {
+        if (generation !== this.generation) return;
+        this.unconfirmed.delete(ctx.peerId);
         const peer = this.peers.get(ctx.peerId);
         if (!peer) return;
         // Binary payloads arrive as a view over bytes; re-wrap as floats.

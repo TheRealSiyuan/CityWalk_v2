@@ -2,6 +2,38 @@
 
 Verified work only. Newest first.
 
+## 2026-11-04
+
+**Implemented**
+- Found and fixed the cause of the intermittent multiplayer failure. It was a real bug that could
+  hit real players, not just the test. While alone in a room the game leaves and re-joins every
+  18 s or more. If a friend connected during that moment, the connection finished on the room
+  being left, one side's second handshake never completed, and the other side believed it was
+  connected. Both then showed an empty street, and further re-joins did not clear it.
+- Fix in `src/net.ts`: a room being left can no longer add peers; a peer that says nothing for
+  12 s after joining (`CONFIG.net.helloTimeout`) has its connection closed, which resets both ends
+  so the normal re-join can connect them. Hello is sent on joining, so a player who has switched
+  to another app is not dropped once they have said it.
+
+**Verified**
+- Reproduced by timing the second player's arrival around the first player's re-join (three pairs
+  at once on this 2-core machine, temporary logging in the library, since removed). Before: 4 of
+  10 arrivals never connected within 45 s, and 2 more took about 30 s; logs showed the stuck
+  handshake. After: all 6 reported arrivals connected: 2 in under 6 s, 1 in 16 s, 3 in about 27 s.
+  3 further arrivals in that run were cut off by my output limit, so their results are unknown.
+- Before the fix, plain repeats mostly passed: 8/8 of the browser test, and 29/30 in a separate
+  join-timing script. So the old "cause unknown" failures fit this bug but were not individually
+  traced to it.
+- Build: 0 TS errors. Unit: 66 passed (5 new in `tests/net.test.ts`, using a fake room). Browser:
+  9 passed, then the multiplayer test 3/3. CrazyGames package rebuilt: scanner clean.
+- Not verified: public relays or real phones (all tests use a local relay). A friend arriving
+  exactly during a re-join can still wait up to about 27 s; that delay is not fixed.
+
+**Money earned:** £0 (not yet published on a paying channel).
+
+**Next task:** decide whether deploy should wait for e2e; owner playtest fixes if any; then shorten
+the remaining wait for a friend arriving during a re-join, or show the rope on a friend's ghost.
+
 ## 2026-11-03
 
 **Implemented**

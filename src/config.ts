@@ -109,6 +109,7 @@ export const CONFIG = {
     sendHz: 12,
     interpDelay: 0.16, // seconds remote avatars are rendered in the past
     maxPlayers: 8,
+    helloTimeout: 12, // seconds a joined peer may stay silent before its connection is reset (the library's own handshake gives up at 10)
   },
 
   // --- performance --------------------------------------------------------
