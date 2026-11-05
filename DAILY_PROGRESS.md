@@ -21,6 +21,7 @@ Verified work only. Newest first.
   timed runs were held Swing only, then teleports to the checkpoints, so not a full human race).
 - Synthetic runs with a rope every 2.5 s: 60 s fits at 5 frames a second; 120 s at 2; 180 s at 1.
   Nonstop swinging for 300 s still fits a link, but may lose the rope.
+- GitHub Actions run 41977013965 (commit 3213a83): build, e2e and deploy all succeeded.
 - Not verified: how it looks on a real phone, or whether anyone finds it better (needs a human).
 
 **Money earned:** £0 (not yet published on a paying channel).
