@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { challengeFromHash, decodeChallenge, encodeChallenge, rivalLine } from '../src/challenge';
 import { CONFIG } from '../src/config';
-import { GhostRecorder, liveDelta, type Ghost } from '../src/ghost';
+import { GhostRecorder, ghostPose, liveDelta, type Ghost, type GhostPose } from '../src/ghost';
 import { dailyRoute } from '../src/race';
 
 const DAY = '2026-11-03';
@@ -26,6 +26,30 @@ function run(seconds: number): Ghost {
   return rec.finish(seconds, Array.from({ length: stops }, (_, i) => (seconds * (i + 1)) / stops))!;
 }
 
+/** The same run with a fresh rope every `every` seconds, each held for most of that time. */
+function roped(seconds: number, every = 2.5): Ghost {
+  const g = run(seconds);
+  g.frames = g.frames.map((f, i) => {
+    const t = i * g.dt;
+    const swing = Math.floor(t / every);
+    if (t - swing * every > every * 0.8) return f;
+    return [...f, Math.round(f[0] + 18 + (swing % 5)) + 0.3, 24 + (swing % 7), f[2] + (swing % 2 ? 11.2 : -9.6)];
+  });
+  // an anchor stays put for a whole swing, as a real rope's does
+  let held: number[] | null = null;
+  let last = -1;
+  g.frames.forEach((f, i) => {
+    if (f.length !== 9) return void (held = null);
+    const swing = Math.floor((i * g.dt) / every);
+    if (!held || swing !== last) held = f.slice(6);
+    last = swing;
+    f.splice(6, 3, ...held);
+  });
+  return g;
+}
+
+const pose = (): GhostPose => ({ x: 0, y: 0, z: 0, yaw: 0, anim: 0, speed: 0, anchor: null });
+
 describe('challenge links', () => {
   it('round-trips a run: route, clock, splits and path, usable by the race ghost', () => {
     const g = run(30);
@@ -46,6 +70,49 @@ describe('challenge links', () => {
       expect(f.length).toBe(6);
     }
     expect(liveDelta(c.ghost, 0, g.frames[40][0], g.frames[40][2], 4)).toBeCloseTo(0, 0);
+  });
+
+  it('carries the rope: same anchors, on the same frames, and the ghost draws it', () => {
+    const g = roped(30);
+    const c = decodeChallenge(encodeChallenge(DAY, g)!)!;
+    const ratio = Math.round(c.ghost.dt / g.dt);
+    expect(ratio).toBe(CONFIG.challenge.frameSteps[0]); // the rope did not cost a 30 s run any smoothness
+    c.ghost.frames.forEach((f, i) => {
+      const src = g.frames[Math.min(i * ratio, g.frames.length - 1)];
+      expect(f.length).toBe(src.length);
+      for (let k = 6; k < src.length; k++) expect(Math.abs(f[k] - src[k])).toBeLessThanOrEqual(0.3);
+    });
+    const held = c.ghost.frames.findIndex((f) => f.length === 9);
+    expect(ghostPose(c.ghost, held * c.ghost.dt, pose()).anchor).not.toBeNull();
+    const free = c.ghost.frames.findIndex((f) => f.length === 6);
+    expect(ghostPose(c.ghost, free * c.ghost.dt, pose()).anchor).toBeNull();
+  });
+
+  it('fits a link with a rope for any likely run, and a hopelessly busy one loses only the rope', () => {
+    for (const s of [20, 60, 120, 180]) {
+      const code = encodeChallenge(DAY, roped(s))!;
+      expect(code.length).toBeLessThanOrEqual(CONFIG.challenge.maxChars);
+      expect(decodeChallenge(code)!.ghost.frames.some((f) => f.length === 9)).toBe(true);
+    }
+    // nonstop swinging for 5 minutes: the link still fits, whether or not the rope does
+    expect(encodeChallenge(DAY, roped(300))).not.toBeNull();
+    const busy = run(240);
+    const before = encodeChallenge(DAY, busy)!;
+    // a new far-off anchor every kept frame: more than any link can hold
+    busy.frames = busy.frames.map((f, i) => [...f, f[0] + 900 + i * 7, 900 - (i % 50), f[2] - 900 - i * 3]);
+    const code = encodeChallenge(DAY, busy)!;
+    expect(code.length).toBeLessThanOrEqual(CONFIG.challenge.maxChars);
+    const c = decodeChallenge(code)!;
+    expect(c.ghost.frames.every((f) => f.length === 6)).toBe(true);
+    expect(c.ghost.dt).toBeCloseTo(decodeChallenge(before)!.ghost.dt, 5);
+  });
+
+  it('still opens a link shared before ropes were added', () => {
+    const c = decodeChallenge('AZiiAawCBEtLS0vIARCvCSDgAwwIAA4DAAwDAA4IAAwDAAwDAA4IAAwDAA4DAAwIAAwDAA4DAAwIAA4DAAYEAAgCCAQ')!;
+    expect(c.day).toBe(DAY);
+    expect(c.ghost.time).toBeCloseTo(3, 2);
+    expect(c.ghost.frames.length).toBeGreaterThan(10);
+    expect(c.ghost.frames.every((f) => f.length === 6)).toBe(true);
   });
 
   it('rebuilds facing and speed from the path', () => {
@@ -86,7 +153,7 @@ describe('challenge links', () => {
   });
 
   it('rejects anything malformed without throwing', () => {
-    const code = encodeChallenge(DAY, run(10))!;
+    const code = encodeChallenge(DAY, roped(10))!;
     for (const bad of [null, undefined, '', '!!!', 'not_a_real_code', 'A'.repeat(50), 'A'.repeat(CONFIG.challenge.maxChars + 1)]) {
       expect(decodeChallenge(bad)).toBeNull();
     }

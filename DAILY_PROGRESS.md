@@ -2,6 +2,31 @@
 
 Verified work only. Newest first.
 
+## 2026-11-05
+
+**Implemented**
+- A friend's ghost from a challenge link now swings on a visible rope. Before, it hung in mid-air
+  with no rope, which is what a new player sees first when a friend sends them a link.
+- Links gain a new format that carries one rope anchor per swing. Links already shared in the old
+  format still open, without a rope. A run too busy to fit with its rope still gets a link,
+  without the rope (the frame rate drops first; the rope goes only if that is not enough).
+
+**Verified**
+- Build: 0 TS errors. Unit: 69 passed (3 new: rope round trip, size limits with ropes, a real
+  old-format link saved before this change). Browser: 9 passed; the challenge-link test now checks
+  the ghost's rope appears and goes again. CrazyGames package rebuilt: scanner clean.
+- One-off real run in headless Chromium (temporary script, not kept): holding Swing through a real
+  daily race, sharing the real link and opening it in a new browser. Rope seen on the Friend ghost
+  in screenshots. Link length: 393 to 719 characters for 13 to 26 s runs with 5 to 9 swings (the
+  timed runs were held Swing only, then teleports to the checkpoints, so not a full human race).
+- Synthetic runs with a rope every 2.5 s: 60 s fits at 5 frames a second; 120 s at 2; 180 s at 1.
+  Nonstop swinging for 300 s still fits a link, but may lose the rope.
+- Not verified: how it looks on a real phone, or whether anyone finds it better (needs a human).
+
+**Money earned:** £0 (not yet published on a paying channel).
+
+**Next task:** links for the fixed routes, or decide whether deploy should wait for e2e.
+
 ## 2026-11-04
 
 **Implemented**

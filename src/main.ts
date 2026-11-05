@@ -629,7 +629,7 @@ const debug = {
     return { state: race.state, time: race.time, next: race.next, route: race.route?.id ?? null, stops };
   },
   get ghost() {
-    return { loaded: !!ghost, time: ghost?.time ?? null, visible: ghostAvatar.root.visible, x: ghostAvatar.root.position.x, z: ghostAvatar.root.position.z };
+    return { loaded: !!ghost, time: ghost?.time ?? null, visible: ghostAvatar.root.visible, rope: ghostAvatar.rope.visible, x: ghostAvatar.root.position.x, z: ghostAvatar.root.position.z };
   },
   /** dev tools: freeze time and step it manually (for capturing smooth footage) */
   pause: (on: boolean) => {

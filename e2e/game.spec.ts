@@ -9,7 +9,7 @@ const url = (room: string) => `/?room=${room}&relay=${encodeURIComponent(RELAY)}
 
 interface PlayerState { x: number; y: number; z: number; anim: number; roped: boolean; grounded: boolean; swings: number }
 interface PeerState { id: string; name: string; seen: boolean; x: number; y: number; z: number }
-type Debug = { ready: boolean; room: string; player: PlayerState; peers: PeerState[]; race: { state: string; time: number; next: number; route: string | null; stops: [number, number][] }; ghost: { loaded: boolean; time: number | null; visible: boolean; x: number; z: number }; teleport(x: number, y: number, z: number): void };
+type Debug = { ready: boolean; room: string; player: PlayerState; peers: PeerState[]; race: { state: string; time: number; next: number; route: string | null; stops: [number, number][] }; ghost: { loaded: boolean; time: number | null; visible: boolean; rope: boolean; x: number; z: number }; teleport(x: number, y: number, z: number): void };
 declare global {
   interface Window { __citywalk: Debug }
 }
@@ -462,7 +462,11 @@ test('challenge link: a finished daily shares a ghost a friend can race, old and
   // yesterday's link still works: it races that day's route and leaves today's own ghost alone
   const oldDay = '2026-10-01';
   const oldRoute = dailyRoute(oldDay);
-  const frames = Array.from({ length: 50 }, (_, i) => [oldRoute.start.x + i, 0.5, oldRoute.start.z, 0, 2, 5]);
+  // the friend swung from 1 s to 4 s of this run, so their ghost's rope shows for that stretch
+  const frames = Array.from({ length: 50 }, (_, i) => {
+    const f = [oldRoute.start.x + i, 0.5, oldRoute.start.z, 0, 2, 5];
+    return i >= 10 && i < 40 ? [...f, oldRoute.start.x + 25, 20, oldRoute.start.z] : f;
+  });
   const oldCode = encodeChallenge(oldDay, { v: 1, dt: 0.1, time: 5, frames, splits: oldRoute.stops.map((_, i) => i + 1) })!;
   await friend.goto(`${url('challengeold')}#c=${oldCode}`);
   await ready(friend);
@@ -470,6 +474,8 @@ test('challenge link: a finished daily shares a ghost a friend can race, old and
   await expect.poll(async () => (await friend.evaluate(() => window.__citywalk.race)).state, { timeout: 10_000 }).toBe('running');
   const old = await friend.evaluate(() => window.__citywalk.race);
   expect(old.route).toBe(`daily-${oldDay}`);
+  await expect.poll(async () => (await friend.evaluate(() => window.__citywalk.ghost)).rope, { timeout: 8000, intervals: [100] }).toBe(true);
+  await expect.poll(async () => (await friend.evaluate(() => window.__citywalk.ghost)).rope, { timeout: 8000, intervals: [100] }).toBe(false);
   for (const [x, z] of old.stops) {
     await friend.evaluate(([x, z]) => window.__citywalk.teleport(x, 0.5, z), [x, z]);
     await friend.waitForTimeout(300);

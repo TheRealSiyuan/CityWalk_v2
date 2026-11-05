@@ -38,8 +38,9 @@ anywhere except the existing GitHub Pages site.
   current leg); it hides when you take a path more than 60 m from your best run's.
 - Holding Swing in big open plazas (Trafalgar Square, Buckingham Palace forecourt) finds
   nothing to grab; you run across them.
-- A friend's ghost from a challenge link swings without a visible rope, and moves less smoothly
-  on longer runs (fewer frames fit in a link). Challenge links are off in the CrazyGames build.
+- A friend's ghost from a challenge link moves less smoothly on longer runs (fewer frames fit in a
+  link), and very long nonstop-swinging runs lose its rope. Links shared before 2026-11-05 have no
+  rope. Challenge links are off in the CrazyGames build.
 - The CrazyGames build is solo only (no shareable room links there); multiplayer would need
   the CrazyGames SDK invite links (Full Launch work).
 - On itch.io the page URL cannot carry a room code, so Share links point at the GitHub

@@ -4,8 +4,9 @@ import { dailyRoute, type Route } from './race';
 
 /**
  * "Race my ghost": a daily-race run packed small enough to travel in a link. Only the path,
- * animation and clock survive (facing and speed are rebuilt from the path, the rope is
- * dropped). The link's contents are untrusted: anything malformed decodes to null.
+ * animation, rope and clock survive (facing and speed are rebuilt from the path). The rope is
+ * the first thing dropped if a run won't fit. The link's contents are untrusted: anything
+ * malformed decodes to null.
  */
 export interface Challenge {
   day: string; // UTC day, e.g. "2026-11-03"; the route is generated from it
@@ -13,7 +14,8 @@ export interface Challenge {
   ghost: Ghost;
 }
 
-const FORMAT = 1;
+const FORMAT = 2; // 2 added the rope; links already shared in format 1 still open
+const OLDEST_FORMAT = 1;
 const QUANT = 2; // position units per metre
 const CS = 100; // clock units per second
 const MS_PER_DAY = 86_400_000;
@@ -68,7 +70,7 @@ function fromCode(code: string): Uint8Array {
   return Uint8Array.from(bin, (c) => c.charCodeAt(0));
 }
 
-function pack(day: string, g: Ghost, step: number): string {
+function pack(day: string, g: Ghost, step: number, withRope: boolean): string {
   const w = new Writer();
   w.uint(FORMAT);
   w.uint(Math.round(Date.parse(day) / MS_PER_DAY));
@@ -108,15 +110,30 @@ function pack(day: string, g: Ghost, step: number): string {
     w.uint(frames[i][4]);
     i = j;
   }
+  // rope as runs too: one anchor for each swing, measured from the runner at its first frame
+  const rope = (f: number[]): number[] | null => (withRope && f.length === 9 ? f.slice(6, 9).map((n) => Math.round(n * QUANT)) : null);
+  for (let i = 0; i < frames.length; ) {
+    const a = rope(frames[i]);
+    let j = i + 1;
+    while (j < frames.length && String(rope(frames[j])) === String(a)) j++;
+    w.uint((j - i) * 2 + (a ? 1 : 0));
+    if (a) for (let k = 0; k < 3; k++) w.sint(a[k] - Math.round(frames[i][k] * QUANT));
+    i = j;
+  }
   return toCode(w.bytes);
 }
 
-/** The code for this run at the finest frame rate that fits a link, or null if none does. */
+/**
+ * The code for this run at the finest frame rate that fits a link, or null if none does. A run
+ * too busy to fit with its rope at any frame rate is sent without it: better than no link.
+ */
 export function encodeChallenge(day: string, g: Ghost): string | null {
   if (!Number.isFinite(Date.parse(day))) return null;
-  for (const step of CONFIG.challenge.frameSteps) {
-    const code = pack(day, g, step);
-    if (code.length <= CONFIG.challenge.maxChars) return code;
+  for (const withRope of [true, false]) {
+    for (const step of CONFIG.challenge.frameSteps) {
+      const code = pack(day, g, step, withRope);
+      if (code.length <= CONFIG.challenge.maxChars) return code;
+    }
   }
   return null;
 }
@@ -143,7 +160,8 @@ export function decodeChallenge(code: string | null | undefined): Challenge | nu
   if (!code || code.length > CONFIG.challenge.maxChars) return null;
   try {
     const r = new Reader(fromCode(code));
-    if (r.uint() !== FORMAT) return null;
+    const format = r.uint();
+    if (format < OLDEST_FORMAT || format > FORMAT) return null;
     const dayNo = r.uint();
     if (dayNo > MAX_DAY) return null;
     const day = new Date(dayNo * MS_PER_DAY).toISOString().slice(0, 10);
@@ -181,8 +199,23 @@ export function decodeChallenge(code: string | null | undefined): Challenge | nu
       for (let j = 0; j < run; j++) points[i + j].anim = anim;
       i += run;
     }
+    const frames = rebuild(points, dt);
+    if (format >= 2) {
+      for (let i = 0; i < count; ) {
+        const head = r.uint();
+        const run = Math.floor(head / 2);
+        if (run < 1 || i + run > count) return null;
+        if (head % 2) {
+          const ax = points[i].x + r.sint() / QUANT;
+          const ay = points[i].y + r.sint() / QUANT;
+          const az = points[i].z + r.sint() / QUANT;
+          for (let j = 0; j < run; j++) frames[i + j].push(ax, ay, az);
+        }
+        i += run;
+      }
+    }
     if (!r.done) return null;
-    return { day, route, ghost: { v: 1, dt, time, frames: rebuild(points, dt), splits } };
+    return { day, route, ghost: { v: 1, dt, time, frames, splits } };
   } catch {
     return null;
   }
