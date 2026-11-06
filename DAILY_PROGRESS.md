@@ -19,6 +19,8 @@ Verified work only. Newest first.
   browser, race the ghost, see the result). The race test's old check that fixed routes have no
   share button now checks the button is there, as that behaviour changed on purpose. CrazyGames
   package rebuilt: scanner clean.
+- GitHub Actions run 42170933539 (commit 471abae): concluded success, covering build, deploy and
+  e2e.
 - Not verified: real phones, or whether anyone uses or enjoys it (needs a human). Finishes in the
   tests are teleports, so these were not full human races.
 
