@@ -301,7 +301,7 @@ export class UI {
   }
 
   /**
-   * `shareText` (daily races only) shows a button that shares it, labelled for a ghost link
+   * `shareText` shows a button that shares it, labelled for a ghost link
    * when `challenge` is set. `rival` says how the run compares with a friend's.
    */
   raceFinished(route: string, time: string, best: string, isNew: boolean, shareText = '', challenge = false, rival = ''): void {

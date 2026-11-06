@@ -2,6 +2,31 @@
 
 Verified work only. Newest first.
 
+## 2026-11-06
+
+**Implemented**
+- Challenge links now work on the three fixed routes (Westminster Dash, River Run, City Sprint),
+  not just the daily. Finishing one shows **Challenge a friend**; the friend gets the offer with
+  the route name and the time to beat, races your ghost on that route, and sees how they compared.
+  Unlike a daily, these links do not depend on the date, so they stay good.
+- Daily links are unchanged. If a run on a fixed route is too long to fit a link, or the build
+  has no links (CrazyGames), no share button appears there.
+
+**Verified**
+- Build: 0 TS errors. Unit: 72 passed (3 new: round trip for all three routes and a pin on the
+  route order that links rely on; rope and fit on a 60 s run; a nonexistent route and wrong splits
+  rejected). Browser: 10 passed (1 new: finish City Sprint, share the real link, open it in a new
+  browser, race the ghost, see the result). The race test's old check that fixed routes have no
+  share button now checks the button is there, as that behaviour changed on purpose. CrazyGames
+  package rebuilt: scanner clean.
+- Not verified: real phones, or whether anyone uses or enjoys it (needs a human). Finishes in the
+  tests are teleports, so these were not full human races.
+
+**Money earned:** £0 (not yet published on a paying channel).
+
+**Next task:** decide whether deploy should wait for e2e; shorten the wait for a friend arriving
+during a re-join; owner playtest fixes if any.
+
 ## 2026-11-05
 
 **Implemented**

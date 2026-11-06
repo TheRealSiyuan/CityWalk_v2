@@ -114,13 +114,13 @@ describe('landmark race', () => {
 
 describe('daily share text', () => {
   it('names the day and time, and only adds a link when given one', async () => {
-    const { dailyShareText } = await import('../src/race');
+    const { raceShareText } = await import('../src/race');
     const route = dailyRoute('2026-10-29');
-    const plain = dailyShareText(route.name, '1:23.4');
+    const plain = raceShareText(route.name, '1:23.4');
     expect(plain).toContain('Daily · 29 Oct');
     expect(plain).toContain('1:23.4');
     expect(plain).not.toMatch(/https?:|\?room=/);
-    expect(dailyShareText(route.name, '1:23.4', 'https://example.test/')).toMatch(/ https:\/\/example\.test\/$/);
-    expect(dailyShareText(route.name, '1:23.4', 'https://example.test/#c=abc', true)).toMatch(/Race my ghost.* https:\/\/example\.test\/#c=abc$/);
+    expect(raceShareText(route.name, '1:23.4', 'https://example.test/')).toMatch(/ https:\/\/example\.test\/$/);
+    expect(raceShareText(route.name, '1:23.4', 'https://example.test/#c=abc', true)).toMatch(/Race my ghost.* https:\/\/example\.test\/#c=abc$/);
   });
 });

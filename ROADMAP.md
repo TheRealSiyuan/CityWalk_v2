@@ -11,8 +11,8 @@ Ordered by impact on getting real players and the first revenue.
 3. **CrazyGames Basic Launch** (awaiting approval — `DECISIONS.md`). The no-external-links
    build is done (`npm run package:crazygames`).
 4. **Ghost polish**: live gap to the ghost (done 2026-10-31); challenge links for the daily
-   (done 2026-11-03); rope on a friend's ghost (done 2026-11-05). Remaining: links for the fixed
-   routes.
+   (done 2026-11-03); rope on a friend's ghost (done 2026-11-05); links for the fixed routes
+   (done 2026-11-06). Nothing left here until players say otherwise.
 5. **First-run polish**: daily-race card after a first tutorial (done 2026-11-01); "how races
    work" hint on the first countdown (done 2026-11-02); compass hides while the card shows
    (done 2026-11-03).

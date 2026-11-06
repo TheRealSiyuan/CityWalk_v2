@@ -10,7 +10,7 @@ import { buildWorld } from './world/city';
 import { LANDMARKS, SPAWN, type Landmark } from './world/data';
 import { challengeFromHash, decodeChallenge, encodeChallenge, rivalLine, type Challenge } from './challenge';
 import { GhostRecorder, decodeGhost, encodeGhost, ghostPose, liveDelta, splitDelta, type Ghost, type GhostPose } from './ghost';
-import { ROUTES, Race, dailyRoute, dailyShareText, formatTime, type Route } from './race';
+import { ROUTES, Race, dailyRoute, formatTime, raceShareText, type Route } from './race';
 import { WATER_Y, groundHeight } from './world/river';
 import { parsePortal, portalRules } from './portal';
 
@@ -153,9 +153,10 @@ const race = new Race(
       const routeId = race.route?.id ?? '';
       const daily = routeId.startsWith('daily-');
       // the link is compiled out of no-external-links builds (shareUrl() is '' there)
-      const url = daily ? shareUrl() : '';
-      const code = url && run ? encodeChallenge(routeId.slice('daily-'.length), run) : null;
-      const share = daily ? dailyShareText(name, formatTime(t), code ? `${url}#c=${code}` : url, !!code) : '';
+      const url = shareUrl();
+      const code = url && run ? encodeChallenge(daily ? routeId.slice('daily-'.length) : routeId, run) : null;
+      // a daily can be shared as a bare time; a fixed route only as a ghost to race
+      const share = daily || code ? raceShareText(name, formatTime(t), code ? `${url}#c=${code}` : url, !!code) : '';
       const vs = rival && rival.route.id === routeId ? rivalLine(t, rival.ghost.time) : '';
       ui.raceFinished(name, formatTime(t), best !== null ? formatTime(best) : '', isNew, share, !!code, vs);
       refreshDailyBadge();

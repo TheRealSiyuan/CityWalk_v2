@@ -1,20 +1,22 @@
 import { CONFIG } from './config';
 import type { Ghost } from './ghost';
-import { dailyRoute, type Route } from './race';
+import { ROUTES, dailyRoute, type Route } from './race';
 
 /**
- * "Race my ghost": a daily-race run packed small enough to travel in a link. Only the path,
+ * "Race my ghost": a race run packed small enough to travel in a link. Only the path,
  * animation, rope and clock survive (facing and speed are rebuilt from the path). The rope is
  * the first thing dropped if a run won't fit. The link's contents are untrusted: anything
  * malformed decodes to null.
  */
 export interface Challenge {
-  day: string; // UTC day, e.g. "2026-11-03"; the route is generated from it
+  day: string | null; // UTC day of a daily, e.g. "2026-11-03", its route generated from it; null for a fixed route
   route: Route;
   ghost: Ghost;
 }
 
-const FORMAT = 2; // 2 added the rope; links already shared in format 1 still open
+// 2 added the rope; 3 names a fixed route instead of a day. Links already shared in older formats still open.
+const DAILY_FORMAT = 2;
+const FIXED_FORMAT = 3;
 const OLDEST_FORMAT = 1;
 const QUANT = 2; // position units per metre
 const CS = 100; // clock units per second
@@ -70,10 +72,10 @@ function fromCode(code: string): Uint8Array {
   return Uint8Array.from(bin, (c) => c.charCodeAt(0));
 }
 
-function pack(day: string, g: Ghost, step: number, withRope: boolean): string {
+function pack(format: number, target: number, g: Ghost, step: number, withRope: boolean): string {
   const w = new Writer();
-  w.uint(FORMAT);
-  w.uint(Math.round(Date.parse(day) / MS_PER_DAY));
+  w.uint(format);
+  w.uint(target);
   w.uint(Math.round(g.time * CS));
   const splits = g.splits ?? [];
   w.uint(splits.length);
@@ -127,11 +129,15 @@ function pack(day: string, g: Ghost, step: number, withRope: boolean): string {
  * The code for this run at the finest frame rate that fits a link, or null if none does. A run
  * too busy to fit with its rope at any frame rate is sent without it: better than no link.
  */
-export function encodeChallenge(day: string, g: Ghost): string | null {
-  if (!Number.isFinite(Date.parse(day))) return null;
+export function encodeChallenge(dayOrRouteId: string, g: Ghost): string | null {
+  // a link names a fixed route by its place in ROUTES, so that order must never change
+  const fixed = ROUTES.findIndex((r) => r.id === dayOrRouteId);
+  const format = fixed >= 0 ? FIXED_FORMAT : DAILY_FORMAT;
+  const target = fixed >= 0 ? fixed : Math.round(Date.parse(dayOrRouteId) / MS_PER_DAY);
+  if (!Number.isFinite(target)) return null;
   for (const withRope of [true, false]) {
     for (const step of CONFIG.challenge.frameSteps) {
-      const code = pack(day, g, step, withRope);
+      const code = pack(format, target, g, step, withRope);
       if (code.length <= CONFIG.challenge.maxChars) return code;
     }
   }
@@ -161,13 +167,14 @@ export function decodeChallenge(code: string | null | undefined): Challenge | nu
   try {
     const r = new Reader(fromCode(code));
     const format = r.uint();
-    if (format < OLDEST_FORMAT || format > FORMAT) return null;
-    const dayNo = r.uint();
-    if (dayNo > MAX_DAY) return null;
-    const day = new Date(dayNo * MS_PER_DAY).toISOString().slice(0, 10);
+    if (format < OLDEST_FORMAT || format > FIXED_FORMAT) return null;
+    const target = r.uint();
+    if (format < FIXED_FORMAT && target > MAX_DAY) return null;
+    const day = format < FIXED_FORMAT ? new Date(target * MS_PER_DAY).toISOString().slice(0, 10) : null;
+    const route = day ? dailyRoute(day) : ROUTES[target];
+    if (!route) return null;
     const time = r.uint() / CS;
     if (!(time > 0)) return null;
-    const route = dailyRoute(day);
     const splitCount = r.uint();
     if (splitCount !== route.stops.length) return null;
     const splits: number[] = [];

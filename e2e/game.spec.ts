@@ -215,7 +215,7 @@ test('race: pick a route, count down, take every checkpoint, finish and keep a p
   }
   await expect(page.locator('#race-done')).toBeVisible();
   await expect(page.locator('#done-kicker')).toContainText('new personal best');
-  await expect(page.locator('#done-share')).toBeHidden(); // sharing is for the daily only
+  await expect(page.locator('#done-share')).toHaveText('Challenge a friend'); // fixed routes share a ghost too
   await page.screenshot({ path: 'screenshots/race-finish.png' });
   const best = await page.evaluate(() => localStorage.getItem('citywalk.best.westminster'));
   expect(Number(best)).toBeGreaterThan(0);
@@ -489,6 +489,59 @@ test('challenge link: a finished daily shares a ghost a friend can race, old and
   await ready(friend);
   await friend.waitForTimeout(300);
   await expect(friend.locator('#next-up')).toBeHidden();
+  await ctx.close();
+  expect(errors).toEqual([]);
+  expect(friendErrors).toEqual([]);
+});
+
+test('challenge link: a fixed route shares a ghost, the friend races it on that route', async ({ page, browser }) => {
+  const errors = trackErrors(page);
+  await page.goto(url('fixedchallenge'));
+  await ready(page);
+  await page.locator('#tut-skip').tap();
+  await page.locator('#next-no').tap();
+  await page.locator('#race-btn').tap();
+  await page.locator('#routes button', { hasText: 'City Sprint' }).tap();
+  await expect.poll(async () => (await page.evaluate(() => window.__citywalk.race)).state, { timeout: 10_000 }).toBe('running');
+  for (const [x, z] of (await page.evaluate(() => window.__citywalk.race)).stops) {
+    await page.waitForTimeout(500);
+    await page.evaluate(([x, z]) => window.__citywalk.teleport(x, 0.5, z), [x, z]);
+    await page.waitForTimeout(300);
+  }
+  await expect(page.locator('#done-share')).toHaveText('Challenge a friend');
+  await page.evaluate(() => {
+    const w = window as unknown as { __shared: string[] };
+    w.__shared = [];
+    Object.defineProperty(navigator, 'share', { value: async (d: { text: string }) => void w.__shared.push(d.text), configurable: true });
+  });
+  await page.locator('#done-share').tap();
+  const text = (await page.evaluate(() => (window as unknown as { __shared: string[] }).__shared))[0];
+  expect(text).toContain('City Sprint');
+  expect(text).toContain('Race my ghost');
+  const link = text.slice(text.indexOf('http'));
+  expect(link).toMatch(/#c=[\w-]+$/);
+  await page.close(); // software rendering: one game at a time
+
+  const ctx = await browser.newContext({ viewport: { width: 390, height: 844 }, hasTouch: true, isMobile: true, baseURL: 'http://localhost:4173' });
+  const friend = await ctx.newPage();
+  const friendErrors = trackErrors(friend);
+  await friend.goto(link.replace('?room=fixedchallenge', `?room=fixedfriend&relay=${encodeURIComponent(RELAY)}`));
+  await ready(friend);
+  await friend.locator('#tut-skip').tap();
+  await expect(friend.locator('#next-kicker')).toContainText('friend challenged you');
+  await expect(friend.locator('#next-route')).toContainText('City Sprint');
+  await expect(friend.locator('#next-route')).toContainText('beat');
+  await friend.locator('#next-go').tap();
+  await expect.poll(async () => (await friend.evaluate(() => window.__citywalk.race)).state, { timeout: 10_000 }).toBe('running');
+  const r = await friend.evaluate(() => window.__citywalk.race);
+  expect(r.route).toBe('city');
+  expect((await friend.evaluate(() => window.__citywalk.ghost)).loaded).toBe(true);
+  for (const [x, z] of r.stops) {
+    await friend.evaluate(([x, z]) => window.__citywalk.teleport(x, 0.5, z), [x, z]);
+    await friend.waitForTimeout(300);
+  }
+  await expect(friend.locator('#race-done')).toBeVisible();
+  await expect(friend.locator('#done-rival')).toHaveText(/friend/i);
   await ctx.close();
   expect(errors).toEqual([]);
   expect(friendErrors).toEqual([]);

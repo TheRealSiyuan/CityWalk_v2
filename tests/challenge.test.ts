@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { challengeFromHash, decodeChallenge, encodeChallenge, rivalLine } from '../src/challenge';
 import { CONFIG } from '../src/config';
 import { GhostRecorder, ghostPose, liveDelta, type Ghost, type GhostPose } from '../src/ghost';
-import { dailyRoute } from '../src/race';
+import { ROUTES, dailyRoute } from '../src/race';
 
 const DAY = '2026-11-03';
 const stops = dailyRoute(DAY).stops.length;
@@ -174,6 +174,44 @@ describe('challenge links', () => {
     const g = run(10);
     expect(decodeChallenge(encodeChallenge(DAY, { ...g, splits: [1] })!)).toBeNull();
     expect(decodeChallenge(encodeChallenge(DAY, { ...g, splits: g.splits!.map((s) => s + 50) })!)).toBeNull();
+  });
+
+  it('round-trips a fixed route, naming the same route forever', () => {
+    // links name a route by its position: reordering ROUTES would send old links to the wrong race
+    expect(ROUTES.map((r) => r.id)).toEqual(['westminster', 'river', 'city']);
+    for (const route of ROUTES) {
+      const g = run(30);
+      g.splits = route.stops.map((_, i) => (30 * (i + 1)) / route.stops.length);
+      const c = decodeChallenge(encodeChallenge(route.id, g)!)!;
+      expect(c.day).toBeNull();
+      expect(c.route).toBe(route);
+      expect(c.ghost.time).toBeCloseTo(30, 2);
+      expect(c.ghost.splits).toHaveLength(route.stops.length);
+      expect(c.ghost.frames.length).toBeGreaterThan(2);
+    }
+  });
+
+  it('keeps the rope on a fixed-route ghost, and fits a long run in a link', () => {
+    const route = ROUTES[1]; // River Run, the most stops
+    const g = roped(60);
+    g.splits = route.stops.map((_, i) => (60 * (i + 1)) / route.stops.length);
+    const code = encodeChallenge(route.id, g)!;
+    expect(code.length).toBeLessThanOrEqual(CONFIG.challenge.maxChars);
+    expect(decodeChallenge(code)!.ghost.frames.some((f) => f.length === 9)).toBe(true);
+  });
+
+  it('rejects a fixed-route link for a route that does not exist or with the wrong splits', () => {
+    const route = ROUTES[0];
+    const g = run(10);
+    g.splits = route.stops.map((_, i) => i + 1);
+    const code = encodeChallenge(route.id, g)!;
+    expect(decodeChallenge(code)).not.toBeNull();
+    const bytes = [...atob(code.replace(/-/g, '+').replace(/_/g, '/'))].map((ch) => ch.charCodeAt(0));
+    bytes[1] = ROUTES.length; // the byte naming the route: one past the end of the list
+    const bad = btoa(String.fromCharCode(...bytes)).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+    expect(decodeChallenge(bad)).toBeNull();
+    expect(decodeChallenge(encodeChallenge(route.id, { ...g, splits: [1] })!)).toBeNull();
+    expect(encodeChallenge('no-such-route', g)).toBeNull();
   });
 
   it('reads the code only from a well-formed hash', () => {
