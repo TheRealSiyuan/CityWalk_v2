@@ -4,8 +4,10 @@ Ordered by impact on getting real players and the first revenue.
 
 ## Now (v0.9 → v1.0)
 
-0. **Multiplayer joins**: stuck joins fixed (2026-11-04). Remaining: friends arriving during a
-   re-join can wait up to about 27 s; decide whether deploy should wait for e2e (it doesn't).
+0. **Multiplayer joins**: stuck joins fixed (2026-11-04); a dropped stuck peer now triggers an
+   immediate re-join (2026-11-07, unit-tested, real-browser gain not measured). Remaining: slow
+   joins (50 s+) seen when 6 browsers shared a 2-core machine, in both old and new builds;
+   find whether that is just load or a real slow path. Decide whether deploy should wait for e2e.
 1. **Owner playtest on phone + desktop**, fix anything it surfaces.
 2. **itch.io launch** (awaiting approval — `DECISIONS.md`).
 3. **CrazyGames Basic Launch** (awaiting approval — `DECISIONS.md`). The no-external-links

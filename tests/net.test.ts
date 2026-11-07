@@ -122,4 +122,37 @@ describe('Net: peers stuck after a re-join', () => {
     peerJoins(rooms[1], 'late');
     expect(net.peers.size).toBe(1);
   });
+
+  it('re-joins straight away after dropping a stuck peer, instead of waiting out the back-off', async () => {
+    const { net, room } = setup();
+    peerJoins(room, 'stuck');
+    // Dropped on the first 2 s tick after helloTimeout; the re-join must follow on that same tick.
+    await vi.advanceTimersByTimeAsync((CONFIG.net.helloTimeout + 2) * 1000);
+    expect(net.peers.size).toBe(0);
+    expect(room.leave).toHaveBeenCalledTimes(1);
+    expect(rooms).toHaveLength(2);
+    // Then back to the normal back-off: no further re-join until 18 s after this one.
+    await vi.advanceTimersByTimeAsync(14_000);
+    expect(rooms).toHaveLength(2);
+    // The friend now gets through on the fresh room.
+    peerJoins(rooms[1], 'stuck');
+    rooms[1].actions.get('hi')?.onMessage?.({ name: 'Ada' }, { peerId: 'stuck' });
+    expect(net.peers.get('stuck')?.name).toBe('Ada');
+  });
+
+  it('does not re-join early when a stuck peer is dropped but a real friend stays', async () => {
+    const { net, room } = setup();
+    peerJoins(room, 'friend');
+    room.actions.get('hi')?.onMessage?.({ name: 'Ada' }, { peerId: 'friend' });
+    peerJoins(room, 'stuck');
+    await vi.advanceTimersByTimeAsync((CONFIG.net.helloTimeout + 2) * 1000);
+    expect([...net.peers.keys()]).toEqual(['friend']);
+    // The friend then leaves normally: the usual 18 s back-off from the last join applies, not an instant re-join.
+    room.onPeerLeave?.('friend');
+    await vi.advanceTimersByTimeAsync(2000);
+    expect(room.leave).not.toHaveBeenCalled();
+    await vi.advanceTimersByTimeAsync(2000);
+    expect(room.leave).toHaveBeenCalledTimes(1);
+    expect(rooms).toHaveLength(2);
+  });
 });

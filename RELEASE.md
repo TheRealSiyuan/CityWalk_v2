@@ -29,8 +29,9 @@ anywhere except the existing GitHub Pages site.
 
 - Frame rate on real phones is unmeasured (tests use software rendering).
 - A friend who connects just as the game re-joins the room (it does so while you are alone) can
-  wait up to about 27 s to appear. The permanent empty street this could cause was fixed on
-  2026-11-04.
+  wait up to about 27 s to appear (about 6 s less in theory since 2026-11-07, not yet measured).
+  The permanent empty street this could cause was fixed on 2026-11-04. Under heavy CPU load in
+  the build machine, some joins took 50 s or more, with or without the 2026-11-07 change.
 - Multiplayer over the public internet is unverified from the build environment; strict
   NATs without TURN fall back to solo.
 - Rope can pass the London Eye wheel and thin details (not solid by design).

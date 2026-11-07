@@ -66,6 +66,8 @@ export class Net {
   private generation = 0;
   /** Peers we have not yet heard a word from, with when they joined (seconds). */
   private unconfirmed = new Map<string, number>();
+  /** Set when a stuck peer was just dropped and we are alone: re-join at once instead of waiting. */
+  private rejoinNow = false;
 
   start(roomCode: string, name: string, relays: string[] | null): void {
     this.name = name;
@@ -79,9 +81,10 @@ export class Net {
     window.setInterval(() => {
       this.dropSilentPeers();
       if (this.status === 'off' || this.peers.size > 0 || document.hidden) return;
-      const wait = Math.min(60, 18 + this.retry * 6);
+      const wait = this.rejoinNow ? 0 : Math.min(60, 18 + this.retry * 6);
       if (performance.now() / 1000 - this.joinedAt < wait) return;
-      this.retry++;
+      if (this.rejoinNow) this.rejoinNow = false;
+      else this.retry++;
       this.generation++;
       const old = this.room;
       this.room = null;
@@ -97,7 +100,8 @@ export class Net {
    * the other side believes it is connected for good (both show an empty street).
    * Every real peer says hello as soon as it joins, even from a background tab, so
    * a peer that stays silent gets its connection closed. That resets both ends,
-   * and whoever is left alone then re-joins as usual.
+   * and whoever is left alone then re-joins straight away (the friend is known to
+   * be trying to connect, so there is no point waiting out the usual back-off).
    */
   private dropSilentPeers(): void {
     const now = performance.now() / 1000;
@@ -110,11 +114,13 @@ export class Net {
         // Already gone: nothing to close.
       }
       if (this.peers.delete(id)) this.handlers.onLeave(id);
+      if (this.peers.size === 0) this.rejoinNow = true;
     }
   }
 
   private join(): void {
     const generation = ++this.generation;
+    this.rejoinNow = false;
     const roomCode = this.roomCode;
     const relays = this.relays;
     this.joinedAt = performance.now() / 1000;

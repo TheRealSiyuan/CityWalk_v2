@@ -2,6 +2,31 @@
 
 Verified work only. Newest first.
 
+## 2026-11-07
+
+**Implemented**
+- Multiplayer: when the game drops a friend's stuck connection (one that never said hello within
+  12 s, the 2026-11-04 fix), and that leaves you alone, it now re-joins the room on the same 2 s
+  check instead of waiting out the usual 18 s back-off. A friend caught by this should appear
+  about 6 s sooner. If a real friend is still connected, nothing changes.
+
+**Verified**
+- Build: 0 TS errors. Unit: 74 passed (2 new in `tests/net.test.ts`: immediate re-join after the
+  drop, then normal back-off; no early re-join when a real friend stays). The first new test
+  fails on the old code. Browser: 10 passed. CrazyGames package rebuilt: scanner clean.
+- One-off timing in headless Chromium with the local relay (temporary script, not kept), friend
+  opening the link 16 to 18 s after the first player (around the first re-join):
+  - 2 pairs at once: new build 16.4 s and 17.9 s; old build 17.0 s and 17.5 s. No difference;
+    these arrivals likely did not hit the stuck path, so the ~6 s gain is not measured.
+  - 3 pairs at once: new build 26.2 s and two over 50 s; old build 25.9 s, 50.3 s, one over
+    50 s. Slow joins under heavy load exist with or without this change; cause not found.
+- Not verified: real phones or the public internet (needs a human).
+
+**Money earned:** £0 (not yet published on a paying channel).
+
+**Next task:** find whether the 50 s+ joins under load are just CPU starvation or a real slow
+path; decide whether deploy should wait for e2e; owner playtest fixes if any.
+
 ## 2026-11-06
 
 **Implemented**
