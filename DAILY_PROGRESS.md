@@ -20,6 +20,7 @@ Verified work only. Newest first.
     these arrivals likely did not hit the stuck path, so the ~6 s gain is not measured.
   - 3 pairs at once: new build 26.2 s and two over 50 s; old build 25.9 s, 50.3 s, one over
     50 s. Slow joins under heavy load exist with or without this change; cause not found.
+- GitHub Actions run 42344856862 (commit aa0f358): build, e2e and deploy all succeeded.
 - Not verified: real phones or the public internet (needs a human).
 
 **Money earned:** £0 (not yet published on a paying channel).
