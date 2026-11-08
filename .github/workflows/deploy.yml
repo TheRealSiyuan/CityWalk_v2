@@ -35,8 +35,9 @@ jobs:
         with:
           path: dist
 
+  # Deploy waits for the browser tests so a broken build never reaches players.
   deploy:
-    needs: build
+    needs: [build, e2e]
     runs-on: ubuntu-24.04
     environment:
       name: github-pages
@@ -45,7 +46,7 @@ jobs:
       - id: deployment
         uses: actions/deploy-pages@v4
 
-  # Browser tests run alongside the deploy; they report but do not block it.
+  # Browser tests gate the deploy (see DECISIONS.md, 2026-11-08).
   e2e:
     runs-on: ubuntu-24.04
     steps:

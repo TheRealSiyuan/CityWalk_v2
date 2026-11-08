@@ -169,7 +169,8 @@ export class UI {
   setReticle(x: number, y: number, on: boolean): void {
     const r = $('reticle');
     r.classList.toggle('on', on);
-    if (on) r.style.transform = `translate(${x.toFixed(1)}px, ${y.toFixed(1)}px)`;
+    // translate first, then turn into a diamond (a separate CSS `rotate` would also turn the offset)
+    if (on) r.style.transform = `translate(${x.toFixed(1)}px, ${y.toFixed(1)}px) rotate(45deg)`;
   }
 
   private async share(): Promise<void> {

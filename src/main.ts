@@ -13,6 +13,7 @@ import { GhostRecorder, decodeGhost, encodeGhost, ghostPose, liveDelta, splitDel
 import { ROUTES, Race, dailyRoute, formatTime, raceShareText, type Route } from './race';
 import { WATER_Y, groundHeight } from './world/river';
 import { parsePortal, portalRules } from './portal';
+import { AimLine } from './render/aimline';
 
 // We author colours as final display values, so skip three's colour management.
 THREE.ColorManagement.enabled = false;
@@ -316,6 +317,7 @@ ghostAvatar.setGhost(CONFIG.ghost.opacity);
 ghostAvatar.setName('Your best');
 ghostAvatar.root.visible = false;
 scene.add(ghostAvatar.root, ghostAvatar.rope);
+const aimLine = new AimLine(scene);
 ui.onName = (name) => {
   const n = cleanName(name);
   if (!n || n === myName) return;
@@ -433,12 +435,16 @@ function updateLandmarks(dt: number): void {
   }
 }
 
+/** where the reticle should sit on screen (CSS px), for the tests */
+let reticleAt: { x: number; y: number } | null = null;
 function updateReticle(): void {
+  reticleAt = null;
   const a = player.aim;
   if (!a || player.rope) return ui.setReticle(0, 0, false);
   proj.set(a.x, a.y, a.z).project(camera);
   if (proj.z > 1 || Math.abs(proj.x) > 1 || Math.abs(proj.y) > 1) return ui.setReticle(0, 0, false);
-  ui.setReticle((proj.x * 0.5 + 0.5) * window.innerWidth, (-proj.y * 0.5 + 0.5) * window.innerHeight, true);
+  reticleAt = { x: (proj.x * 0.5 + 0.5) * window.innerWidth, y: (-proj.y * 0.5 + 0.5) * window.innerHeight };
+  ui.setReticle(reticleAt.x, reticleAt.y, true);
 }
 
 // --- main loop ------------------------------------------------------------------------
@@ -523,6 +529,7 @@ function tick(dt: number, now: number): void {
   tut.looked = input.lookTotal;
 
   avatar.update(dt, rp.x, rp.y, rp.z, player.yaw, player.anim, player.speed, player.rope ? player.rope.visual : null);
+  aimLine.update({ x: rp.x, y: rp.y + 1.75, z: rp.z }, player.aim, !!player.rope);
   updateCamera(dt, now);
   updateLandmarks(dt);
   race.update(dt, player.pos.x, player.pos.z);
@@ -618,6 +625,13 @@ const debug = {
   config: CONFIG,
   get player() {
     return { x: player.pos.x, y: player.pos.y, z: player.pos.z, anim: player.anim, roped: !!player.rope, grounded: player.grounded, swings: player.swings };
+  },
+  /** the dotted preview line to the anchor Swing would grab */
+  get aimLine() {
+    return { visible: aimLine.line.visible, aim: !!player.aim };
+  },
+  get reticleAt() {
+    return reticleAt;
   },
   get peers() {
     return [...remotes.values()].map((r) => ({ id: r.peer.id, name: r.peer.name, seen: r.seen, x: r.snap.x, y: r.snap.y, z: r.snap.z }));

@@ -2,6 +2,35 @@
 
 Verified work only. Newest first.
 
+## 2026-11-08
+
+**Implemented**
+- Fixed: the swing reticle was drawn in the wrong place on screen. Its CSS diamond turn
+  (`rotate: 45deg`) also turned its screen offset, so it sat far from the anchor it marked, often
+  near the left edge. It now sits on the anchor the Swing button would grab. This bug was present
+  in every earlier build.
+- New: a dotted cream line runs from your hand to that anchor whenever Swing has something to
+  grab, and disappears once the real rope takes over. Tuning in `src/config.ts` (`aimLine`).
+  First tried as a 1-pixel GL line; it was barely visible on a phone-sized screenshot, so it uses
+  small dots instead.
+- Deploy now waits for the browser tests (`deploy` needs `build` and `e2e`), so a build that fails
+  them no longer reaches players. Decision recorded in `DECISIONS.md`.
+
+**Verified**
+- Build: 0 TS errors. Unit: 76 passed (2 new in `tests/aimline.test.ts`). Browser: 10 passed; the
+  Swing test now checks the dotted line appears before grabbing, hides once roped, and that the
+  reticle's centre is within 6 px of the anchor's projected screen point. I did not re-run that
+  check against the old CSS, so it is not proven to catch the old bug.
+- Pixel 7 emulation screenshot before and after: reticle moved from the screen edge onto the
+  lamp-post the line points at.
+- CrazyGames package rebuilt: scanner clean.
+- Not verified: whether the line helps or clutters in real play (needs a human), real phones.
+
+**Money earned:** £0 (not yet published on a paying channel).
+
+**Next task:** owner playtest fixes if any; then slow multiplayer joins under load, or swing feel
+(rope tension sound, landing roll).
+
 ## 2026-11-07
 
 **Implemented**

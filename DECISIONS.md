@@ -2,6 +2,13 @@
 
 Newest first.
 
+## 2026-11-08 — Deploy waits for browser tests
+
+The Pages deploy job now needs the e2e job as well as the build. Reason: e2e had passed on every
+run since 2026-10-26, so it is not flaky, and a build that breaks the game in a browser should not
+reach players. Cost: a deploy lands about 5 minutes later. Reversible by editing
+`.github/workflows/deploy.yml` (`needs: build`).
+
 ## 2026-10-28 — CrazyGames Basic Launch approval requested (not yet given)
 
 **Request:** submit `release/citywalk-crazygames-0.9.0.zip` to CrazyGames Basic Launch

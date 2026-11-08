@@ -83,6 +83,18 @@ export const CONFIG = {
 
   // --- race ghost ---------------------------------------------------------
   // your best run on each route replays as a translucent runner to chase
+  // dotted line from your hand to the anchor the Swing button would grab
+  aimLine: {
+    enabled: true,
+    color: 0xfff4d6, // same cream as the rope
+    opacity: 0.7,
+    dot: 0.16, // metres: size of each dot
+    spacing: 1.1, // metres between dots
+    maxDots: 60,
+    startGap: 0.6, // starts this far from the hand so it never cuts through the head
+    minLength: 1.5, // shorter than this, the reticle alone is enough
+  },
+
   ghost: {
     sampleHz: 10, // recorded poses per second of race time
     maxFrames: 6000, // runs longer than this (10 min at 10 Hz) keep no ghost
