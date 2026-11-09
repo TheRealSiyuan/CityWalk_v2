@@ -21,6 +21,7 @@ Verified work only. Newest first.
 - One-off desktop probe (temporary script, not kept), holding E for 6 s: hum level stayed at zero
   while reeling in, rose through each swing's low point to its cap, and was zero between ropes.
 - CrazyGames package rebuilt: scanner clean.
+- GitHub Actions run 42570091407 (commit 698fbf4): build, e2e, then deploy all succeeded.
 - Not verified: how it sounds (headless tests read the computed level, not the speakers), whether
   it helps or annoys in real play, and the hidden-tab pause on real phones. Needs a human.
 
