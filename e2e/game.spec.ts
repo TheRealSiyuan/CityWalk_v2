@@ -9,7 +9,7 @@ const url = (room: string) => `/?room=${room}&relay=${encodeURIComponent(RELAY)}
 
 interface PlayerState { x: number; y: number; z: number; anim: number; roped: boolean; grounded: boolean; swings: number }
 interface PeerState { id: string; name: string; seen: boolean; x: number; y: number; z: number }
-type Debug = { ready: boolean; room: string; player: PlayerState; peers: PeerState[]; race: { state: string; time: number; next: number; route: string | null; stops: [number, number][] }; ghost: { loaded: boolean; time: number | null; visible: boolean; rope: boolean; x: number; z: number }; aimLine: { visible: boolean; aim: boolean }; reticleAt: { x: number; y: number } | null; teleport(x: number, y: number, z: number): void };
+type Debug = { ready: boolean; room: string; player: PlayerState; peers: PeerState[]; race: { state: string; time: number; next: number; route: string | null; stops: [number, number][] }; ghost: { loaded: boolean; time: number | null; visible: boolean; rope: boolean; x: number; z: number }; aimLine: { visible: boolean; aim: boolean }; reticleAt: { x: number; y: number } | null; ropeHum: { gain: number; freq: number }; teleport(x: number, y: number, z: number): void };
 declare global {
   interface Window { __citywalk: Debug }
 }
@@ -123,9 +123,12 @@ test('mobile: holding Swing attaches a rope and releasing lets go', async ({ pag
   await page.waitForTimeout(700);
   const mid = await player(page);
   expect(mid.y).toBeGreaterThan(0.5); // lifted off the ground by the rope
+  // the rope hums while it pulls, and falls silent once you let go
+  await expect.poll(async () => (await page.evaluate(() => window.__citywalk.ropeHum)).gain, { timeout: 3000 }).toBeGreaterThan(0);
   await page.screenshot({ path: 'screenshots/mobile-swing.png' });
   await touch(cdp, 'touchEnd');
   await expect.poll(async () => (await player(page)).roped, { timeout: 2000 }).toBe(false);
+  await expect.poll(async () => (await page.evaluate(() => window.__citywalk.ropeHum)).gain, { timeout: 1000 }).toBe(0);
   expect(errors).toEqual([]);
 });
 

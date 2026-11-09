@@ -2,6 +2,8 @@
 export class Sfx {
   private ctx: AudioContext | null = null;
   private wind: GainNode | null = null;
+  private hum: GainNode | null = null;
+  private humOsc: OscillatorNode | null = null;
   muted = false;
 
   /** Must be called from a user gesture. */
@@ -31,6 +33,18 @@ export class Sfx {
       this.wind.gain.value = 0;
       src.connect(filter).connect(this.wind).connect(ctx.destination);
       src.start();
+      // rope hum: a soft sawtooth through a low-pass, silent until a rope pulls
+      const osc = ctx.createOscillator();
+      osc.type = 'sawtooth';
+      osc.frequency.value = 85;
+      const lp = ctx.createBiquadFilter();
+      lp.type = 'lowpass';
+      lp.frequency.value = 420;
+      this.hum = ctx.createGain();
+      this.hum.gain.value = 0;
+      osc.connect(lp).connect(this.hum).connect(ctx.destination);
+      osc.start();
+      this.humOsc = osc;
     } catch {
       this.ctx = null;
     }
@@ -41,10 +55,25 @@ export class Sfx {
     if (this.ctx && this.ctx.state === 'suspended') void this.ctx.resume().catch(() => {});
   }
 
+  /** Silence the looping wind and rope hum while the tab is in the background (frames stop, so they would hold their last level). */
+  setHidden(hidden: boolean): void {
+    if (!this.ctx) return;
+    if (hidden) void this.ctx.suspend().catch(() => {});
+    else this.resume();
+  }
+
   setWind(speed: number): void {
     if (!this.ctx || !this.wind) return;
     const g = this.muted ? 0 : Math.min(0.22, Math.max(0, (speed - 9) / 30) * 0.22);
     this.wind.gain.setTargetAtTime(g, this.ctx.currentTime, 0.15);
+  }
+
+  /** Rope hum level and pitch (from `ropeHum`); gain 0 silences it. */
+  setRopeHum(gain: number, freq: number, smoothing: number): void {
+    if (!this.ctx || !this.hum || !this.humOsc) return;
+    const t = this.ctx.currentTime;
+    this.hum.gain.setTargetAtTime(this.muted ? 0 : gain, t, smoothing);
+    this.humOsc.frequency.setTargetAtTime(freq, t, smoothing);
   }
 
   private tone(freq: number, to: number, dur: number, type: OscillatorType, vol: number, delay = 0): void {

@@ -2,6 +2,33 @@
 
 Verified work only. Newest first.
 
+## 2026-11-09
+
+**Implemented**
+- New: the rope now hums while it pulls. A soft, low procedural tone (no audio files) rises in
+  pitch and volume with how hard the rope is pulling you: quiet while hanging or reeling in,
+  swelling as you whip through the bottom of a swing, silent the moment you let go. It follows
+  Sound on/off. Tuning in `src/config.ts` (`ropeHum`).
+- Fixed: the looping wind (and now the hum) kept playing at its last level when the tab went to
+  the background, because frames stop there. Sound now pauses while the tab is hidden and comes
+  back on return (or on the next tap on iOS).
+
+**Verified**
+- Build: 0 TS errors. Unit: 81 passed (5 new in `tests/ropesound.test.ts`: 1 g hanging still,
+  v²/r added at the low point, speed along the rope ignored, slack above the anchor, hum silent
+  when resting/disabled and capped at full tension). Browser: 10 passed; the Swing test now checks
+  the hum's level goes above zero while roped and back to zero after letting go.
+- One-off desktop probe (temporary script, not kept), holding E for 6 s: hum level stayed at zero
+  while reeling in, rose through each swing's low point to its cap, and was zero between ropes.
+- CrazyGames package rebuilt: scanner clean.
+- Not verified: how it sounds (headless tests read the computed level, not the speakers), whether
+  it helps or annoys in real play, and the hidden-tab pause on real phones. Needs a human.
+
+**Money earned:** £0 (not yet published on a paying channel).
+
+**Next task:** owner playtest fixes if any; then landing roll animation, or slow multiplayer
+joins under load.
+
 ## 2026-11-08
 
 **Implemented**

@@ -95,6 +95,17 @@ export const CONFIG = {
     minLength: 1.5, // shorter than this, the reticle alone is enough
   },
 
+  // a low hum while on a rope that rises and swells with how hard the rope pulls (no assets)
+  ropeHum: {
+    enabled: true,
+    minTension: 1.1, // in g: hanging still is 1, so a resting rope stays quiet
+    fullTension: 3.5, // the hum is at its loudest and highest from here up
+    maxGain: 0.05,
+    baseFreq: 85, // Hz at the quietest
+    topFreq: 190, // Hz at full tension
+    smoothing: 0.08, // seconds: how quickly the hum follows the tension
+  },
+
   ghost: {
     sampleHz: 10, // recorded poses per second of race time
     maxFrames: 6000, // runs longer than this (10 min at 10 Hz) keep no ghost

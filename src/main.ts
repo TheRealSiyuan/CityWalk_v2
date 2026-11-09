@@ -5,6 +5,7 @@ import { Net, makeRoomCode, sample, sanitizeRoom, type Peer, type Snap } from '.
 import { Avatar, Anim, PLAYER_COLORS } from './player/avatar';
 import { Player } from './player/controller';
 import { Sfx } from './audio';
+import { ropeHum, ropeTension } from './ropesound';
 import { UI, store } from './ui';
 import { buildWorld } from './world/city';
 import { LANDMARKS, SPAWN, type Landmark } from './world/data';
@@ -76,11 +77,13 @@ const world = buildWorld();
 scene.add(world.group);
 
 const sfx = new Sfx();
+let hum = { gain: 0, freq: 0 };
 const ui = new UI(shareUrl);
 const input = new Input(document.getElementById('touch')!);
 input.onFirstGesture = () => sfx.start();
 for (const ev of ['pointerup', 'touchend', 'click', 'keyup']) document.addEventListener(ev, () => sfx.resume(), { passive: true });
 ui.onMute = (m) => (sfx.muted = m);
+document.addEventListener('visibilitychange', () => sfx.setHidden(document.hidden));
 
 const tut = { moved: 0, looked: 0, jumped: 0, swung: 0 };
 const jitter = () => (Math.random() - 0.5) * 3;
@@ -565,6 +568,8 @@ function tick(dt: number, now: number): void {
   updateReticle();
   ui.updateTutorial(dt, tut);
   sfx.setWind(Math.hypot(player.vel.x, player.vel.y, player.vel.z));
+  hum = ropeHum(player.rope ? ropeTension(player.pos, player.vel, player.rope.anchor) : null);
+  sfx.setRopeHum(hum.gain, hum.freq, CONFIG.ropeHum.smoothing);
 
   // remote players, rendered slightly in the past and interpolated
   const rt = now - CONFIG.net.interpDelay;
@@ -659,6 +664,9 @@ const debug = {
     autopilot = ids ? { stops: ids.map((id) => LANDMARKS.find((l) => l.id === id)!).filter(Boolean), i: 0 } : null;
   },
   place: (x: number, z: number, yaw: number) => placePlayer(x, z, yaw),
+  get ropeHum() {
+    return hum;
+  },
   get fps() {
     return fps;
   },
