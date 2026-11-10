@@ -32,6 +32,9 @@ anywhere except the existing GitHub Pages site.
   wait up to about 27 s to appear (about 6 s less in theory since 2026-11-07, not yet measured).
   The permanent empty street this could cause was fixed on 2026-11-04. Under heavy CPU load in
   the build machine, some joins took 50 s or more, with or without the 2026-11-07 change.
+- The two-player browser test failed once in CI (2026-11-10) on a networking-library console error
+  logged when a peer connection is closed ("User-Initiated Abort"); a re-run passed. Cause not yet
+  found; it may be the room re-join path closing a connection mid-handshake.
 - Multiplayer over the public internet is unverified from the build environment; strict
   NATs without TURN fall back to solo.
 - Rope can pass the London Eye wheel and thin details (not solid by design).

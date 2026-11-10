@@ -20,7 +20,11 @@ Verified work only. Newest first.
 - One-off desktop probe (temporary script, not kept), frame-stepped: running off a 22 m drop gave
   a roll; captured frames show tuck, upside-down, and back upright.
 - CrazyGames package rebuilt: scanner clean.
-- GitHub Actions: DEPLOY_RESULT
+- GitHub Actions run 42765171542 (commit 5d7a1d0): first attempt failed in e2e, so nothing
+  deployed. The two-player test caught a console error from the networking library ("peer error:
+  User-Initiated Abort, reason=Close called"), logged when a peer connection is closed; the landing
+  change does not touch networking and all 10 browser tests passed locally. Re-running the failed
+  job passed, and deploy then succeeded. Treated as a flaky multiplayer close, not fixed today.
 - Not verified: whether it feels good or reads clearly at game speed, on a phone, or on a friend's
   avatar over a real network. Needs a human.
 
