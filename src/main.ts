@@ -667,6 +667,10 @@ const debug = {
   get ropeHum() {
     return hum;
   },
+  /** landing poses (crouch / roll) the local avatar has started */
+  get landings() {
+    return { count: avatar.landing.count, kind: avatar.landing.kind };
+  },
   get fps() {
     return fps;
   },

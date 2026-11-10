@@ -2,6 +2,32 @@
 
 Verified work only. Newest first.
 
+## 2026-11-10
+
+**Implemented**
+- New: landings have a body. Dropping hard (over ~11.5 m/s, more than a plain jump) makes the
+  character crouch on touchdown; dropping hard while moving fast (from a swing, say) turns it into
+  a quick forward roll. Purely visual: speed, sliding and controls are unchanged, and a jump
+  cancels the pose at once. It is worked out from the avatar's height alone, so friends' avatars
+  and race ghosts roll too. Tuning in `src/config.ts` (`landing`).
+
+**Verified**
+- Build: 0 TS errors. Unit: 86 passed (5 new in `tests/landing.test.ts`: crouch/roll/none
+  thresholds, the roll turns exactly once and ends upright, the body never dips below the pavement
+  mid-roll, the tracker fires once per touchdown from heights alone, and a plain hop, a teleport or
+  a swing low point followed by a short drop does not trigger it). Browser: 10 passed; the Swing
+  test now drops the player 15 m and checks a landing pose starts and finishes.
+- One-off desktop probe (temporary script, not kept), frame-stepped: running off a 22 m drop gave
+  a roll; captured frames show tuck, upside-down, and back upright.
+- CrazyGames package rebuilt: scanner clean.
+- GitHub Actions: DEPLOY_RESULT
+- Not verified: whether it feels good or reads clearly at game speed, on a phone, or on a friend's
+  avatar over a real network. Needs a human.
+
+**Money earned:** £0 (not yet published on a paying channel).
+
+**Next task:** owner playtest fixes if any; then slow multiplayer joins under load.
+
 ## 2026-11-09
 
 **Implemented**

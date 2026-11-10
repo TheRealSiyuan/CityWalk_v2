@@ -24,7 +24,7 @@ Ordered by impact on getting real players and the first revenue.
 - Multiplayer race: everyone in a room races the same route.
 - Measure real-phone frame rate (ask testers), tune quality presets.
 - Swing feel: anchor preview line and on-target reticle (done 2026-11-08); rope tension hum
-  (done 2026-11-09, needs a listen); landing roll animation.
+  (done 2026-11-09, needs a listen); landing crouch/roll (done 2026-11-10, needs a look).
 
 ## Later (only if players ask for it)
 

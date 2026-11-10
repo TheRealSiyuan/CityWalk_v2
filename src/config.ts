@@ -96,6 +96,19 @@ export const CONFIG = {
   },
 
   // a low hum while on a rope that rises and swells with how hard the rope pulls (no assets)
+  // Landing pose (purely visual: the body's physics are unchanged).
+  landing: {
+    enabled: true,
+    crouchFall: 11.5, // m/s falling at touchdown: below this (a plain jump lands at ~10.5), no pose
+    rollFall: 13, // ...and from this fast, while moving fast, a forward roll
+    rollSpeed: 9, // m/s across the ground needed to roll rather than crouch
+    crouchTime: 0.24, // seconds
+    crouchDepth: 0.22, // 0..1 how far the body squashes at the deepest point
+    rollTime: 0.5, // seconds for one full forward roll
+    rollTuck: 0.4, // 0..1 how small the body curls up mid-roll
+    rollPivot: 0.6, // metres above the feet the body turns about
+    rollLift: 0.45, // metres the pivot rises mid-roll, so the head clears the pavement
+  },
   ropeHum: {
     enabled: true,
     minTension: 1.1, // in g: hanging still is 1, so a resting rope stays quiet

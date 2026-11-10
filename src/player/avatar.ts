@@ -1,6 +1,7 @@
 import * as THREE from 'three';
 import { Builder } from '../world/builder';
 import { toonMaterial } from '../render/materials';
+import { LandingTracker } from './landing';
 
 export enum Anim {
   Idle = 0,
@@ -70,6 +71,8 @@ export class Avatar {
   private tag: THREE.Sprite | null = null;
   private phase = 0;
   private lean = new THREE.Quaternion();
+  /** touchdown crouch / forward roll, driven by height alone so friends and ghosts get it too */
+  landing = new LandingTracker();
 
   constructor(public color: number) {
     const SKIN = 0xf4c9a0;
@@ -141,6 +144,7 @@ export class Avatar {
     }
     this.lean.slerp(tmpQ, 1 - Math.exp(-10 * dt));
     this.body.quaternion.copy(this.lean).multiply(yawQ);
+    const land = this.landing.update(dt, y, anim === Anim.Air || anim === Anim.Swing, speed);
 
     const k = 1 - Math.exp(-14 * dt);
     let aL = 0, aR = 0, lL = 0, lR = 0, tilt = 0, bob = 0;
@@ -174,8 +178,22 @@ export class Avatar {
     this.legR.rotation.x += (lR - this.legR.rotation.x) * k;
     this.armL.rotation.z = -0.12;
     this.armR.rotation.z = 0.12;
-    this.body.position.y = bob;
-    if (tilt) {
+    this.body.position.set(0, bob, 0);
+    this.body.scale.set(1, 1, 1);
+    if (land) {
+      // Curl up and turn about a point above the feet (see landing.ts posePoint).
+      tilt = land.angle;
+      this.body.scale.set(land.sxz, land.sy, land.sxz);
+      tmpQ.setFromAxisAngle(tmp.set(1, 0, 0), tilt);
+      this.body.quaternion.multiply(tmpQ);
+      tmp.set(0, land.pivot * land.sy, 0).applyQuaternion(this.body.quaternion);
+      this.body.position.set(-tmp.x, land.pivot + land.lift - tmp.y, -tmp.z);
+      const t = land.tuck;
+      this.armL.rotation.x += (-1.3 * t - this.armL.rotation.x) * Math.min(1, k * 2);
+      this.armR.rotation.x += (-1.3 * t - this.armR.rotation.x) * Math.min(1, k * 2);
+      this.legL.rotation.x += (-1.5 * t - this.legL.rotation.x) * Math.min(1, k * 2);
+      this.legR.rotation.x += (-1.5 * t - this.legR.rotation.x) * Math.min(1, k * 2);
+    } else if (tilt) {
       tmpQ.setFromAxisAngle(tmp.set(1, 0, 0), tilt);
       this.body.quaternion.multiply(tmpQ);
     }

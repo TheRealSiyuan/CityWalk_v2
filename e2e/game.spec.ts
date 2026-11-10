@@ -9,7 +9,7 @@ const url = (room: string) => `/?room=${room}&relay=${encodeURIComponent(RELAY)}
 
 interface PlayerState { x: number; y: number; z: number; anim: number; roped: boolean; grounded: boolean; swings: number }
 interface PeerState { id: string; name: string; seen: boolean; x: number; y: number; z: number }
-type Debug = { ready: boolean; room: string; player: PlayerState; peers: PeerState[]; race: { state: string; time: number; next: number; route: string | null; stops: [number, number][] }; ghost: { loaded: boolean; time: number | null; visible: boolean; rope: boolean; x: number; z: number }; aimLine: { visible: boolean; aim: boolean }; reticleAt: { x: number; y: number } | null; ropeHum: { gain: number; freq: number }; teleport(x: number, y: number, z: number): void };
+type Debug = { ready: boolean; room: string; player: PlayerState; peers: PeerState[]; race: { state: string; time: number; next: number; route: string | null; stops: [number, number][] }; ghost: { loaded: boolean; time: number | null; visible: boolean; rope: boolean; x: number; z: number }; aimLine: { visible: boolean; aim: boolean }; reticleAt: { x: number; y: number } | null; ropeHum: { gain: number; freq: number }; landings: { count: number; kind: string }; teleport(x: number, y: number, z: number): void };
 declare global {
   interface Window { __citywalk: Debug }
 }
@@ -129,6 +129,13 @@ test('mobile: holding Swing attaches a rope and releasing lets go', async ({ pag
   await touch(cdp, 'touchEnd');
   await expect.poll(async () => (await player(page)).roped, { timeout: 2000 }).toBe(false);
   await expect.poll(async () => (await page.evaluate(() => window.__citywalk.ropeHum)).gain, { timeout: 1000 }).toBe(0);
+  // a hard drop ends in a landing pose (crouch standing still), then the body stands up again
+  await expect.poll(async () => (await player(page)).grounded, { timeout: 8000 }).toBe(true);
+  const before = (await page.evaluate(() => window.__citywalk.landings)).count;
+  const at2 = await player(page);
+  await page.evaluate(([x, y, z]) => window.__citywalk.teleport(x, y + 15, z), [at2.x, at2.y, at2.z]);
+  await expect.poll(async () => (await page.evaluate(() => window.__citywalk.landings)).count, { timeout: 5000 }).toBe(before + 1);
+  await expect.poll(async () => (await page.evaluate(() => window.__citywalk.landings)).kind, { timeout: 2000 }).toBe('none');
   expect(errors).toEqual([]);
 });
 
