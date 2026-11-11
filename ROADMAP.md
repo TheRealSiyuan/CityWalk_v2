@@ -8,8 +8,8 @@ Ordered by impact on getting real players and the first revenue.
    immediate re-join (2026-11-07, unit-tested, real-browser gain not measured). Remaining: slow
    joins (50 s+) seen when 6 browsers shared a 2-core machine, in both old and new builds;
    find whether that is just load or a real slow path. Deploy now waits for e2e (2026-11-08).
-   Also: a one-off "User-Initiated Abort" peer error failed the two-player CI test on 2026-11-10
-   (re-run passed); find what closes the connection.
+   The "User-Initiated Abort" CI flake (2026-11-10) is fixed: it was the library logging a
+   friend's abrupt close as an error (2026-11-11).
 1. **Owner playtest on phone + desktop**, fix anything it surfaces.
 2. **itch.io launch** (awaiting approval — `DECISIONS.md`).
 3. **CrazyGames Basic Launch** (awaiting approval — `DECISIONS.md`). The no-external-links

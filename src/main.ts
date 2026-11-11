@@ -1,7 +1,7 @@
 import * as THREE from 'three';
 import { CONFIG } from './config';
 import { Input } from './input';
-import { Net, makeRoomCode, sample, sanitizeRoom, type Peer, type Snap } from './net';
+import { Net, makeRoomCode, remoteCloseCount, sample, sanitizeRoom, type Peer, type Snap } from './net';
 import { Avatar, Anim, PLAYER_COLORS } from './player/avatar';
 import { Player } from './player/controller';
 import { Sfx } from './audio';
@@ -637,6 +637,11 @@ const debug = {
   },
   get reticleAt() {
     return reticleAt;
+  },
+  /** close all peer connections abruptly (tests the remote-close path) */
+  dropPeers: () => net.dropPeersAbruptly(),
+  get remoteCloses() {
+    return remoteCloseCount();
   },
   get peers() {
     return [...remotes.values()].map((r) => ({ id: r.peer.id, name: r.peer.name, seen: r.seen, x: r.snap.x, y: r.snap.y, z: r.snap.z }));

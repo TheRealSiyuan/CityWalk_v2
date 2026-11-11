@@ -28,6 +28,42 @@ export interface NetHandlers {
   onName(peer: Peer): void;
 }
 
+/**
+ * When the other end closes a connection without saying goodbye first (its tab
+ * crashed, or it reset a stuck handshake), Chrome reports the closed channel as
+ * an error ("User-Initiated Abort, reason=Close called") and the networking
+ * library logs it with console.error before treating it as a normal disconnect.
+ * Nothing is wrong on this side, so that one message is logged as debug instead:
+ * a clean console for players and portal QA, and every other error still shows.
+ */
+export function isRemoteCloseLog(args: readonly unknown[]): boolean {
+  return (
+    args.length >= 2 &&
+    typeof args[0] === 'string' &&
+    /\bpeer error\b/i.test(args[0]) &&
+    /User-Initiated Abort/.test(String(args[1]))
+  );
+}
+
+let remoteCloses = 0;
+let wrapper: ((...args: unknown[]) => void) | null = null;
+/** How many remote closes were logged as debug instead of an error (for tests). */
+export const remoteCloseCount = () => remoteCloses;
+
+function quietRemoteCloses(): void {
+  if (console.error === wrapper) return;
+  const error = console.error.bind(console);
+  wrapper = (...args: unknown[]) => {
+    if (isRemoteCloseLog(args)) {
+      remoteCloses++;
+      console.debug('CityWalk: a friend closed the connection; it will reconnect if they are still here.', ...args);
+      return;
+    }
+    error(...args);
+  };
+  console.error = wrapper;
+}
+
 const ROOM_ALPHABET = 'abcdefghjkmnpqrstuvwxyz23456789';
 
 export function makeRoomCode(): string {
@@ -70,6 +106,7 @@ export class Net {
   private rejoinNow = false;
 
   start(roomCode: string, name: string, relays: string[] | null): void {
+    quietRemoteCloses();
     this.name = name;
     this.roomCode = roomCode;
     this.relays = relays;
@@ -208,6 +245,17 @@ export class Net {
     b[8] = anchor ? anchor.y : 0;
     b[9] = anchor ? anchor.z : 0;
     this.sendState(b);
+  }
+
+  /** Test hook: close every peer connection abruptly, as a crashed tab or a stuck-handshake reset would. */
+  dropPeersAbruptly(): void {
+    for (const p of Object.values(this.room?.getPeers() ?? {})) {
+      try {
+        p.close();
+      } catch {
+        // Already gone.
+      }
+    }
   }
 
   leave(): void {

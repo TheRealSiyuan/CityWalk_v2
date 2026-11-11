@@ -2,6 +2,33 @@
 
 Verified work only. Newest first.
 
+## 2026-11-11
+
+**Implemented**
+- Fixed: the flaky two-player CI failure from 2026-11-10. Cause found and reproduced on demand:
+  when one side closes a connection without a goodbye (the game itself does this to reset a
+  friend stuck mid-handshake, and a crashed tab does it too), Chrome reports the closed channel to
+  the other side as an error, and the networking library logs it with `console.error` before
+  handling it as an ordinary disconnect. A graceful leave did not produce it. The game now logs that
+  one message as debug instead, so the console stays clean for players and portal QA; every other
+  error, including other networking errors, is still logged as an error.
+- Which close happened in the failing CI run is not proven (the reset of a silent peer, or the
+  library dropping a duplicate connection); both end in the same message.
+
+**Verified**
+- Build: 0 TS errors. Unit: 88 passed (2 new in `tests/net.test.ts`: only that exact library
+  message is recognised, and once the game is online it goes to debug and is counted while other
+  errors pass through unchanged). Browser: 10 passed; the two-player test now also drops A's
+  connection abruptly and checks B sees A leave, logs no error, counts the remote close, and that
+  both find each other again (within a few seconds locally). With the fix disabled, that test fails.
+  Two-player test passed 3 of 3 repeats.
+- CrazyGames package rebuilt: scanner clean.
+- Not verified: behaviour over the real internet or on phones; that CI stays green over time.
+
+**Money earned:** £0 (not yet published on a paying channel).
+
+**Next task:** owner playtest fixes if any; then slow multiplayer joins under load.
+
 ## 2026-11-10
 
 **Implemented**

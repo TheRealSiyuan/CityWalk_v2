@@ -36,7 +36,7 @@ vi.mock('trystero', () => ({
   },
 }));
 
-const { Net } = await import('../src/net');
+const { Net, isRemoteCloseLog, remoteCloseCount } = await import('../src/net');
 
 function setup() {
   const onLeave = vi.fn();
@@ -154,5 +154,45 @@ describe('Net: peers stuck after a re-join', () => {
     await vi.advanceTimersByTimeAsync(2000);
     expect(room.leave).toHaveBeenCalledTimes(1);
     expect(rooms).toHaveLength(2);
+  });
+});
+
+describe('Net: a friend closing the connection is not an error', () => {
+  const abort = Object.assign(new Error('User-Initiated Abort, reason=Close called'), { name: 'OperationError' });
+
+  it('recognises only the library log of a remote close', () => {
+    expect(isRemoteCloseLog(['Trystero peer error:', abort])).toBe(true);
+    expect(isRemoteCloseLog(['Trystero peer error:', String(abort)])).toBe(true);
+    // other peer errors, other messages and a bare string stay errors
+    expect(isRemoteCloseLog(['Trystero peer error:', new Error('failed to apply remote signal')])).toBe(false);
+    expect(isRemoteCloseLog(['Trystero action handler error:', abort])).toBe(false);
+    expect(isRemoteCloseLog(['peer error: User-Initiated Abort'])).toBe(false);
+    expect(isRemoteCloseLog([abort])).toBe(false);
+  });
+
+  it('logs a remote close as debug once the game is online, and leaves every other error alone', () => {
+    const seen: unknown[][] = [];
+    const debugSeen: unknown[][] = [];
+    const origError = console.error;
+    const origDebug = console.debug;
+    console.error = (...a: unknown[]) => void seen.push(a);
+    console.debug = (...a: unknown[]) => void debugSeen.push(a);
+    vi.stubGlobal('window', { setInterval: () => 0 });
+    vi.stubGlobal('document', { hidden: false });
+    try {
+      new Net({ onJoin: vi.fn(), onLeave: vi.fn(), onName: vi.fn() }).start('room', 'Me', null);
+      const before = remoteCloseCount();
+      console.error('Trystero peer error:', abort);
+      console.error('Trystero peer error:', new Error('failed to apply remote signal'));
+      console.error('something else broke');
+      expect(remoteCloseCount()).toBe(before + 1);
+      expect(seen.map((a) => String(a[0]))).toEqual(['Trystero peer error:', 'something else broke']);
+      expect(String(seen[0][1])).toContain('failed to apply remote signal');
+      expect(debugSeen).toHaveLength(1);
+    } finally {
+      console.error = origError;
+      console.debug = origDebug;
+      vi.unstubAllGlobals();
+    }
   });
 });
