@@ -23,6 +23,8 @@ Verified work only. Newest first.
   both find each other again (within a few seconds locally). With the fix disabled, that test fails.
   Two-player test passed 3 of 3 repeats.
 - CrazyGames package rebuilt: scanner clean.
+- GitHub Actions run 42969837820 (commit 39d8314): build, e2e, then deploy all succeeded on the
+  first attempt.
 - Not verified: behaviour over the real internet or on phones; that CI stays green over time.
 
 **Money earned:** £0 (not yet published on a paying channel).
