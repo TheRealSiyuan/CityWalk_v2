@@ -145,6 +145,8 @@ export const CONFIG = {
     sendHz: 12,
     interpDelay: 0.16, // seconds remote avatars are rendered in the past
     maxPlayers: 8,
+    maxRaceSeconds: 3600, // race results from friends outside (0, this) are ignored
+    roomResultToast: 3.5, // seconds a friend's race result stays on screen
     helloTimeout: 12, // seconds a joined peer may stay silent before its connection is reset (the library's own handshake gives up at 10)
   },
 

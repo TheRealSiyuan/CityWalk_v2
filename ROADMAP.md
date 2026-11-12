@@ -23,7 +23,9 @@ Ordered by impact on getting real players and the first revenue.
 
 ## Next
 
-- Multiplayer race: everyone in a room races the same route.
+- Multiplayer race: everyone in a room races the same route. First slice done 2026-11-12:
+  friends in a room see a toast with each other's race times. Next slice: a "Race it" button on
+  that toast so a friend can start the same route in one tap.
 - Measure real-phone frame rate (ask testers), tune quality presets.
 - Swing feel: anchor preview line and on-target reticle (done 2026-11-08); rope tension hum
   (done 2026-11-09, needs a listen); landing crouch/roll (done 2026-11-10, needs a look).

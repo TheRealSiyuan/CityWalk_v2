@@ -2,6 +2,33 @@
 
 Verified work only. Newest first.
 
+## 2026-11-12
+
+**Implemented**
+- Room race results: when someone in your room finishes a race, everyone else in the room sees a
+  toast such as "Swift Otter finished Westminster Dash in 1:23.4" (3.5 s). This is the first slice
+  of the "multiplayer race" item. Only a route id and a time are sent; the receiving game checks
+  both (known id shape, time between 0 and 1 hour) and looks the route's name up itself, so a
+  peer cannot put its own text on anyone's screen. Unknown routes are ignored; a daily from
+  another date (a friend in another time zone) shows that day's name. Nothing is sent when you
+  are alone, and the CrazyGames build (solo) is unaffected. Tuning in `CONFIG.net`.
+- Why this over slow joins: the Now list is otherwise blocked on the owner, and this is player
+  visible; the slow-join question is still open.
+
+**Verified**
+- Build: 0 TS errors. Unit: 91 passed (3 new in `tests/net.test.ts`: payload validation, local
+  route naming including other days' dailies, and send-only-when-not-alone / ignore bad or
+  unknown-peer results). Browser: 10 passed; the two-player test now has A run Westminster Dash
+  and checks B gets the toast and A gets no echo (screenshot `screenshots/multiplayer-result-b.png`).
+- CrazyGames package rebuilt: scanner clean.
+- Not verified: whether players notice or care about the toast (needs real players); behaviour
+  over the real internet or on phones.
+
+**Money earned:** £0 (not yet published on a paying channel).
+
+**Next task:** "Race it" button on a friend's result toast; owner playtest fixes if any; slow
+multiplayer joins under load.
+
 ## 2026-11-11
 
 **Implemented**

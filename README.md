@@ -31,7 +31,8 @@ building, character, shader and sound is generated in code.
 - **Races:** three timed landmark routes with a countdown, a beacon over the next stop and
   personal bests saved on your device.
 - **Share** opens the native share sheet (or copies the link). Anyone opening
-  it joins your room, up to 8 players.
+  it joins your room, up to 8 players. When someone in the room finishes a race, everyone
+  else sees their time.
 
 ## Run it
 

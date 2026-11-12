@@ -26,6 +26,24 @@ export interface NetHandlers {
   onJoin(peer: Peer): void;
   onLeave(id: string): void;
   onName(peer: Peer): void;
+  /** A friend in the room finished a race (already validated). */
+  onRaceResult(peer: Peer, result: RaceResult): void;
+}
+
+/** What a friend's game tells the room when it finishes a race: which route, and the time. */
+export type RaceResult = { route: string; t: number };
+
+/**
+ * Check a race result that arrived from another player before showing it. Only a
+ * route id and a time travel over the wire; the route's display name is looked up
+ * locally, so a peer can never put its own text on someone else's screen.
+ */
+export function parseRaceResult(d: unknown): RaceResult | null {
+  if (!d || typeof d !== 'object') return null;
+  const { route, t } = d as { route?: unknown; t?: unknown };
+  if (typeof route !== 'string' || !/^[a-z0-9-]{1,32}$/.test(route)) return null;
+  if (typeof t !== 'number' || !Number.isFinite(t) || t <= 0 || t >= CONFIG.net.maxRaceSeconds) return null;
+  return { route, t };
 }
 
 /**
@@ -89,6 +107,7 @@ export class Net {
   private room: Room | null = null;
   private sendState: ((d: Float32Array) => void) | null = null;
   private sendHello: ((d: { name: string }, target?: string) => void) | null = null;
+  private sendResult: ((d: RaceResult) => void) | null = null;
   private buf = new Float32Array(10);
   private name = '';
 
@@ -174,11 +193,15 @@ export class Net {
       this.room = room;
       const state = room.makeAction<Float32Array>('st');
       const hello = room.makeAction<{ name: string }>('hi');
+      const result = room.makeAction<RaceResult>('rr');
       this.sendState = (d) => {
         if (this.peers.size) state.send(d).catch(() => {});
       };
       this.sendHello = (d, target) => {
         hello.send(d, target ? { target } : undefined).catch(() => {});
+      };
+      this.sendResult = (d) => {
+        if (this.peers.size) result.send(d).catch(() => {});
       };
 
       room.onPeerJoin = (id) => {
@@ -205,6 +228,13 @@ export class Net {
         if (!peer || !d || typeof d.name !== 'string') return;
         peer.name = d.name.replace(/[^\p{L}\p{N} _-]/gu, '').slice(0, 14) || 'Walker';
         this.handlers.onName(peer);
+      };
+      result.onMessage = (d, ctx) => {
+        if (generation !== this.generation) return;
+        this.unconfirmed.delete(ctx.peerId);
+        const peer = this.peers.get(ctx.peerId);
+        const r = parseRaceResult(d);
+        if (peer && r) this.handlers.onRaceResult(peer, r);
       };
       state.onMessage = (raw, ctx) => {
         if (generation !== this.generation) return;
@@ -234,6 +264,12 @@ export class Net {
   setName(name: string): void {
     this.name = name;
     if (this.peers.size) this.sendHello?.({ name });
+  }
+
+  /** Tell everyone in the room you finished a race (nothing is sent when you are alone). */
+  sendRaceResult(route: string, t: number): void {
+    const r = parseRaceResult({ route, t });
+    if (r) this.sendResult?.(r);
   }
 
   send(x: number, y: number, z: number, yaw: number, anim: number, speed: number, anchor: { x: number; y: number; z: number } | null): void {

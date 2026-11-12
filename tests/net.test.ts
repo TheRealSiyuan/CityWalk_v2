@@ -36,11 +36,12 @@ vi.mock('trystero', () => ({
   },
 }));
 
-const { Net, isRemoteCloseLog, remoteCloseCount } = await import('../src/net');
+const { Net, isRemoteCloseLog, remoteCloseCount, parseRaceResult } = await import('../src/net');
+const { routeName, roomResultText, dailyRoute } = await import('../src/race');
 
 function setup() {
   const onLeave = vi.fn();
-  const net = new Net({ onJoin: vi.fn(), onLeave, onName: vi.fn() });
+  const net = new Net({ onJoin: vi.fn(), onLeave, onName: vi.fn(), onRaceResult: vi.fn() });
   net.start('room', 'Me', null);
   const room = rooms[rooms.length - 1];
   return { net, room, onLeave };
@@ -180,7 +181,7 @@ describe('Net: a friend closing the connection is not an error', () => {
     vi.stubGlobal('window', { setInterval: () => 0 });
     vi.stubGlobal('document', { hidden: false });
     try {
-      new Net({ onJoin: vi.fn(), onLeave: vi.fn(), onName: vi.fn() }).start('room', 'Me', null);
+      new Net({ onJoin: vi.fn(), onLeave: vi.fn(), onName: vi.fn(), onRaceResult: vi.fn() }).start('room', 'Me', null);
       const before = remoteCloseCount();
       console.error('Trystero peer error:', abort);
       console.error('Trystero peer error:', new Error('failed to apply remote signal'));
@@ -194,5 +195,60 @@ describe('Net: a friend closing the connection is not an error', () => {
       console.debug = origDebug;
       vi.unstubAllGlobals();
     }
+  });
+});
+
+describe('Net: friends see your race results', () => {
+  beforeEach(() => {
+    rooms.length = 0;
+    vi.useFakeTimers();
+    vi.stubGlobal('window', { setInterval: (f: () => void, ms: number) => setInterval(f, ms) });
+    vi.stubGlobal('document', { hidden: false });
+  });
+  afterEach(() => {
+    vi.useRealTimers();
+    vi.unstubAllGlobals();
+  });
+
+  it('accepts only a known-shaped route id and a sane time', () => {
+    expect(parseRaceResult({ route: 'westminster', t: 42.5 })).toEqual({ route: 'westminster', t: 42.5 });
+    expect(parseRaceResult({ route: 'daily-2026-11-12', t: 61 })).toEqual({ route: 'daily-2026-11-12', t: 61 });
+    for (const bad of [null, 'x', 7, {}, { route: 'westminster' }, { route: 'westminster', t: 0 }, { route: 'westminster', t: -3 },
+      { route: 'westminster', t: Infinity }, { route: 'westminster', t: NaN }, { route: 'westminster', t: CONFIG.net.maxRaceSeconds },
+      { route: 'Westminster <b>', t: 40 }, { route: 'a'.repeat(33), t: 40 }, { route: 3, t: 40 }, { route: 'westminster', t: '40' }]) {
+      expect(parseRaceResult(bad)).toBeNull();
+    }
+  });
+
+  it('names routes locally and ignores unknown ones', () => {
+    expect(routeName('westminster')).toBe('Westminster Dash');
+    expect(routeName('daily-2026-11-12')).toBe(dailyRoute('2026-11-12').name);
+    expect(routeName('daily-2026-11-11')).toBe(dailyRoute('2026-11-11').name); // a friend a day behind in another time zone
+    expect(routeName('nowhere')).toBeNull();
+    expect(routeName('daily-2026-99-99')).toBeNull();
+    expect(roomResultText('Sam', 'Westminster Dash', 83.4)).toBe('Sam finished Westminster Dash in 1:23.4');
+  });
+
+  it('sends a finished race to the room, and passes on only valid results from a known peer', () => {
+    const onRaceResult = vi.fn();
+    const net = new Net({ onJoin: vi.fn(), onLeave: vi.fn(), onName: vi.fn(), onRaceResult });
+    net.start('room', 'Me', null);
+    const room = rooms[rooms.length - 1];
+    const rr = room.actions.get('rr')!;
+    net.sendRaceResult('westminster', 50);
+    expect(rr.send).not.toHaveBeenCalled(); // alone: nothing to tell
+    peerJoins(room, 'friend');
+    net.sendRaceResult('westminster', 50);
+    expect(rr.send).toHaveBeenCalledWith({ route: 'westminster', t: 50 });
+    net.sendRaceResult('westminster', NaN);
+    expect(rr.send).toHaveBeenCalledTimes(1);
+
+    rr.onMessage!({ route: 'river', t: 71.2 }, { peerId: 'friend' });
+    expect(onRaceResult).toHaveBeenCalledTimes(1);
+    expect(onRaceResult.mock.calls[0][0].id).toBe('friend');
+    expect(onRaceResult.mock.calls[0][1]).toEqual({ route: 'river', t: 71.2 });
+    rr.onMessage!({ route: 'river', t: -1 }, { peerId: 'friend' });
+    rr.onMessage!({ route: 'river', t: 30 }, { peerId: 'stranger' });
+    expect(onRaceResult).toHaveBeenCalledTimes(1);
   });
 });

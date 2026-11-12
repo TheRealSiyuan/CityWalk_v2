@@ -11,7 +11,7 @@ import { buildWorld } from './world/city';
 import { LANDMARKS, SPAWN, type Landmark } from './world/data';
 import { challengeFromHash, decodeChallenge, encodeChallenge, rivalLine, type Challenge } from './challenge';
 import { GhostRecorder, decodeGhost, encodeGhost, ghostPose, liveDelta, splitDelta, type Ghost, type GhostPose } from './ghost';
-import { ROUTES, Race, dailyRoute, formatTime, raceShareText, type Route } from './race';
+import { ROUTES, Race, dailyRoute, formatTime, raceShareText, roomResultText, routeName, type Route } from './race';
 import { WATER_Y, groundHeight } from './world/river';
 import { parsePortal, portalRules } from './portal';
 import { AimLine } from './render/aimline';
@@ -152,6 +152,8 @@ const race = new Race(
       ui.raceHud(false);
       beacon.visible = false;
       const run = ghostRec.finish(t, splits);
+      // friends in the same room see a toast with your time
+      if (race.route) net.sendRaceResult(race.route.id, t);
       if (isNew && race.route && run) saveGhost(race.route.id, run);
       const name = race.route?.name ?? 'Race';
       const routeId = race.route?.id ?? '';
@@ -312,7 +314,16 @@ const net = new Net({
   onName(peer) {
     remotes.get(peer.id)?.avatar.setName(peer.name);
   },
+  onRaceResult(peer, r) {
+    const name = routeName(r.route);
+    if (!name) return;
+    const text = roomResultText(peer.name, name, r.t);
+    roomResults.push(text);
+    ui.toast(text, CONFIG.net.roomResultToast * 1000);
+  },
 });
+// friends' race results seen this visit (for tests)
+const roomResults: string[] = [];
 const avatar = new Avatar(colorFor(net.id));
 scene.add(avatar.root, avatar.rope);
 const ghostAvatar = new Avatar(0xcfe8ff);
@@ -640,6 +651,9 @@ const debug = {
   },
   /** close all peer connections abruptly (tests the remote-close path) */
   dropPeers: () => net.dropPeersAbruptly(),
+  get roomResults() {
+    return [...roomResults];
+  },
   get remoteCloses() {
     return remoteCloseCount();
   },

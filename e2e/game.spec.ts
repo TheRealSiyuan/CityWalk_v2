@@ -9,7 +9,7 @@ const url = (room: string) => `/?room=${room}&relay=${encodeURIComponent(RELAY)}
 
 interface PlayerState { x: number; y: number; z: number; anim: number; roped: boolean; grounded: boolean; swings: number }
 interface PeerState { id: string; name: string; seen: boolean; x: number; y: number; z: number }
-type Debug = { ready: boolean; room: string; player: PlayerState; peers: PeerState[]; race: { state: string; time: number; next: number; route: string | null; stops: [number, number][] }; ghost: { loaded: boolean; time: number | null; visible: boolean; rope: boolean; x: number; z: number }; aimLine: { visible: boolean; aim: boolean }; reticleAt: { x: number; y: number } | null; ropeHum: { gain: number; freq: number }; landings: { count: number; kind: string }; remoteCloses: number; dropPeers(): void; teleport(x: number, y: number, z: number): void };
+type Debug = { ready: boolean; room: string; player: PlayerState; peers: PeerState[]; race: { state: string; time: number; next: number; route: string | null; stops: [number, number][] }; ghost: { loaded: boolean; time: number | null; visible: boolean; rope: boolean; x: number; z: number }; aimLine: { visible: boolean; aim: boolean }; reticleAt: { x: number; y: number } | null; ropeHum: { gain: number; freq: number }; landings: { count: number; kind: string }; remoteCloses: number; roomResults: string[]; dropPeers(): void; teleport(x: number, y: number, z: number): void };
 declare global {
   interface Window { __citywalk: Debug }
 }
@@ -205,6 +205,22 @@ test('multiplayer: two browsers on the same room link see each other move', asyn
   expect(await b.evaluate(() => window.__citywalk.remoteCloses)).toBeGreaterThan(closesB);
   await expect.poll(async () => (await peersOf(a)).filter((p) => p.seen).length, { timeout: 45_000 }).toBe(1);
   await expect.poll(async () => (await peersOf(b)).filter((p) => p.seen).length, { timeout: 45_000 }).toBe(1);
+
+  // A races; when A finishes, B is told A's time.
+  if (await a.locator('#tut-skip').isVisible()) await a.locator('#tut-skip').tap();
+  await a.locator('#race-btn').tap();
+  await a.locator('#routes button', { hasText: 'Westminster Dash' }).tap();
+  await expect.poll(async () => (await a.evaluate(() => window.__citywalk.race)).state, { timeout: 10_000 }).toBe('running');
+  for (const [x, z] of (await a.evaluate(() => window.__citywalk.race)).stops) {
+    await a.evaluate(([x, z]) => window.__citywalk.teleport(x, 0.5, z), [x, z]);
+    await a.waitForTimeout(400);
+  }
+  await expect(a.locator('#race-done')).toBeVisible();
+  await expect.poll(async () => (await b.evaluate(() => window.__citywalk.roomResults)).length, { timeout: 5000 }).toBe(1);
+  expect((await b.evaluate(() => window.__citywalk.roomResults))[0]).toMatch(/ finished Westminster Dash in \d+:\d\d\.\d$/);
+  await expect(b.locator('#toast')).toContainText('finished Westminster Dash');
+  await b.screenshot({ path: 'screenshots/multiplayer-result-b.png' });
+  expect(await a.evaluate(() => window.__citywalk.roomResults)).toEqual([]); // your own finish is not echoed back
 
   expect(errA).toEqual([]);
   expect(errB).toEqual([]);

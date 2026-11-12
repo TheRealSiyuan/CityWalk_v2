@@ -168,3 +168,17 @@ export function raceShareText(routeName: string, time: string, url = '', withGho
   const text = `CityWalk ${routeName}: I raced it in ${time}. ${dare}`;
   return url ? `${text} ${url}` : text;
 }
+
+/** The display name of a route id (a fixed route, or any day's daily); null if it is not one we know. */
+export function routeName(id: string): string | null {
+  const fixed = ROUTES.find((r) => r.id === id);
+  if (fixed) return fixed.name;
+  const m = /^daily-(\d{4}-\d{2}-\d{2})$/.exec(id);
+  if (!m || Number.isNaN(Date.parse(m[1]))) return null;
+  return dailyRoute(m[1]).name;
+}
+
+/** The toast shown when a friend in your room finishes a race. */
+export function roomResultText(who: string, route: string, t: number): string {
+  return `${who} finished ${route} in ${formatTime(t)}`;
+}
