@@ -21,6 +21,8 @@ Verified work only. Newest first.
   unknown-peer results). Browser: 10 passed; the two-player test now has A run Westminster Dash
   and checks B gets the toast and A gets no echo (screenshot `screenshots/multiplayer-result-b.png`).
 - CrazyGames package rebuilt: scanner clean.
+- GitHub Actions run 43164463355 (commit 60bf7c8): build, e2e, then deploy all succeeded on the
+  first attempt.
 - Not verified: whether players notice or care about the toast (needs real players); behaviour
   over the real internet or on phones.
 
