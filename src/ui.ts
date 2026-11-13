@@ -384,7 +384,8 @@ export class UI {
    * `kicker` marks it as a challenge, which waits for an answer instead of hiding itself;
    * `onNo` runs if the player declines.
    */
-  showNextUp(routeName: string, onRace: () => void, kicker?: string, onNo?: () => void): void {
+  /** Offer a race. Without a kicker it is the daily suggestion and hides by itself; with one it stays until answered, unless `hideAfter` (seconds) is given. */
+  showNextUp(routeName: string, onRace: () => void, kicker?: string, onNo?: () => void, hideAfter?: number): void {
     $('next-kicker').textContent = kicker ?? 'Ready? Try today\'s daily race';
     $('next-route').textContent = routeName;
     $('next-no').onclick = () => {
@@ -397,7 +398,12 @@ export class UI {
     };
     $('next-up').hidden = false;
     clearTimeout(this.nextTimer);
-    if (!kicker) this.nextTimer = window.setTimeout(() => this.hideNextUp(), CONFIG.firstRun.suggestSeconds * 1000);
+    const secs = hideAfter ?? (kicker ? 0 : CONFIG.firstRun.suggestSeconds);
+    if (secs > 0) this.nextTimer = window.setTimeout(() => this.hideNextUp(), secs * 1000);
+  }
+
+  get nextUpShowing(): boolean {
+    return !$('next-up').hidden;
   }
 
   hideNextUp(): void {

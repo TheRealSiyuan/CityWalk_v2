@@ -11,7 +11,7 @@ import { buildWorld } from './world/city';
 import { LANDMARKS, SPAWN, type Landmark } from './world/data';
 import { challengeFromHash, decodeChallenge, encodeChallenge, rivalLine, type Challenge } from './challenge';
 import { GhostRecorder, decodeGhost, encodeGhost, ghostPose, liveDelta, splitDelta, type Ghost, type GhostPose } from './ghost';
-import { ROUTES, Race, dailyRoute, formatTime, raceShareText, roomResultText, routeName, type Route } from './race';
+import { ROUTES, Race, dailyRoute, formatTime, raceShareText, roomResultText, routeById, type Route } from './race';
 import { WATER_Y, groundHeight } from './world/river';
 import { parsePortal, portalRules } from './portal';
 import { AimLine } from './render/aimline';
@@ -315,11 +315,14 @@ const net = new Net({
     remotes.get(peer.id)?.avatar.setName(peer.name);
   },
   onRaceResult(peer, r) {
-    const name = routeName(r.route);
-    if (!name) return;
-    const text = roomResultText(peer.name, name, r.t);
+    const route = routeById(r.route);
+    if (!route) return;
+    const text = roomResultText(peer.name, route.name, r.t);
     roomResults.push(text);
     ui.toast(text, CONFIG.net.roomResultToast * 1000);
+    // offer the same route in one tap, but never interrupt a race, the tutorial or another offer
+    if (race.active || ui.tutorialActive || ui.nextUpShowing) return;
+    ui.showNextUp(`${route.name} · ${formatTime(r.t)}`, () => startRace(route), `Beat ${peer.name}`, undefined, CONFIG.net.raceItCard);
   },
 });
 // friends' race results seen this visit (for tests)

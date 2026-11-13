@@ -37,7 +37,7 @@ vi.mock('trystero', () => ({
 }));
 
 const { Net, isRemoteCloseLog, remoteCloseCount, parseRaceResult } = await import('../src/net');
-const { routeName, roomResultText, dailyRoute } = await import('../src/race');
+const { routeName, routeById, roomResultText, dailyRoute } = await import('../src/race');
 
 function setup() {
   const onLeave = vi.fn();
@@ -227,6 +227,15 @@ describe('Net: friends see your race results', () => {
     expect(routeName('nowhere')).toBeNull();
     expect(routeName('daily-2026-99-99')).toBeNull();
     expect(roomResultText('Sam', 'Westminster Dash', 83.4)).toBe('Sam finished Westminster Dash in 1:23.4');
+  });
+
+  it('rebuilds a friend\'s route locally so it can be raced ("Race it")', () => {
+    expect(routeById('westminster')?.name).toBe('Westminster Dash');
+    expect(routeById('daily-2026-11-11')).toEqual(dailyRoute('2026-11-11')); // same stops and start as the friend raced
+    expect(routeById('daily-2026-11-11')?.id).toBe('daily-2026-11-11');
+    expect(routeById('nowhere')).toBeNull();
+    expect(routeById('daily-2026-99-99')).toBeNull();
+    expect(routeById('daily-x')).toBeNull();
   });
 
   it('sends a finished race to the room, and passes on only valid results from a known peer', () => {

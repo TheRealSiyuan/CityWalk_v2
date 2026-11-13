@@ -208,6 +208,10 @@ test('multiplayer: two browsers on the same room link see each other move', asyn
 
   // A races; when A finishes, B is told A's time.
   if (await a.locator('#tut-skip').isVisible()) await a.locator('#tut-skip').tap();
+  // B is idle (no tutorial, no other offer up), so B will be offered A's route
+  if (await b.locator('#tut-skip').isVisible()) await b.locator('#tut-skip').tap();
+  if (await b.locator('#next-up').isVisible()) await b.locator('#next-no').tap();
+  await expect(b.locator('#next-up')).toBeHidden();
   await a.locator('#race-btn').tap();
   await a.locator('#routes button', { hasText: 'Westminster Dash' }).tap();
   await expect.poll(async () => (await a.evaluate(() => window.__citywalk.race)).state, { timeout: 10_000 }).toBe('running');
@@ -219,8 +223,17 @@ test('multiplayer: two browsers on the same room link see each other move', asyn
   await expect.poll(async () => (await b.evaluate(() => window.__citywalk.roomResults)).length, { timeout: 5000 }).toBe(1);
   expect((await b.evaluate(() => window.__citywalk.roomResults))[0]).toMatch(/ finished Westminster Dash in \d+:\d\d\.\d$/);
   await expect(b.locator('#toast')).toContainText('finished Westminster Dash');
+  // ...and offered the same route in one tap ("Race it"); A, who finished, gets no such offer
+  await expect(b.locator('#next-up')).toBeVisible();
+  await expect(b.locator('#next-kicker')).toContainText('Beat ');
+  await expect(b.locator('#next-route')).toContainText(/Westminster Dash · \d+:\d\d\.\d/);
   await b.screenshot({ path: 'screenshots/multiplayer-result-b.png' });
   expect(await a.evaluate(() => window.__citywalk.roomResults)).toEqual([]); // your own finish is not echoed back
+  await expect(a.locator('#next-up')).toBeHidden();
+  await b.locator('#next-go').tap();
+  await expect(b.locator('#next-up')).toBeHidden();
+  await expect.poll(async () => (await b.evaluate(() => window.__citywalk.race)).route, { timeout: 5000 }).toBe('westminster');
+  expect(['countdown', 'running']).toContain((await b.evaluate(() => window.__citywalk.race)).state);
 
   expect(errA).toEqual([]);
   expect(errB).toEqual([]);

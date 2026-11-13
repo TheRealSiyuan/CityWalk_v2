@@ -2,6 +2,34 @@
 
 Verified work only. Newest first.
 
+## 2026-11-13
+
+**Implemented**
+- "Race it" for a friend's result: when someone in your room finishes a race and you are not
+  racing, in the tutorial or already looking at another offer, a card appears ("Beat Jolly Badger
+  · Westminster Dash · 0:01.2") with Race it / Not now; Race it starts that route at its start
+  line. It hides itself after 8 s (`CONFIG.net.raceItCard`). The result toast is unchanged, and
+  mid-race you get only the toast. The route is rebuilt locally from its id (a fixed route, or any
+  day's daily), so a peer still cannot put its own text or route on your screen.
+- Second slice of the "multiplayer race" item; chosen because the rest of Now waits on the owner.
+
+**Verified**
+- Build: 0 TS errors. Unit: 92 passed (1 new in `tests/net.test.ts`: routes rebuilt by id, unknown
+  or malformed ids refused). Browser: the two-player test now checks B gets the card after A
+  finishes, A does not, and B's tap starts Westminster Dash (screenshot
+  `screenshots/multiplayer-result-b.png`).
+- Full browser run: 9 of 10 passed on the first run; the two-player test timed out earlier in the
+  test, at the existing "find each other again after an abrupt drop" step (45 s), before the new
+  code is reached. That test then passed 2 of 2 repeats. This is the known slow-join issue
+  (RELEASE.md), now also seen once on this build machine.
+- CrazyGames package rebuilt: scanner clean.
+- Not verified: whether players use the card; behaviour over the real internet or on phones.
+
+**Money earned:** £0 (not yet published on a paying channel).
+
+**Next task:** slow multiplayer re-joins after an abrupt drop (seen again today); owner playtest
+fixes if any.
+
 ## 2026-11-12
 
 **Implemented**

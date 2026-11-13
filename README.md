@@ -32,7 +32,7 @@ building, character, shader and sound is generated in code.
   personal bests saved on your device.
 - **Share** opens the native share sheet (or copies the link). Anyone opening
   it joins your room, up to 8 players. When someone in the room finishes a race, everyone
-  else sees their time.
+  else sees their time, with a "Race it" button to run the same route.
 
 ## Run it
 
