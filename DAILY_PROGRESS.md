@@ -23,6 +23,8 @@ Verified work only. Newest first.
   code is reached. That test then passed 2 of 2 repeats. This is the known slow-join issue
   (RELEASE.md), now also seen once on this build machine.
 - CrazyGames package rebuilt: scanner clean.
+- GitHub Actions run 43375338540 (commit 7b5c63d): build, e2e, then deploy all succeeded on the
+  first attempt.
 - Not verified: whether players use the card; behaviour over the real internet or on phones.
 
 **Money earned:** £0 (not yet published on a paying channel).
