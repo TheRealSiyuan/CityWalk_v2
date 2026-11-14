@@ -9,7 +9,7 @@ const url = (room: string) => `/?room=${room}&relay=${encodeURIComponent(RELAY)}
 
 interface PlayerState { x: number; y: number; z: number; anim: number; roped: boolean; grounded: boolean; swings: number }
 interface PeerState { id: string; name: string; seen: boolean; x: number; y: number; z: number }
-type Debug = { ready: boolean; room: string; player: PlayerState; peers: PeerState[]; race: { state: string; time: number; next: number; route: string | null; stops: [number, number][] }; ghost: { loaded: boolean; time: number | null; visible: boolean; rope: boolean; x: number; z: number }; aimLine: { visible: boolean; aim: boolean }; reticleAt: { x: number; y: number } | null; ropeHum: { gain: number; freq: number }; landings: { count: number; kind: string }; remoteCloses: number; roomResults: string[]; dropPeers(): void; teleport(x: number, y: number, z: number): void };
+type Debug = { ready: boolean; room: string; player: PlayerState; peers: PeerState[]; race: { state: string; time: number; next: number; route: string | null; stops: [number, number][]; target: { route: string; who: string; t: number } | null }; ghost: { loaded: boolean; time: number | null; visible: boolean; rope: boolean; x: number; z: number }; aimLine: { visible: boolean; aim: boolean }; reticleAt: { x: number; y: number } | null; ropeHum: { gain: number; freq: number }; landings: { count: number; kind: string }; remoteCloses: number; roomResults: string[]; dropPeers(): void; teleport(x: number, y: number, z: number): void };
 declare global {
   interface Window { __citywalk: Debug }
 }
@@ -140,6 +140,7 @@ test('mobile: holding Swing attaches a rope and releasing lets go', async ({ pag
 });
 
 test('multiplayer: two browsers on the same room link see each other move', async ({ browser }) => {
+  test.setTimeout(150_000); // joins, a drop and re-join, then two races; ran 66 s on 2026-11-14
   const room = 'e2e' + Math.random().toString(36).slice(2, 8);
   // Two fully separate browser contexts = two different people's phones.
   const phone = { viewport: { width: 390, height: 844 }, hasTouch: true, isMobile: true, baseURL: 'http://localhost:4173' };
@@ -234,6 +235,24 @@ test('multiplayer: two browsers on the same room link see each other move', asyn
   await expect(b.locator('#next-up')).toBeHidden();
   await expect.poll(async () => (await b.evaluate(() => window.__citywalk.race)).route, { timeout: 5000 }).toBe('westminster');
   expect(['countdown', 'running']).toContain((await b.evaluate(() => window.__citywalk.race)).state);
+  // B races A's time: the HUD names A's time, and B's finish card says who won
+  await expect(b.locator('#race-target')).toBeVisible();
+  await expect(b.locator('#race-target')).toHaveText(/^Beat .+ · \d+:\d\d\.\d$/);
+  expect((await b.evaluate(() => window.__citywalk.race)).target?.route).toBe('westminster');
+  await expect.poll(async () => (await b.evaluate(() => window.__citywalk.race)).state, { timeout: 10_000 }).toBe('running');
+  for (const [x, z] of (await b.evaluate(() => window.__citywalk.race)).stops) {
+    await b.evaluate(([x, z]) => window.__citywalk.teleport(x, 0.5, z), [x, z]);
+    await b.waitForTimeout(400);
+  }
+  await expect(b.locator('#race-done')).toBeVisible();
+  await expect(b.locator('#done-rival')).toBeVisible();
+  await expect(b.locator('#done-rival')).toHaveText(/^(You beat .+ by \d+\.\d s|.+ was \d+\.\d s faster|Dead level with .+!)$/);
+  await expect(b.locator('#race-target')).toBeHidden();
+  // picking another race from the menu drops the target
+  await b.locator('#done-routes').tap();
+  await b.locator('#routes button').first().tap();
+  await expect(b.locator('#race-target')).toBeHidden();
+  expect((await b.evaluate(() => window.__citywalk.race)).target).toBeNull();
 
   expect(errA).toEqual([]);
   expect(errB).toEqual([]);

@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { LANDMARKS } from '../src/world/data';
 import { CONFIG } from '../src/config';
-import { ROUTES, Race, dailyRoute, dayKey, formatTime, type BestStore } from '../src/race';
+import { ROUTES, Race, dailyRoute, dayKey, formatTime, targetResult, targetText, type BestStore } from '../src/race';
 
 const memStore = (): BestStore & { data: Record<string, number> } => {
   const data: Record<string, number> = {};
@@ -122,5 +122,16 @@ describe('daily share text', () => {
     expect(plain).not.toMatch(/https?:|\?room=/);
     expect(raceShareText(route.name, '1:23.4', 'https://example.test/')).toMatch(/ https:\/\/example\.test\/$/);
     expect(raceShareText(route.name, '1:23.4', 'https://example.test/#c=abc', true)).toMatch(/Race my ghost.* https:\/\/example\.test\/#c=abc$/);
+  });
+});
+
+describe('racing a friend’s room time', () => {
+  it('shows who and what time to beat', () => {
+    expect(targetText('Swift Otter', 83.4)).toBe('Beat Swift Otter · 1:23.4');
+  });
+  it('says who won and by how much, or a tie at display precision', () => {
+    expect(targetResult('Sam', 80, 83.4)).toBe('You beat Sam by 3.4 s');
+    expect(targetResult('Sam', 85.25, 83)).toBe('Sam was 2.3 s faster');
+    expect(targetResult('Sam', 83.42, 83.4)).toBe('Dead level with Sam!');
   });
 });

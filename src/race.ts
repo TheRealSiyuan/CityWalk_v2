@@ -187,3 +187,15 @@ export function routeName(id: string): string | null {
 export function roomResultText(who: string, route: string, t: number): string {
   return `${who} finished ${route} in ${formatTime(t)}`;
 }
+
+/** The HUD line while racing a time a friend in your room just set ("Race it"). */
+export function targetText(who: string, t: number): string {
+  return `Beat ${who} · ${formatTime(t)}`;
+}
+
+/** How your finish compares with the time of the friend you chose to race. */
+export function targetResult(who: string, mine: number, theirs: number): string {
+  const gap = Math.abs(mine - theirs).toFixed(1);
+  if (gap === '0.0') return `Dead level with ${who}!`;
+  return mine < theirs ? `You beat ${who} by ${gap} s` : `${who} was ${gap} s faster`;
+}

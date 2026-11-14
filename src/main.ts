@@ -11,7 +11,7 @@ import { buildWorld } from './world/city';
 import { LANDMARKS, SPAWN, type Landmark } from './world/data';
 import { challengeFromHash, decodeChallenge, encodeChallenge, rivalLine, type Challenge } from './challenge';
 import { GhostRecorder, decodeGhost, encodeGhost, ghostPose, liveDelta, splitDelta, type Ghost, type GhostPose } from './ghost';
-import { ROUTES, Race, dailyRoute, formatTime, raceShareText, roomResultText, routeById, type Route } from './race';
+import { ROUTES, Race, dailyRoute, formatTime, raceShareText, roomResultText, routeById, targetResult, targetText, type Route } from './race';
 import { WATER_Y, groundHeight } from './world/river';
 import { parsePortal, portalRules } from './portal';
 import { AimLine } from './render/aimline';
@@ -163,13 +163,20 @@ const race = new Race(
       const code = url && run ? encodeChallenge(daily ? routeId.slice('daily-'.length) : routeId, run) : null;
       // a daily can be shared as a bare time; a fixed route only as a ghost to race
       const share = daily || code ? raceShareText(name, formatTime(t), code ? `${url}#c=${code}` : url, !!code) : '';
-      const vs = rival && rival.route.id === routeId ? rivalLine(t, rival.ghost.time) : '';
+      const vs =
+        rival && rival.route.id === routeId
+          ? rivalLine(t, rival.ghost.time)
+          : roomTarget && roomTarget.route === routeId
+            ? targetResult(roomTarget.who, t, roomTarget.t)
+            : '';
       ui.raceFinished(name, formatTime(t), best !== null ? formatTime(best) : '', isNew, share, !!code, vs);
       refreshDailyBadge();
     },
   },
 );
 let lastRoute: Route = ROUTES[0];
+// a friend's time from your room you chose to race ("Race it"): kept across restarts of that route
+let roomTarget: { route: string; who: string; t: number } | null = null;
 // a friend's run from a challenge link: raced instead of your own best on its route, this visit
 let rival: Challenge | null = null;
 let ghostLabel = 'Your best';
@@ -196,8 +203,9 @@ function placePlayer(x: number, z: number, yaw: number): void {
   camPitch = 0.2;
   camTarget.set(player.pos.x, player.pos.y + CONFIG.camera.height, player.pos.z);
 }
-function startRace(route: Route): void {
+function startRace(route: Route, keepTarget = false): void {
   lastRoute = route;
+  if (!keepTarget || roomTarget?.route !== route.id) roomTarget = null;
   ui.hideFinished();
   ui.hideRoutes();
   placePlayer(route.start.x, route.start.z, route.start.yaw);
@@ -211,6 +219,7 @@ function startRace(route: Route): void {
   ui.raceHud(true);
   ui.raceHint();
   ui.raceGap(null);
+  ui.raceTarget(roomTarget ? targetText(roomTarget.who, roomTarget.t) : null);
   gapClock = 0;
   if (ui.tutorialActive) ui.endTutorial();
   ui.hideNextUp();
@@ -233,13 +242,13 @@ const openRaces = () => {
 };
 document.getElementById('race-btn')!.addEventListener('click', openRaces);
 document.getElementById('race-close')!.addEventListener('click', () => ui.hideRoutes());
-document.getElementById('race-restart')!.addEventListener('click', () => startRace(lastRoute));
+document.getElementById('race-restart')!.addEventListener('click', () => startRace(lastRoute, true));
 document.getElementById('race-quit')!.addEventListener('click', () => {
   race.quit();
   ui.raceHud(false);
   beacon.visible = false;
 });
-document.getElementById('done-again')!.addEventListener('click', () => startRace(lastRoute));
+document.getElementById('done-again')!.addEventListener('click', () => startRace(lastRoute, true));
 document.getElementById('done-routes')!.addEventListener('click', openRaces);
 document.getElementById('done-close')!.addEventListener('click', () => {
   race.quit();
@@ -322,7 +331,11 @@ const net = new Net({
     ui.toast(text, CONFIG.net.roomResultToast * 1000);
     // offer the same route in one tap, but never interrupt a race, the tutorial or another offer
     if (race.active || ui.tutorialActive || ui.nextUpShowing) return;
-    ui.showNextUp(`${route.name} · ${formatTime(r.t)}`, () => startRace(route), `Beat ${peer.name}`, undefined, CONFIG.net.raceItCard);
+    const who = peer.name;
+    ui.showNextUp(`${route.name} · ${formatTime(r.t)}`, () => {
+      roomTarget = { route: route.id, who, t: r.t };
+      startRace(route, true);
+    }, `Beat ${who}`, undefined, CONFIG.net.raceItCard);
   },
 });
 // friends' race results seen this visit (for tests)
@@ -570,6 +583,7 @@ function tick(dt: number, now: number): void {
       const total = race.route!.stops.length;
       const d = Math.hypot(stop.x - player.pos.x, stop.z - player.pos.z);
       ui.raceTick(formatTime(race.time), `${race.next + 1}/${total} · ${stop.name} · ${Math.round(d / 5) * 5} m`);
+      if (roomTarget) ui.raceTargetPassed(race.time > roomTarget.t);
       // live gap to your best run, refreshed a few times a second so it reads steadily
       gapClock -= dt;
       if (gapClock <= 0) {
@@ -668,7 +682,7 @@ const debug = {
   },
   get race() {
     const stops = (race.route?.stops ?? []).map((id) => LANDMARKS.find((l) => l.id === id)!).map((l) => [l.x, l.z] as [number, number]);
-    return { state: race.state, time: race.time, next: race.next, route: race.route?.id ?? null, stops };
+    return { state: race.state, time: race.time, next: race.next, route: race.route?.id ?? null, stops, target: roomTarget ? { ...roomTarget } : null };
   },
   get ghost() {
     return { loaded: !!ghost, time: ghost?.time ?? null, visible: ghostAvatar.root.visible, rope: ghostAvatar.rope.visible, x: ghostAvatar.root.position.x, z: ghostAvatar.root.position.z };

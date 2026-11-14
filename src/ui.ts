@@ -259,6 +259,7 @@ export class UI {
     document.body.classList.toggle('racing', on);
     if (!on) $('countdown').hidden = true;
     if (!on) this.raceGap(null);
+    if (!on) this.raceTarget(null);
     if (!on) this.hideRaceHint();
   }
 
@@ -279,6 +280,19 @@ export class UI {
   raceTick(time: string, next: string): void {
     $('race-time').textContent = time;
     $('race-next').textContent = next;
+  }
+
+  /** A friend's time you are racing ("Beat Swift Otter · 1:23.4"): null hides it. */
+  raceTarget(text: string | null): void {
+    const el = $('race-target');
+    el.hidden = text === null;
+    el.classList.remove('passed');
+    if (text !== null) el.textContent = text;
+  }
+
+  /** Greys the target out once the clock has gone past the friend's time. */
+  raceTargetPassed(passed: boolean): void {
+    $('race-target').classList.toggle('passed', passed);
   }
 
   /** Gap to the ghost you are racing: null hides it. */
