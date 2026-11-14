@@ -31,8 +31,10 @@ Verified work only. Newest first.
   before today's code runs. That is the known slow re-join issue, now seen in CI for the first
   time. It failed 3 of 6 isolated local runs today, while the unchanged build passed its single
   run, so a link to today's change cannot be ruled out, though today's change touches no network
-  code. The run for this documentation commit is the next attempt; if it is also red, the
-  next run must fix the re-join first (and, failing that, revert today's commits).
+  code.
+- GitHub Actions run 43565517497 (commit af727f3, docs only): build, e2e (all 10, including the
+  new step) and deploy all succeeded. Today's feature is live. CI went red, red, green: the
+  re-join step is flaky and is the next task.
 - Not verified: whether players care about the target; real internet or phones.
 
 **Money earned:** £0 (not yet published on a paying channel).
