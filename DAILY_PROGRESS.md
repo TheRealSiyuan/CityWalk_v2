@@ -2,6 +2,37 @@
 
 Verified work only. Newest first.
 
+## 2026-11-14
+
+**Implemented**
+- Racing a friend's room time: after tapping "Race it", the race HUD shows "Beat Jolly Badger ·
+  1:23.4" under the clock (struck through once your clock passes that time), and the finish card
+  says "You beat Jolly Badger by 2.3 s", "Jolly Badger was 2.3 s faster" or "Dead level". Restart
+  and Race again keep the target; choosing any other race drops it. Names are the already
+  sanitised peer names, shown as text.
+- Third slice of the "multiplayer race" item; chosen because the rest of Now waits on the owner.
+
+**Verified**
+- Build: 0 TS errors. Unit: 94 passed (2 new in `tests/race.test.ts` for the target and result
+  wording). Browser: full run 10 of 10 passed. The two-player test now also has B race A's time:
+  checks the target shows, B finishes, the result line appears, and picking another race clears
+  the target. Its time limit was raised from 90 s to 150 s for the extra race (it ran 60–85 s).
+- Flakiness, honestly: run alone, the two-player test failed 3 times in a row at the existing
+  "find each other again after an abrupt drop" step (before today's code runs), then passed 3 of 3.
+  The unchanged build passed its one run. Same known slow re-join issue as yesterday.
+- CrazyGames package rebuilt: scanner clean (solo build, feature never shows there).
+- GitHub Actions run 43564356814 (commit 65f20db): build passed, **e2e failed, deploy skipped**
+  (the live game was unchanged). Cause: the new test step waited for B's countdown to end, but B
+  was the background tab and stayed in "countdown" for 10 s (most likely throttled frames; not
+  proven). Fix: the test brings B's tab to the front before its race; passed 2 of 2 locally. The
+  follow-up run's result is recorded below.
+- Not verified: whether players care about the target; real internet or phones.
+
+**Money earned:** £0 (not yet published on a paying channel).
+
+**Next task:** slow multiplayer re-joins after an abrupt drop (failed the test 3 of 6
+isolated runs here); owner playtest fixes if any.
+
 ## 2026-11-13
 
 **Implemented**

@@ -235,7 +235,9 @@ test('multiplayer: two browsers on the same room link see each other move', asyn
   await expect(b.locator('#next-up')).toBeHidden();
   await expect.poll(async () => (await b.evaluate(() => window.__citywalk.race)).route, { timeout: 5000 }).toBe('westminster');
   expect(['countdown', 'running']).toContain((await b.evaluate(() => window.__citywalk.race)).state);
-  // B races A's time: the HUD names A's time, and B's finish card says who won
+  // B races A's time: the HUD names A's time, and B's finish card says who won.
+  // B's tab comes to the front first, as a player's would; a background tab's frames are throttled.
+  await b.bringToFront();
   await expect(b.locator('#race-target')).toBeVisible();
   await expect(b.locator('#race-target')).toHaveText(/^Beat .+ · \d+:\d\d\.\d$/);
   expect((await b.evaluate(() => window.__citywalk.race)).target?.route).toBe('westminster');

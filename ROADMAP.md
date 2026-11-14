@@ -9,7 +9,8 @@ Ordered by impact on getting real players and the first revenue.
    joins (50 s+) seen when 6 browsers shared a 2-core machine, in both old and new builds;
    find whether that is just load or a real slow path. Deploy now waits for e2e (2026-11-08).
    The "User-Initiated Abort" CI flake (2026-11-10) is fixed: it was the library logging a
-   friend's abrupt close as an error (2026-11-11).
+   friend's abrupt close as an error (2026-11-11). The re-join after an abrupt drop failed the
+   two-player test 3 of 6 isolated runs on 2026-11-14: top engineering task now.
 1. **Owner playtest on phone + desktop**, fix anything it surfaces.
 2. **itch.io launch** (awaiting approval — `DECISIONS.md`).
 3. **CrazyGames Basic Launch** (awaiting approval — `DECISIONS.md`). The no-external-links
@@ -25,8 +26,9 @@ Ordered by impact on getting real players and the first revenue.
 
 - Multiplayer race: everyone in a room races the same route. First slice done 2026-11-12:
   friends in a room see a toast with each other's race times. Second slice done 2026-11-13: a
-  "Race it" card offers the same route in one tap (only when you are not racing). Next slice,
-  if players use it: show the friend's time as a target during that race.
+  "Race it" card offers the same route in one tap (only when you are not racing). Third slice
+  done 2026-11-14: that race shows the friend's time as a target and the finish says who won.
+  Nothing more here until players use it.
 - Measure real-phone frame rate (ask testers), tune quality presets.
 - Swing feel: anchor preview line and on-target reticle (done 2026-11-08); rope tension hum
   (done 2026-11-09, needs a listen); landing crouch/roll (done 2026-11-10, needs a look).
