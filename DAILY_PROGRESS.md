@@ -26,6 +26,13 @@ Verified work only. Newest first.
   was the background tab and stayed in "countdown" for 10 s (most likely throttled frames; not
   proven). Fix: the test brings B's tab to the front before its race; passed 2 of 2 locally. The
   follow-up run's result is recorded below.
+- GitHub Actions run 43565006790 (commit 9c91a2e): build passed, **e2e failed again, deploy
+  skipped**, this time at the older "find each other again after an abrupt drop" step (line 207),
+  before today's code runs. That is the known slow re-join issue, now seen in CI for the first
+  time. It failed 3 of 6 isolated local runs today, while the unchanged build passed its single
+  run, so a link to today's change cannot be ruled out, though today's change touches no network
+  code. The run for this documentation commit is the next attempt; if it is also red, the
+  next run must fix the re-join first (and, failing that, revert today's commits).
 - Not verified: whether players care about the target; real internet or phones.
 
 **Money earned:** £0 (not yet published on a paying channel).
