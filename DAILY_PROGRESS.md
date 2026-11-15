@@ -26,7 +26,7 @@ things worse and was reverted (not pushed).
 - With diagnostics: re-join measured 4.1, 5.1, 5.0, 30.6 s (4 of 4 passed) and 5.0 s in the full
   run. So the normal path is ~5 s; the slow path is 30 s+, and over 45 s it fails the test.
 - Build: 0 TS errors. Unit: 94 passed. Browser: full run 10 of 10 passed.
-- GitHub Actions result for this push is recorded below.
+- GitHub Actions run 43684604160 (commit f66ee2a): build, e2e and deploy all succeeded.
 
 **Money earned:** £0 (not yet published on a paying channel).
 
