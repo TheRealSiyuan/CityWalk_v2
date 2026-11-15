@@ -10,7 +10,9 @@ Ordered by impact on getting real players and the first revenue.
    find whether that is just load or a real slow path. Deploy now waits for e2e (2026-11-08).
    The "User-Initiated Abort" CI flake (2026-11-10) is fixed: it was the library logging a
    friend's abrupt close as an error (2026-11-11). The re-join after an abrupt drop failed the
-   two-player test 3 of 6 isolated runs on 2026-11-14: top engineering task now.
+   two-player test 3 of 6 isolated runs on 2026-11-14: top engineering task now. 2026-11-15:
+   normal re-join measured ~5 s, slow path 30 s+; "wait for the library's own reconnect" tried and
+   rejected (slower, still failed); failure now logs both sides' network view.
 1. **Owner playtest on phone + desktop**, fix anything it surfaces.
 2. **itch.io launch** (awaiting approval — `DECISIONS.md`).
 3. **CrazyGames Basic Launch** (awaiting approval — `DECISIONS.md`). The no-external-links

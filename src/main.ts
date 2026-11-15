@@ -674,6 +674,10 @@ const debug = {
   get remoteCloses() {
     return remoteCloseCount();
   },
+  /** Network view for diagnosing joins: own id, status and the peers the room has (said hello or not). */
+  get net() {
+    return { id: net.id, status: net.status, peers: [...net.peers.keys()] };
+  },
   get peers() {
     return [...remotes.values()].map((r) => ({ id: r.peer.id, name: r.peer.name, seen: r.seen, x: r.snap.x, y: r.snap.y, z: r.snap.z }));
   },

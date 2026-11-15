@@ -2,6 +2,37 @@
 
 Verified work only. Newest first.
 
+## 2026-11-15
+
+**Day result: the re-join flake is not fixed.** Today was diagnosis only; one tried fix made
+things worse and was reverted (not pushed).
+
+**Tried and reverted**
+- Hypothesis: the networking library re-announces on its own when a connection drops, and our
+  "re-join while alone" timer (every 2 s once 18 s have passed since joining) cut that reconnect
+  short. Tried waiting 15 s after a friend drops before re-joining. Result: the multiplayer test
+  still failed 2 of 6 at the same step, and every re-join took 18–21 s instead of about 5 s.
+  Hypothesis rejected; change reverted.
+- Checked and ruled out: background-tab throttling. Both tabs report `visible` at the drop and at
+  the re-join.
+
+**Implemented (test/diagnostic only, no player-visible change)**
+- The two-player test now logs how long the re-join took, and on failure logs each side's network
+  view (own id, status, peers the room holds, peers shown), via a new `window.__citywalk.net`
+  debug getter. This tells a one-sided join from no join next time it fails in CI.
+
+**Verified**
+- Unmodified build, multiplayer test alone: 2 of 3 passed (failed at line 207, as in CI).
+- With diagnostics: re-join measured 4.1, 5.1, 5.0, 30.6 s (4 of 4 passed) and 5.0 s in the full
+  run. So the normal path is ~5 s; the slow path is 30 s+, and over 45 s it fails the test.
+- Build: 0 TS errors. Unit: 94 passed. Browser: full run 10 of 10 passed.
+- GitHub Actions result for this push is recorded below.
+
+**Money earned:** £0 (not yet published on a paying channel).
+
+**Next task:** catch a failing re-join with the new log (in CI or repeated local runs) and fix the
+slow path; owner playtest fixes if any.
+
 ## 2026-11-14
 
 **Implemented**

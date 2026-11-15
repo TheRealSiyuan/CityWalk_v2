@@ -9,7 +9,7 @@ const url = (room: string) => `/?room=${room}&relay=${encodeURIComponent(RELAY)}
 
 interface PlayerState { x: number; y: number; z: number; anim: number; roped: boolean; grounded: boolean; swings: number }
 interface PeerState { id: string; name: string; seen: boolean; x: number; y: number; z: number }
-type Debug = { ready: boolean; room: string; player: PlayerState; peers: PeerState[]; race: { state: string; time: number; next: number; route: string | null; stops: [number, number][]; target: { route: string; who: string; t: number } | null }; ghost: { loaded: boolean; time: number | null; visible: boolean; rope: boolean; x: number; z: number }; aimLine: { visible: boolean; aim: boolean }; reticleAt: { x: number; y: number } | null; ropeHum: { gain: number; freq: number }; landings: { count: number; kind: string }; remoteCloses: number; roomResults: string[]; dropPeers(): void; teleport(x: number, y: number, z: number): void };
+type Debug = { ready: boolean; room: string; player: PlayerState; peers: PeerState[]; race: { state: string; time: number; next: number; route: string | null; stops: [number, number][]; target: { route: string; who: string; t: number } | null }; ghost: { loaded: boolean; time: number | null; visible: boolean; rope: boolean; x: number; z: number }; aimLine: { visible: boolean; aim: boolean }; reticleAt: { x: number; y: number } | null; ropeHum: { gain: number; freq: number }; landings: { count: number; kind: string }; remoteCloses: number; net: { id: string; status: string; peers: string[] }; roomResults: string[]; dropPeers(): void; teleport(x: number, y: number, z: number): void };
 declare global {
   interface Window { __citywalk: Debug }
 }
@@ -201,11 +201,20 @@ test('multiplayer: two browsers on the same room link see each other move', asyn
   // A's connection drops without a goodbye (a crashed tab, or a stuck handshake being reset).
   // B treats it as A leaving, not as an error, and the two find each other again.
   const closesB = await b.evaluate(() => window.__citywalk.remoteCloses);
+  const droppedAt = Date.now();
   await a.evaluate(() => window.__citywalk.dropPeers());
   await expect.poll(async () => (await peersOf(b)).length, { timeout: 10_000 }).toBe(0);
   expect(await b.evaluate(() => window.__citywalk.remoteCloses)).toBeGreaterThan(closesB);
-  await expect.poll(async () => (await peersOf(a)).filter((p) => p.seen).length, { timeout: 45_000 }).toBe(1);
-  await expect.poll(async () => (await peersOf(b)).filter((p) => p.seen).length, { timeout: 45_000 }).toBe(1);
+  try {
+    await expect.poll(async () => (await peersOf(a)).filter((p) => p.seen).length, { timeout: 45_000 }).toBe(1);
+    await expect.poll(async () => (await peersOf(b)).filter((p) => p.seen).length, { timeout: 45_000 }).toBe(1);
+  } catch (e) {
+    // Known flaky step (RELEASE.md): record what each side holds, to tell a one-sided join from none.
+    const ids = async (p: Page) => ({ net: await p.evaluate(() => window.__citywalk.net), shown: await peersOf(p) });
+    console.log('re-join failed; A:', JSON.stringify(await ids(a)), 'B:', JSON.stringify(await ids(b)));
+    throw e;
+  }
+  console.log(`re-joined ${((Date.now() - droppedAt) / 1000).toFixed(1)} s after the abrupt drop`);
 
   // A races; when A finishes, B is told A's time.
   if (await a.locator('#tut-skip').isVisible()) await a.locator('#tut-skip').tap();
