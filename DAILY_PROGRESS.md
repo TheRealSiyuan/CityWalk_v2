@@ -21,6 +21,9 @@ Verified work only. Newest first.
   re-join step). Full browser run 10 of 10 passed. Unit: 97 passed (3 new for the one-sided
   re-join, one updated to the new hold rule). Build: 0 TS errors.
 - Not verified: real internet, phones, rooms of 3+ (each pair still tie-breaks by id).
+- GitHub Actions run 43815331388 (commit fe7728d): build, e2e and deploy all succeeded. Live.
+- Correction to 2026-11-15: that day's last push (e25ad23, screenshots) ran as 43685108927 and
+  **failed** (unrecorded then); the live game stayed on f66ee2a until today's deploy.
 
 **Money earned:** £0 (not yet published on a paying channel).
 
