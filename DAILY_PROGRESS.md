@@ -2,6 +2,31 @@
 
 Verified work only. Newest first.
 
+## 2026-11-16
+
+**Implemented**
+- Slow/failed multiplayer re-join after an abrupt drop: fixed in the two-browser test. Cause, found
+  with a new connection event log (`window.__citywalk.net.log`): when the last friend goes, both
+  games re-joined on the same 2 s tick, each leaving the room the other was announcing into, and
+  they stayed in lockstep (both again 26 s later). Now only one side moves: the lower id re-joins
+  at once; the other stays in its room for `CONFIG.net.rejoinHold` (10 s), then resumes the usual
+  back-off if nobody came. The e2e test prints both sides' event logs when a re-join takes >15 s.
+
+**Verified**
+- Before the change, multiplayer test alone, 6 runs: 3 passed (re-join 5.7, 3.9, 31.7 s), 2 failed
+  at the re-join step (logs showed both sides re-joining within 0.4 s, twice, never meeting), 1 run
+  lost to a missing browser path on my side.
+- After: re-join step 7 of 7 within 4.0–5.5 s (6 isolated runs plus the full run). One isolated
+  run then failed later (a tap after the races hit the 150 s test limit; details lost, not the
+  re-join step). Full browser run 10 of 10 passed. Unit: 97 passed (3 new for the one-sided
+  re-join, one updated to the new hold rule). Build: 0 TS errors.
+- Not verified: real internet, phones, rooms of 3+ (each pair still tie-breaks by id).
+
+**Money earned:** £0 (not yet published on a paying channel).
+
+**Next task:** watch CI for the re-join step; if green for a few days, owner playtest fixes or
+real-phone frame rate.
+
 ## 2026-11-15
 
 **Day result: the re-join flake is not fixed.** Today was diagnosis only; one tried fix made

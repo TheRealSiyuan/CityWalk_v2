@@ -32,7 +32,9 @@ anywhere except the existing GitHub Pages site.
   wait up to about 27 s to appear (about 6 s less in theory since 2026-11-07, not yet measured).
   The permanent empty street this could cause was fixed on 2026-11-04. Under heavy CPU load in
   the build machine, some joins took 50 s or more, with or without the 2026-11-07 change. On
-  2026-11-14 a re-join after an abrupt drop also failed the browser test in CI (45 s limit).
+  2026-11-14 a re-join after an abrupt drop also failed the browser test in CI (45 s limit). Fixed locally
+  2026-11-16 (both sides re-joined in lockstep; now one side waits): 7 of 7 re-joins in ~5 s, not
+  yet proven in CI or over the real internet.
 - Multiplayer over the public internet is unverified from the build environment; strict
   NATs without TURN fall back to solo.
 - Rope can pass the London Eye wheel and thin details (not solid by design).

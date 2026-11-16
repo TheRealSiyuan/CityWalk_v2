@@ -148,13 +148,62 @@ describe('Net: peers stuck after a re-join', () => {
     peerJoins(room, 'stuck');
     await vi.advanceTimersByTimeAsync((CONFIG.net.helloTimeout + 2) * 1000);
     expect([...net.peers.keys()]).toEqual(['friend']);
-    // The friend then leaves normally: the usual 18 s back-off from the last join applies, not an instant re-join.
+    // The friend then leaves. 'me' > 'friend', so this side is the one that holds still
+    // (CONFIG.net.rejoinHold) rather than re-joining at once, then resumes the back-off.
     room.onPeerLeave?.('friend');
-    await vi.advanceTimersByTimeAsync(2000);
+    await vi.advanceTimersByTimeAsync((CONFIG.net.rejoinHold - 2) * 1000);
     expect(room.leave).not.toHaveBeenCalled();
+    await vi.advanceTimersByTimeAsync(4000);
+    expect(room.leave).toHaveBeenCalledTimes(1);
+    expect(rooms).toHaveLength(2);
+  });
+});
+
+describe('Net: only one side re-joins when friends lose each other', () => {
+  beforeEach(() => {
+    rooms.length = 0;
+    vi.useFakeTimers();
+    vi.stubGlobal('window', { setInterval: (f: () => void, ms: number) => setInterval(f, ms) });
+    vi.stubGlobal('document', { hidden: false });
+  });
+
+  afterEach(() => {
+    vi.useRealTimers();
+    vi.unstubAllGlobals();
+  });
+
+  async function friendThenLoss(friendId: string) {
+    const { net, room } = setup();
+    peerJoins(room, friendId);
+    room.actions.get('hi')?.onMessage?.({ name: 'Ada' }, { peerId: friendId });
+    // Long past the usual back-off, as after a few minutes of play together.
+    await vi.advanceTimersByTimeAsync(60_000);
+    room.onPeerLeave?.(friendId);
+    return { net, room };
+  }
+
+  it('the lower id re-joins on the next tick', async () => {
+    const { room } = await friendThenLoss('zz-friend'); // 'me' < 'zz-friend'
     await vi.advanceTimersByTimeAsync(2000);
     expect(room.leave).toHaveBeenCalledTimes(1);
     expect(rooms).toHaveLength(2);
+  });
+
+  it('the higher id stays in its room while the friend re-joins, and is found there', async () => {
+    const { net, room } = await friendThenLoss('aa-friend'); // 'me' > 'aa-friend'
+    await vi.advanceTimersByTimeAsync((CONFIG.net.rejoinHold - 2) * 1000);
+    expect(room.leave).not.toHaveBeenCalled();
+    peerJoins(room, 'aa-friend');
+    room.actions.get('hi')?.onMessage?.({ name: 'Ada' }, { peerId: 'aa-friend' });
+    await vi.advanceTimersByTimeAsync(30_000);
+    expect(room.leave).not.toHaveBeenCalled();
+    expect(net.peers.get('aa-friend')?.name).toBe('Ada');
+  });
+
+  it('the higher id re-joins after the hold if the friend does not come back', async () => {
+    const { room } = await friendThenLoss('aa-friend');
+    await vi.advanceTimersByTimeAsync((CONFIG.net.rejoinHold + 2) * 1000);
+    expect(room.leave).toHaveBeenCalledTimes(1);
   });
 });
 

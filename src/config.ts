@@ -148,6 +148,7 @@ export const CONFIG = {
     maxRaceSeconds: 3600, // race results from friends outside (0, this) are ignored
     roomResultToast: 3.5, // seconds a friend's race result stays on screen
     raceItCard: 8, // seconds the "Race it" card for a friend's route stays up (only shown when you are not racing)
+    rejoinHold: 10, // seconds the higher-id side stays in its room after losing its last friend, while the other side re-joins
     helloTimeout: 12, // seconds a joined peer may stay silent before its connection is reset (the library's own handshake gives up at 10)
   },
 

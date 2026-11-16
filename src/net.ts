@@ -123,6 +123,14 @@ export class Net {
   private unconfirmed = new Map<string, number>();
   /** Set when a stuck peer was just dropped and we are alone: re-join at once instead of waiting. */
   private rejoinNow = false;
+  /** After losing the last friend, the side that waits stays in its room until this time (seconds). */
+  private holdUntil = 0;
+  /** Recent connection events with times in seconds, for diagnosing slow joins (newest last, capped). */
+  readonly log: string[] = [];
+  private note(e: string): void {
+    this.log.push(`${(performance.now() / 1000).toFixed(1)} ${e}`);
+    if (this.log.length > 40) this.log.splice(0, this.log.length - 40);
+  }
 
   start(roomCode: string, name: string, relays: string[] | null): void {
     quietRemoteCloses();
@@ -137,8 +145,10 @@ export class Net {
     window.setInterval(() => {
       this.dropSilentPeers();
       if (this.status === 'off' || this.peers.size > 0 || document.hidden) return;
+      if (performance.now() / 1000 < this.holdUntil) return;
       const wait = this.rejoinNow ? 0 : Math.min(60, 18 + this.retry * 6);
       if (performance.now() / 1000 - this.joinedAt < wait) return;
+      this.note(this.rejoinNow ? 'rejoin-now' : `rejoin retry=${this.retry}`);
       if (this.rejoinNow) this.rejoinNow = false;
       else this.retry++;
       this.generation++;
@@ -164,14 +174,34 @@ export class Net {
     for (const [id, joined] of this.unconfirmed) {
       if (now - joined < CONFIG.net.helloTimeout) continue;
       this.unconfirmed.delete(id);
+      this.note(`silent-drop ${id.slice(0, 4)}`);
       try {
         this.room?.getPeers()[id]?.close();
       } catch {
         // Already gone: nothing to close.
       }
       if (this.peers.delete(id)) this.handlers.onLeave(id);
-      if (this.peers.size === 0) this.rejoinNow = true;
+      if (this.peers.size === 0) this.lostLastFriend(id);
     }
+  }
+
+  /**
+   * When the last friend goes, both games are alone and both used to re-join on the
+   * same 2 s tick. Each then left the room the other was announcing into, and the pair
+   * could miss each other again and again (measured 2026-11-16: 3 of 6 test runs). Now
+   * exactly one side moves: the one with the lower id re-joins at once, and the other
+   * stays put for a few seconds, so the fresh announcement lands in a room that is still
+   * there. If the friend really left, the waiting side resumes the usual back-off.
+   */
+  private lostLastFriend(id: string): void {
+    if (this.id < id) {
+      this.rejoinNow = true;
+      this.holdUntil = 0;
+    } else {
+      this.rejoinNow = false;
+      this.holdUntil = performance.now() / 1000 + CONFIG.net.rejoinHold;
+    }
+    this.note(this.rejoinNow ? 'lost friend: re-join now' : 'lost friend: hold');
   }
 
   private join(): void {
@@ -180,6 +210,7 @@ export class Net {
     const roomCode = this.roomCode;
     const relays = this.relays;
     this.joinedAt = performance.now() / 1000;
+    this.note(`join gen=${generation}`);
     try {
       this.status = 'connecting';
       const room = joinRoom(
@@ -205,6 +236,7 @@ export class Net {
       };
 
       room.onPeerJoin = (id) => {
+        this.note(`peer-join ${id.slice(0, 4)} gen=${generation}${generation !== this.generation ? ' (stale)' : ''}`);
         if (generation !== this.generation) return;
         // Rooms are capped: extra peers are simply not shown or synced.
         if (this.peers.size >= CONFIG.net.maxPlayers - 1) return;
@@ -217,13 +249,17 @@ export class Net {
         this.sendHello?.({ name: this.name }, id);
       };
       room.onPeerLeave = (id) => {
+        this.note(`peer-leave ${id.slice(0, 4)} gen=${generation}${generation !== this.generation ? ' (stale)' : ''}`);
         if (generation !== this.generation) return;
         this.unconfirmed.delete(id);
-        if (this.peers.delete(id)) this.handlers.onLeave(id);
+        if (this.peers.delete(id)) {
+          this.handlers.onLeave(id);
+          if (this.peers.size === 0) this.lostLastFriend(id);
+        }
       };
       hello.onMessage = (d, ctx) => {
         if (generation !== this.generation) return;
-        this.unconfirmed.delete(ctx.peerId);
+        if (this.unconfirmed.delete(ctx.peerId)) this.note(`hello ${ctx.peerId.slice(0, 4)}`);
         const peer = this.peers.get(ctx.peerId);
         if (!peer || !d || typeof d.name !== 'string') return;
         peer.name = d.name.replace(/[^\p{L}\p{N} _-]/gu, '').slice(0, 14) || 'Walker';

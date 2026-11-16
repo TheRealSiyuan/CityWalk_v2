@@ -13,6 +13,8 @@ Ordered by impact on getting real players and the first revenue.
    two-player test 3 of 6 isolated runs on 2026-11-14: top engineering task now. 2026-11-15:
    normal re-join measured ~5 s, slow path 30 s+; "wait for the library's own reconnect" tried and
    rejected (slower, still failed); failure now logs both sides' network view.
+   2026-11-16: cause found (both sides re-joined on the same tick, in lockstep); now only the
+   lower id re-joins and the other waits. Re-join step 7 of 7 locally at ~5 s. Watch CI.
 1. **Owner playtest on phone + desktop**, fix anything it surfaces.
 2. **itch.io launch** (awaiting approval — `DECISIONS.md`).
 3. **CrazyGames Basic Launch** (awaiting approval — `DECISIONS.md`). The no-external-links
