@@ -19,6 +19,7 @@ Verified work only. Newest first.
   rope attaches, and that a second tap straight after does not repeat it.
 - Re-join fix in CI: runs 43815331388 and 43816225714 (2026-11-16) both passed e2e; the latest
   logged the re-join at 1.9 s. Locally today 3.9 s. Two CI runs is a start, not proof.
+- GitHub Actions run 44027281057 (commit efc0c29): build, e2e and deploy all succeeded. Live.
 - Not verified: whether the wording reads well to a real player (needs a human), real phones.
 
 **Money earned:** £0 (not yet published on a paying channel).
