@@ -59,6 +59,15 @@ export const CONFIG = {
     lineOfSight: true, // never attach through a building
   },
 
+  // a short hint when Swing is pressed with nothing in reach (open plazas, parks, the river)
+  missHint: {
+    enabled: true,
+    text: 'Nothing to swing from here — head for the buildings',
+    ms: 2600, // how long the hint stays up
+    cooldown: 30, // seconds before it can show again
+    maxPerSession: 3, // then the miss sound and button flash alone are enough
+  },
+
   // --- camera -------------------------------------------------------------
   camera: {
     distance: 8.5,

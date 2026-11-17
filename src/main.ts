@@ -15,6 +15,7 @@ import { ROUTES, Race, dailyRoute, formatTime, raceShareText, roomResultText, ro
 import { WATER_Y, groundHeight } from './world/river';
 import { parsePortal, portalRules } from './portal';
 import { AimLine } from './render/aimline';
+import { MissHint } from './player/misshint';
 
 // We author colours as final display values, so skip three's colour management.
 THREE.ColorManagement.enabled = false;
@@ -89,6 +90,7 @@ const tut = { moved: 0, looked: 0, jumped: 0, swung: 0 };
 const jitter = () => (Math.random() - 0.5) * 3;
 const spawn = { x: SPAWN.x + jitter(), y: 0, z: SPAWN.z + jitter() };
 spawn.y = groundHeight(spawn.x, spawn.z);
+const missHint = new MissHint();
 const player = new Player(world, spawn, {
   onSplash: () => {
     sfx.splash();
@@ -108,6 +110,7 @@ const player = new Player(world, spawn, {
     sfx.miss();
     document.getElementById('btn-swing')?.classList.add('miss');
     window.setTimeout(() => document.getElementById('btn-swing')?.classList.remove('miss'), 250);
+    if (missHint.onMiss(performance.now() / 1000)) ui.toast(CONFIG.missHint.text, CONFIG.missHint.ms);
   },
 });
 player.yaw = SPAWN.yaw + Math.PI;
@@ -662,6 +665,10 @@ const debug = {
   /** the dotted preview line to the anchor Swing would grab */
   get aimLine() {
     return { visible: aimLine.line.visible, aim: !!player.aim };
+  },
+  /** how many times the "nothing to swing from" hint has shown */
+  get missHints() {
+    return missHint.count;
   },
   get reticleAt() {
     return reticleAt;

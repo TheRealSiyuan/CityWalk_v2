@@ -41,7 +41,7 @@ anywhere except the existing GitHub Pages site.
 - The live gap to your ghost is an estimate (where your best run passed closest to you on the
   current leg); it hides when you take a path more than 60 m from your best run's.
 - Holding Swing in big open plazas (Trafalgar Square, Buckingham Palace forecourt) finds
-  nothing to grab; you run across them.
+  nothing to grab; you run across them. Since 2026-11-17 a short hint says so on a missed press.
 - A friend's ghost from a challenge link moves less smoothly on longer runs (fewer frames fit in a
   link), and very long nonstop-swinging runs lose its rope. Links shared before 2026-11-05 have no
   rope. Challenge links are off in the CrazyGames build. A fixed-route run too long to fit a link

@@ -15,6 +15,7 @@ Ordered by impact on getting real players and the first revenue.
    rejected (slower, still failed); failure now logs both sides' network view.
    2026-11-16: cause found (both sides re-joined on the same tick, in lockstep); now only the
    lower id re-joins and the other waits. Re-join step 7 of 7 locally at ~5 s. Watch CI.
+   2026-11-17: CI green on both runs since (re-join 1.9 s in the latest). Keep watching.
 1. **Owner playtest on phone + desktop**, fix anything it surfaces.
 2. **itch.io launch** (awaiting approval — `DECISIONS.md`).
 3. **CrazyGames Basic Launch** (awaiting approval — `DECISIONS.md`). The no-external-links
@@ -34,7 +35,8 @@ Ordered by impact on getting real players and the first revenue.
   done 2026-11-14: that race shows the friend's time as a target and the finish says who won.
   Nothing more here until players use it.
 - Measure real-phone frame rate (ask testers), tune quality presets.
-- Swing feel: anchor preview line and on-target reticle (done 2026-11-08); rope tension hum
+- Swing feel: "nothing to swing from" hint on a missed press (done 2026-11-17, needs a look);
+  anchor preview line and on-target reticle (done 2026-11-08); rope tension hum
   (done 2026-11-09, needs a listen); landing crouch/roll (done 2026-11-10, needs a look).
 
 ## Later (only if players ask for it)

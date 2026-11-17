@@ -9,7 +9,7 @@ const url = (room: string) => `/?room=${room}&relay=${encodeURIComponent(RELAY)}
 
 interface PlayerState { x: number; y: number; z: number; anim: number; roped: boolean; grounded: boolean; swings: number }
 interface PeerState { id: string; name: string; seen: boolean; x: number; y: number; z: number }
-type Debug = { ready: boolean; room: string; player: PlayerState; peers: PeerState[]; race: { state: string; time: number; next: number; route: string | null; stops: [number, number][]; target: { route: string; who: string; t: number } | null }; ghost: { loaded: boolean; time: number | null; visible: boolean; rope: boolean; x: number; z: number }; aimLine: { visible: boolean; aim: boolean }; reticleAt: { x: number; y: number } | null; ropeHum: { gain: number; freq: number }; landings: { count: number; kind: string }; remoteCloses: number; net: { id: string; status: string; peers: string[]; log: string[] }; roomResults: string[]; dropPeers(): void; teleport(x: number, y: number, z: number): void };
+type Debug = { ready: boolean; room: string; player: PlayerState; peers: PeerState[]; race: { state: string; time: number; next: number; route: string | null; stops: [number, number][]; target: { route: string; who: string; t: number } | null }; ghost: { loaded: boolean; time: number | null; visible: boolean; rope: boolean; x: number; z: number }; aimLine: { visible: boolean; aim: boolean }; reticleAt: { x: number; y: number } | null; ropeHum: { gain: number; freq: number }; landings: { count: number; kind: string }; missHints: number; remoteCloses: number; net: { id: string; status: string; peers: string[]; log: string[] }; roomResults: string[]; dropPeers(): void; teleport(x: number, y: number, z: number): void };
 declare global {
   interface Window { __citywalk: Debug }
 }
@@ -136,6 +136,24 @@ test('mobile: holding Swing attaches a rope and releasing lets go', async ({ pag
   await page.evaluate(([x, y, z]) => window.__citywalk.teleport(x, y + 15, z), [at2.x, at2.y, at2.z]);
   await expect.poll(async () => (await page.evaluate(() => window.__citywalk.landings)).count, { timeout: 5000 }).toBe(before + 1);
   await expect.poll(async () => (await page.evaluate(() => window.__citywalk.landings)).kind, { timeout: 2000 }).toBe('none');
+  // in the middle of a park there is nothing to grab: pressing Swing says why, once
+  await page.evaluate(() => window.__citywalk.teleport(-655, 2, 88));
+  await expect.poll(async () => (await player(page)).grounded, { timeout: 5000 }).toBe(true);
+  await expect.poll(async () => (await page.evaluate(() => window.__citywalk.aimLine)).aim, { timeout: 3000 }).toBe(false);
+  expect(await page.evaluate(() => window.__citywalk.missHints)).toBe(0);
+  await touch(cdp, 'touchStart', bx, by, 3);
+  await page.waitForTimeout(150);
+  await touch(cdp, 'touchEnd');
+  await expect(page.locator('#toast')).toHaveText(/Nothing to swing from here/, { timeout: 2000 });
+  await expect(page.locator('#toast')).toHaveClass(/on/);
+  expect((await player(page)).roped).toBe(false);
+  expect(await page.evaluate(() => window.__citywalk.missHints)).toBe(1);
+  // a second miss straight after only flashes the button: no repeat nagging
+  await touch(cdp, 'touchStart', bx, by, 4);
+  await page.waitForTimeout(150);
+  await touch(cdp, 'touchEnd');
+  await page.waitForTimeout(300);
+  expect(await page.evaluate(() => window.__citywalk.missHints)).toBe(1);
   expect(errors).toEqual([]);
 });
 

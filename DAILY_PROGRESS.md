@@ -2,6 +2,29 @@
 
 Verified work only. Newest first.
 
+## 2026-11-17
+
+**Implemented**
+- "Nothing to swing from here — head for the buildings": a short hint when Swing is pressed with
+  nothing in reach (open plazas, parks, the river). Before, a miss only played a sound and flashed
+  the button, so a new player in Trafalgar Square could not tell why nothing happened (a known
+  issue). Shows on the first miss, then at most once per 30 s and 3 times per session; tuning in
+  `CONFIG.missHint`. Chosen because the rest of Now waits on the owner and CI for the re-join fix
+  was already green.
+
+**Verified**
+- Build: 0 TS errors. Unit: 101 passed (4 new in `tests/misshint.test.ts`: first miss shows,
+  cooldown, per-session cap, disabled/bad clock). Browser: full run 10 of 10 passed; the mobile
+  swing test now teleports into the middle of Green Park, taps Swing, checks the hint appears and no
+  rope attaches, and that a second tap straight after does not repeat it.
+- Re-join fix in CI: runs 43815331388 and 43816225714 (2026-11-16) both passed e2e; the latest
+  logged the re-join at 1.9 s. Locally today 3.9 s. Two CI runs is a start, not proof.
+- Not verified: whether the wording reads well to a real player (needs a human), real phones.
+
+**Money earned:** £0 (not yet published on a paying channel).
+
+**Next task:** keep watching the re-join step in CI; owner playtest fixes; real-phone frame rate.
+
 ## 2026-11-16
 
 **Implemented**
