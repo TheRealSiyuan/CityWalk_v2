@@ -16,6 +16,8 @@ Ordered by impact on getting real players and the first revenue.
    2026-11-16: cause found (both sides re-joined on the same tick, in lockstep); now only the
    lower id re-joins and the other waits. Re-join step 7 of 7 locally at ~5 s. Watch CI.
    2026-11-17: CI green on both runs since (re-join 1.9 s in the latest). Keep watching.
+   2026-11-18: one CI failure (run 44027868413) was a test race, not the game: the tutorial
+   timed out between the test's check and its tap. Test fixed. Keep watching.
 1. **Owner playtest on phone + desktop**, fix anything it surfaces.
 2. **itch.io launch** (awaiting approval — `DECISIONS.md`).
 3. **CrazyGames Basic Launch** (awaiting approval — `DECISIONS.md`). The no-external-links

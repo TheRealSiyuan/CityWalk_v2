@@ -29,6 +29,17 @@ async function ready(page: Page): Promise<void> {
 const player = (page: Page) => page.evaluate(() => window.__citywalk.player);
 
 /** A real touch drag, dispatched through the browser's input pipeline. */
+/**
+ * Dismiss an overlay that may also close by itself (the tutorial times out after ~12 s, the
+ * next-up card after a few seconds). A plain isVisible() check followed by tap() can race that
+ * timer: the overlay hides in between and tap() waits for the test limit (CI 2026-11-17).
+ * Taps if it is there, tolerates it vanishing, then requires it gone.
+ */
+async function dismissIfShown(page: Page, overlay: string, button: string): Promise<void> {
+  if (await page.locator(overlay).isVisible()) await page.locator(button).tap({ timeout: 3000 }).catch(() => {});
+  await expect(page.locator(overlay)).toBeHidden();
+}
+
 async function touch(cdp: CDPSession, type: 'touchStart' | 'touchMove' | 'touchEnd', x?: number, y?: number, id = 1): Promise<void> {
   await cdp.send('Input.dispatchTouchEvent', {
     type,
@@ -239,11 +250,10 @@ test('multiplayer: two browsers on the same room link see each other move', asyn
   }
 
   // A races; when A finishes, B is told A's time.
-  if (await a.locator('#tut-skip').isVisible()) await a.locator('#tut-skip').tap();
+  await dismissIfShown(a, '#tutorial', '#tut-skip');
   // B is idle (no tutorial, no other offer up), so B will be offered A's route
-  if (await b.locator('#tut-skip').isVisible()) await b.locator('#tut-skip').tap();
-  if (await b.locator('#next-up').isVisible()) await b.locator('#next-no').tap();
-  await expect(b.locator('#next-up')).toBeHidden();
+  await dismissIfShown(b, '#tutorial', '#tut-skip');
+  await dismissIfShown(b, '#next-up', '#next-no');
   await a.locator('#race-btn').tap();
   await a.locator('#routes button', { hasText: 'Westminster Dash' }).tap();
   await expect.poll(async () => (await a.evaluate(() => window.__citywalk.race)).state, { timeout: 10_000 }).toBe('running');

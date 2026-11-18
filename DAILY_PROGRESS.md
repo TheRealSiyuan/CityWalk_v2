@@ -2,6 +2,33 @@
 
 Verified work only. Newest first.
 
+## 2026-11-18
+
+**Day result: a CI fix, no player-visible change.** The live game is unchanged (still efc0c29).
+
+**Implemented**
+- Fixed a test race that failed CI. Yesterday's last push (2ea46ca, a docs-only commit) ran as
+  GitHub Actions run 44027868413 and **failed** e2e: in the multiplayer test, after a good re-join
+  (2.0 s), `#tut-skip` was visible when checked, then the tutorial timed out by itself (it ends
+  after ~12 s) before the tap, and the tap waited until the 150 s test limit. The game was not at
+  fault; deploy was skipped, so players kept yesterday's working build. The same pattern guarded
+  the next-up card, which also hides on a timer. Both now go through `dismissIfShown()` in
+  `e2e/game.spec.ts`: tap if shown, tolerate it vanishing, then require it hidden. This is likely
+  also the unexplained "tap after the races hit the 150 s limit" failure noted on 2026-11-16.
+
+**Verified**
+- Build: 0 TS errors. Unit: 101 passed. Browser: full run 10 of 10 passed (re-join 6.2 s).
+- The timing race itself was not reproduced locally; the fix is by construction. CI result for
+  today's push: see below.
+- Not verified: real phones, real internet.
+
+**Correction to 2026-11-17:** that entry's record-deploy push (2ea46ca) failed CI as above; it was
+not recorded at the time.
+
+**Money earned:** £0 (not yet published on a paying channel).
+
+**Next task:** owner playtest fixes; real-phone frame rate; keep watching the multiplayer test in CI.
+
 ## 2026-11-17
 
 **Implemented**
