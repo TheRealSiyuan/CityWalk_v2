@@ -15,6 +15,7 @@ Verified work only. Newest first.
 - Build: 0 TS errors. Unit: 106 passed (new: `tests/settings.test.ts`). Browser: 11 of 11 passed (re-join 5.0 s). CrazyGames build scan passed.
 - New browser test: a 30 px look-drag moves the camera; after Fast + inverted the same drag
   moves it the other way and further; all three options survive a reload.
+- GitHub Actions run 44468813036 (commit 7d1fdd9): build, e2e and deploy all succeeded.
 - Yesterday's CI fix: GitHub Actions run 44247361134 (2507bf7) succeeded, deploy included.
 - Not verified: whether the speeds feel right on a real phone — needs a human.
 
