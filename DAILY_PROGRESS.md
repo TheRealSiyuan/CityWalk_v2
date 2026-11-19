@@ -2,6 +2,26 @@
 
 Verified work only. Newest first.
 
+## 2026-11-19
+
+**Implemented**
+- Player options in the journal panel: **Camera: Slow / Normal / Fast** (0.6× / 1× / 1.6× look
+  speed, `CONFIG.settings`) and **Look up/down: normal / inverted**. Both apply to touch drag and
+  desktop mouse look. Sound on/off is now remembered too (it used to reset on every reload).
+  All three are saved on the device (`citywalk.settings`); bad or old saved values fall back to
+  the defaults.
+
+**Verified**
+- Build: 0 TS errors. Unit: 106 passed (new: `tests/settings.test.ts`). Browser: 11 of 11 passed (re-join 5.0 s). CrazyGames build scan passed.
+- New browser test: a 30 px look-drag moves the camera; after Fast + inverted the same drag
+  moves it the other way and further; all three options survive a reload.
+- Yesterday's CI fix: GitHub Actions run 44247361134 (2507bf7) succeeded, deploy included.
+- Not verified: whether the speeds feel right on a real phone — needs a human.
+
+**Money earned:** £0 (not yet published on a paying channel).
+
+**Next task:** owner playtest fixes; real-phone frame rate; keep watching the multiplayer test in CI.
+
 ## 2026-11-18
 
 **Day result: a CI fix, no player-visible change.** The live game is unchanged (still efc0c29).

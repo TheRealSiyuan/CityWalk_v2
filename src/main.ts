@@ -11,6 +11,7 @@ import { buildWorld } from './world/city';
 import { LANDMARKS, SPAWN, type Landmark } from './world/data';
 import { challengeFromHash, decodeChallenge, encodeChallenge, rivalLine, type Challenge } from './challenge';
 import { GhostRecorder, decodeGhost, encodeGhost, ghostPose, liveDelta, splitDelta, type Ghost, type GhostPose } from './ghost';
+import { lookScale } from './settings';
 import { ROUTES, Race, dailyRoute, formatTime, raceShareText, roomResultText, routeById, targetResult, targetText, type Route } from './race';
 import { WATER_Y, groundHeight } from './world/river';
 import { parsePortal, portalRules } from './portal';
@@ -84,6 +85,7 @@ const input = new Input(document.getElementById('touch')!);
 input.onFirstGesture = () => sfx.start();
 for (const ev of ['pointerup', 'touchend', 'click', 'keyup']) document.addEventListener(ev, () => sfx.resume(), { passive: true });
 ui.onMute = (m) => (sfx.muted = m);
+sfx.muted = ui.settings.muted;
 document.addEventListener('visibilitychange', () => sfx.setHidden(document.hidden));
 
 const tut = { moved: 0, looked: 0, jumped: 0, swung: 0 };
@@ -386,8 +388,9 @@ function updateCamera(dt: number, now: number): void {
     camera.lookAt(fixedView.target);
     return;
   }
-  camYaw -= input.lookX * C.lookSensitivity;
-  camPitch += input.lookY * C.lookSensitivity;
+  const k = lookScale(ui.settings);
+  camYaw -= input.lookX * C.lookSensitivity * k.x;
+  camPitch += input.lookY * C.lookSensitivity * k.y;
   input.lookX = input.lookY = 0;
   camPitch = Math.min(C.maxPitch, Math.max(C.minPitch, camPitch));
 
@@ -723,6 +726,10 @@ const debug = {
   },
   get pixelRatio() {
     return pixelRatio;
+  },
+  /** camera angles (radians), for checking the look settings */
+  get cam() {
+    return { yaw: camYaw, pitch: camPitch };
   },
   stats: world.stats,
   roads: world.plan.roads,

@@ -68,6 +68,17 @@ export const CONFIG = {
     maxPerSession: 3, // then the miss sound and button flash alone are enough
   },
 
+  // --- player settings (journal panel) -------------------------------------
+  settings: {
+    // multipliers on camera.lookSensitivity, cycled by the "Camera" button
+    cameraSpeeds: [
+      { label: 'Slow', scale: 0.6 },
+      { label: 'Normal', scale: 1 },
+      { label: 'Fast', scale: 1.6 },
+    ],
+    defaultCameraSpeed: 1,
+  },
+
   // --- camera -------------------------------------------------------------
   camera: {
     distance: 8.5,

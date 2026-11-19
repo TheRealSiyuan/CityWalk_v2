@@ -9,7 +9,7 @@ const url = (room: string) => `/?room=${room}&relay=${encodeURIComponent(RELAY)}
 
 interface PlayerState { x: number; y: number; z: number; anim: number; roped: boolean; grounded: boolean; swings: number }
 interface PeerState { id: string; name: string; seen: boolean; x: number; y: number; z: number }
-type Debug = { ready: boolean; room: string; player: PlayerState; peers: PeerState[]; race: { state: string; time: number; next: number; route: string | null; stops: [number, number][]; target: { route: string; who: string; t: number } | null }; ghost: { loaded: boolean; time: number | null; visible: boolean; rope: boolean; x: number; z: number }; aimLine: { visible: boolean; aim: boolean }; reticleAt: { x: number; y: number } | null; ropeHum: { gain: number; freq: number }; landings: { count: number; kind: string }; missHints: number; remoteCloses: number; net: { id: string; status: string; peers: string[]; log: string[] }; roomResults: string[]; dropPeers(): void; teleport(x: number, y: number, z: number): void };
+type Debug = { ready: boolean; room: string; cam: { yaw: number; pitch: number }; player: PlayerState; peers: PeerState[]; race: { state: string; time: number; next: number; route: string | null; stops: [number, number][]; target: { route: string; who: string; t: number } | null }; ghost: { loaded: boolean; time: number | null; visible: boolean; rope: boolean; x: number; z: number }; aimLine: { visible: boolean; aim: boolean }; reticleAt: { x: number; y: number } | null; ropeHum: { gain: number; freq: number }; landings: { count: number; kind: string }; missHints: number; remoteCloses: number; net: { id: string; status: string; peers: string[]; log: string[] }; roomResults: string[]; dropPeers(): void; teleport(x: number, y: number, z: number): void };
 declare global {
   interface Window { __citywalk: Debug }
 }
@@ -696,4 +696,51 @@ test('desktop: no touch buttons, key hints shown, WASD and Space work', async ({
   await page.screenshot({ path: 'screenshots/desktop-1280x720.png' });
   expect(errors).toEqual([]);
   await ctx.close();
+});
+
+test('settings: camera speed, inverted look and sound are kept after a reload and change the camera', async ({ page }) => {
+  const errors = trackErrors(page);
+  await page.goto(url('settingstest'));
+  await ready(page);
+  await dismissIfShown(page, '#tutorial', '#tut-skip');
+  const cdp = await page.context().newCDPSession(page);
+  /** pitch change from a 30 px downward look-drag on the right half of the screen */
+  const dragPitch = async (): Promise<number> => {
+    const before = (await page.evaluate(() => window.__citywalk.cam)).pitch;
+    await touch(cdp, 'touchStart', 300, 400, 3);
+    for (let i = 1; i <= 5; i++) await touch(cdp, 'touchMove', 300, 400 + i * 6, 3);
+    await touch(cdp, 'touchEnd');
+    await page.waitForTimeout(200);
+    return (await page.evaluate(() => window.__citywalk.cam)).pitch - before;
+  };
+  const normal = await dragPitch();
+  expect(Math.abs(normal)).toBeGreaterThan(0.05);
+
+  await page.locator('#progress').tap();
+  await expect(page.locator('#cam-speed')).toHaveText('Camera: Normal');
+  await expect(page.locator('#invert-y')).toHaveText('Look up/down: normal');
+  await page.locator('#cam-speed').tap();
+  await expect(page.locator('#cam-speed')).toHaveText('Camera: Fast');
+  await page.locator('#invert-y').tap();
+  await expect(page.locator('#invert-y')).toHaveText('Look up/down: inverted');
+  await page.locator('#mute').tap();
+  await expect(page.locator('#mute')).toHaveText('Sound: off');
+  await page.locator('#close').tap();
+
+  // same drag now moves the other way, and further
+  const inverted = await dragPitch();
+  expect(Math.sign(inverted)).toBe(-Math.sign(normal));
+  expect(Math.abs(inverted)).toBeGreaterThan(Math.abs(normal) * 1.2);
+
+  await page.reload();
+  await ready(page);
+  await dismissIfShown(page, '#tutorial', '#tut-skip');
+  await page.locator('#progress').tap();
+  await expect(page.locator('#cam-speed')).toHaveText('Camera: Fast');
+  await expect(page.locator('#invert-y')).toHaveText('Look up/down: inverted');
+  await expect(page.locator('#mute')).toHaveText('Sound: off');
+  await page.locator('#cam-speed').tap();
+  await expect(page.locator('#cam-speed')).toHaveText('Camera: Slow');
+  await page.screenshot({ path: 'screenshots/settings-390x844.png' });
+  expect(errors).toEqual([]);
 });

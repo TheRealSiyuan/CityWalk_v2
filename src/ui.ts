@@ -1,5 +1,6 @@
 import { CONFIG } from './config';
 import { LANDMARKS, type Landmark } from './world/data';
+import { camSpeedLabel, nextCamSpeed, parseSettings, type Settings } from './settings';
 
 const $ = <T extends HTMLElement = HTMLElement>(id: string): T => document.getElementById(id) as T;
 
@@ -65,12 +66,13 @@ export class UI {
   found: Set<string>;
   onName: ((name: string) => void) | null = null;
   onMute: ((muted: boolean) => void) | null = null;
+  /** Saved player options; main.ts reads camSpeed/invertY every frame. */
+  settings: Settings = parseSettings(store.get('citywalk.settings'));
   private cardTimer = 0;
   private toastTimer = 0;
   private tutStep = -1;
   private tutTime = 0;
   private tutBase: TutorialState | null = null;
-  private muted = false;
   private doneShare = '';
   touch = matchMedia('(pointer: coarse)').matches || 'ontouchstart' in window;
   onRespawn: (() => void) | null = null;
@@ -113,13 +115,33 @@ export class UI {
       window.setTimeout(() => ($('keys').hidden = true), 20000);
     }
     $('mute').addEventListener('click', () => {
-      this.muted = !this.muted;
-      $('mute').textContent = `Sound: ${this.muted ? 'off' : 'on'}`;
-      this.onMute?.(this.muted);
+      this.settings.muted = !this.settings.muted;
+      this.saveSettings();
+      this.onMute?.(this.settings.muted);
     });
+    $('cam-speed').addEventListener('click', () => {
+      this.settings.camSpeed = nextCamSpeed(this.settings.camSpeed);
+      this.saveSettings();
+    });
+    $('invert-y').addEventListener('click', () => {
+      this.settings.invertY = !this.settings.invertY;
+      this.saveSettings();
+    });
+    this.renderSettings();
     $('version').textContent = `CityWalk v${__APP_VERSION__} · progress is saved on this device only`;
     const dots = $('tut-dots');
     STEPS.forEach(() => dots.appendChild(document.createElement('b')));
+  }
+
+  private saveSettings(): void {
+    store.set('citywalk.settings', JSON.stringify(this.settings));
+    this.renderSettings();
+  }
+
+  private renderSettings(): void {
+    $('mute').textContent = `Sound: ${this.settings.muted ? 'off' : 'on'}`;
+    $('cam-speed').textContent = `Camera: ${camSpeedLabel(this.settings.camSpeed)}`;
+    $('invert-y').textContent = `Look up/down: ${this.settings.invertY ? 'inverted' : 'normal'}`;
   }
 
   private renderProgress(): void {
