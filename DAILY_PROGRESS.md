@@ -19,6 +19,8 @@ Verified work only. Newest first.
   form, and checks it survives a reload. New screenshot `screenshots/fps-meter-390x844.png`.
 - First placement (top-left under the bar) overlapped the next-up card and could meet the
   compass on narrow phones; moved to the bottom-left corner after checking the screenshot.
+- GitHub Actions run 44684672550 (commit 7ac9c95): build, e2e and deploy all succeeded. Live.
+- Yesterday's record-deploy push: run 44469965674 (d789929) succeeded.
 - Not verified: any real-phone frame rate (the test browser uses software rendering, ~10–12 fps).
   That number needs a human with the option turned on.
 
