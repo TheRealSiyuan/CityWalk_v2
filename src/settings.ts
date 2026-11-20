@@ -6,9 +6,11 @@ export interface Settings {
   camSpeed: number;
   invertY: boolean;
   muted: boolean;
+  /** small frame-rate readout in the corner, for testers checking real phones */
+  showFps: boolean;
 }
 
-export const DEFAULT_SETTINGS: Settings = { camSpeed: CONFIG.settings.defaultCameraSpeed, invertY: false, muted: false };
+export const DEFAULT_SETTINGS: Settings = { camSpeed: CONFIG.settings.defaultCameraSpeed, invertY: false, muted: false, showFps: false };
 
 /** Reads saved settings, falling back to defaults for anything missing or malformed. */
 export function parseSettings(raw: string | null): Settings {
@@ -26,6 +28,7 @@ export function parseSettings(raw: string | null): Settings {
   if (typeof r.camSpeed === 'number' && Number.isInteger(r.camSpeed) && r.camSpeed >= 0 && r.camSpeed < n) s.camSpeed = r.camSpeed;
   if (typeof r.invertY === 'boolean') s.invertY = r.invertY;
   if (typeof r.muted === 'boolean') s.muted = r.muted;
+  if (typeof r.showFps === 'boolean') s.showFps = r.showFps;
   return s;
 }
 
@@ -41,4 +44,11 @@ export function camSpeedLabel(i: number): string {
 export function lookScale(s: Settings): { x: number; y: number } {
   const k = CONFIG.settings.cameraSpeeds[s.camSpeed]?.scale ?? 1;
   return { x: k, y: s.invertY ? -k : k };
+}
+
+/** Text for the frame-rate readout: whole frames per second and the current render scale. */
+export function fpsLabel(fps: number, pixelRatio: number): string {
+  if (!Number.isFinite(fps) || fps < 0) return '-- fps';
+  const pr = Number.isFinite(pixelRatio) && pixelRatio > 0 ? ` · ${pixelRatio.toFixed(2)}x` : '';
+  return `${Math.round(fps)} fps${pr}`;
 }

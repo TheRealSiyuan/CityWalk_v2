@@ -19,7 +19,9 @@ Ordered by impact on getting real players and the first revenue.
    2026-11-18: one CI failure (run 44027868413) was a test race, not the game: the tutorial
    timed out between the test's check and its tap. Test fixed. Keep watching.
    2026-11-19: CI green for that fix (run 44247361134). Keep watching.
-1. **Owner playtest on phone + desktop**, fix anything it surfaces.
+1. **Owner playtest on phone + desktop**, fix anything it surfaces. Turn on journal → "Frame rate:
+   shown" (added 2026-11-20) and note the fps number in busy spots (Westminster, the City) so the
+   quality presets can be tuned from real data.
 2. **itch.io launch** (awaiting approval — `DECISIONS.md`).
 3. **CrazyGames Basic Launch** (awaiting approval — `DECISIONS.md`). The no-external-links
    build is done (`npm run package:crazygames`).
@@ -40,7 +42,7 @@ Ordered by impact on getting real players and the first revenue.
   "Race it" card offers the same route in one tap (only when you are not racing). Third slice
   done 2026-11-14: that race shows the friend's time as a target and the finish says who won.
   Nothing more here until players use it.
-- Measure real-phone frame rate (ask testers), tune quality presets.
+- Measure real-phone frame rate (ask testers; in-game readout added 2026-11-20), tune quality presets.
 - Swing feel: "nothing to swing from" hint on a missed press (done 2026-11-17, needs a look);
   anchor preview line and on-target reticle (done 2026-11-08); rope tension hum
   (done 2026-11-09, needs a listen); landing crouch/roll (done 2026-11-10, needs a look).

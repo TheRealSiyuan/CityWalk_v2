@@ -27,7 +27,8 @@ anywhere except the existing GitHub Pages site.
 
 ## Known issues (v0.9.0)
 
-- Frame rate on real phones is unmeasured (tests use software rendering).
+- Frame rate on real phones is unmeasured (tests use software rendering). Players can now see it
+  in-game: journal → "Frame rate: shown".
 - A friend who connects just as the game re-joins the room (it does so while you are alone) can
   wait up to about 27 s to appear (about 6 s less in theory since 2026-11-07, not yet measured).
   The permanent empty street this could cause was fixed on 2026-11-04. Under heavy CPU load in

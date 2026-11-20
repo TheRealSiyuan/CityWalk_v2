@@ -643,6 +643,7 @@ function tick(dt: number, now: number): void {
       renderer.setPixelRatio(pixelRatio);
       stableGood = 0;
     }
+    ui.showFrameRate(fps, pixelRatio);
   }
 }
 

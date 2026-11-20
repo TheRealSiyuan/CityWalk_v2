@@ -698,7 +698,7 @@ test('desktop: no touch buttons, key hints shown, WASD and Space work', async ({
   await ctx.close();
 });
 
-test('settings: camera speed, inverted look and sound are kept after a reload and change the camera', async ({ page }) => {
+test('settings: camera speed, inverted look, sound and frame rate are kept after a reload and change the camera', async ({ page }) => {
   const errors = trackErrors(page);
   await page.goto(url('settingstest'));
   await ready(page);
@@ -725,7 +725,15 @@ test('settings: camera speed, inverted look and sound are kept after a reload an
   await expect(page.locator('#invert-y')).toHaveText('Look up/down: inverted');
   await page.locator('#mute').tap();
   await expect(page.locator('#mute')).toHaveText('Sound: off');
+  await expect(page.locator('#fps-meter')).toBeHidden();
+  await expect(page.locator('#show-fps')).toHaveText('Frame rate: hidden');
+  await page.locator('#show-fps').tap();
+  await expect(page.locator('#show-fps')).toHaveText('Frame rate: shown');
   await page.locator('#close').tap();
+  // the readout fills in with a real measurement within a few seconds
+  await expect(page.locator('#fps-meter')).toBeVisible();
+  await expect(page.locator('#fps-meter')).toHaveText(/^\d+ fps · \d\.\d\dx$/, { timeout: 8000 });
+  await page.screenshot({ path: 'screenshots/fps-meter-390x844.png' });
 
   // same drag now moves the other way, and further
   const inverted = await dragPitch();
@@ -739,6 +747,7 @@ test('settings: camera speed, inverted look and sound are kept after a reload an
   await expect(page.locator('#cam-speed')).toHaveText('Camera: Fast');
   await expect(page.locator('#invert-y')).toHaveText('Look up/down: inverted');
   await expect(page.locator('#mute')).toHaveText('Sound: off');
+  await expect(page.locator('#show-fps')).toHaveText('Frame rate: shown');
   await page.locator('#cam-speed').tap();
   await expect(page.locator('#cam-speed')).toHaveText('Camera: Slow');
   await page.screenshot({ path: 'screenshots/settings-390x844.png' });

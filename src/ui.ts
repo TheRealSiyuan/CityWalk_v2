@@ -1,6 +1,6 @@
 import { CONFIG } from './config';
 import { LANDMARKS, type Landmark } from './world/data';
-import { camSpeedLabel, nextCamSpeed, parseSettings, type Settings } from './settings';
+import { camSpeedLabel, fpsLabel, nextCamSpeed, parseSettings, type Settings } from './settings';
 
 const $ = <T extends HTMLElement = HTMLElement>(id: string): T => document.getElementById(id) as T;
 
@@ -127,6 +127,10 @@ export class UI {
       this.settings.invertY = !this.settings.invertY;
       this.saveSettings();
     });
+    $('show-fps').addEventListener('click', () => {
+      this.settings.showFps = !this.settings.showFps;
+      this.saveSettings();
+    });
     this.renderSettings();
     $('version').textContent = `CityWalk v${__APP_VERSION__} · progress is saved on this device only`;
     const dots = $('tut-dots');
@@ -142,6 +146,13 @@ export class UI {
     $('mute').textContent = `Sound: ${this.settings.muted ? 'off' : 'on'}`;
     $('cam-speed').textContent = `Camera: ${camSpeedLabel(this.settings.camSpeed)}`;
     $('invert-y').textContent = `Look up/down: ${this.settings.invertY ? 'inverted' : 'normal'}`;
+    $('show-fps').textContent = `Frame rate: ${this.settings.showFps ? 'shown' : 'hidden'}`;
+    $('fps-meter').hidden = !this.settings.showFps;
+  }
+
+  /** Updates the frame-rate readout (only visible when the player turned it on). */
+  showFrameRate(fps: number, pixelRatio: number): void {
+    if (this.settings.showFps) $('fps-meter').textContent = fpsLabel(fps, pixelRatio);
   }
 
   private renderProgress(): void {

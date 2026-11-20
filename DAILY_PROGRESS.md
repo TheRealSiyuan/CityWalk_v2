@@ -2,6 +2,31 @@
 
 Verified work only. Newest first.
 
+## 2026-11-20
+
+**Implemented**
+- **Frame rate: hidden / shown** option in the journal panel. When shown, a small readout in the
+  bottom-left corner gives frames per second and the current render scale (e.g. `58 fps · 1.50x`),
+  refreshed every 1.5 s from the game's existing dynamic-resolution measurement. Saved on the
+  device with the other options; off by default. Purpose: lets the owner or a tester read the real
+  frame rate on their own phone (Roadmap "Measure real-phone frame rate"), with no tracking and
+  nothing sent anywhere. Settings saved before today load unchanged.
+
+**Verified**
+- Build: 0 TS errors. Unit: 108 passed (2 new in `tests/settings.test.ts`: old saved settings
+  still load; readout text, including bad numbers). Browser: 11 of 11 passed (re-join 4.8 s); the
+  settings test now turns the readout on, waits for a real measurement in the `N fps · N.NNx`
+  form, and checks it survives a reload. New screenshot `screenshots/fps-meter-390x844.png`.
+- First placement (top-left under the bar) overlapped the next-up card and could meet the
+  compass on narrow phones; moved to the bottom-left corner after checking the screenshot.
+- Not verified: any real-phone frame rate (the test browser uses software rendering, ~10–12 fps).
+  That number needs a human with the option turned on.
+
+**Money earned:** £0 (not yet published on a paying channel).
+
+**Next task:** owner playtest (with the frame-rate readout on) and fixes; keep watching the
+multiplayer test in CI.
+
 ## 2026-11-19
 
 **Implemented**

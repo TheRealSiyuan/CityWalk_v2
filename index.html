@@ -243,6 +243,12 @@
         font-weight: 700; font-size: 13px; pointer-events: none; opacity: 0.9;
       }
       #keys[hidden] { display: none; }
+      #fps-meter {
+        position: fixed; left: calc(8px + var(--sal)); bottom: calc(8px + var(--sab)); background: var(--paper); border-radius: 8px;
+        padding: 3px 8px; font-weight: 700; font-size: 12px; font-variant-numeric: tabular-nums; pointer-events: none; opacity: 0.85;
+      }
+      #fps-meter[hidden] { display: none; }
+      body:has(#keys:not([hidden])) #fps-meter { bottom: calc(60px + var(--sab)); }
       body.desktop .act, body.desktop #joy-base { display: none; }
       body.racing #compass { display: none; }
 
@@ -275,6 +281,7 @@
     </div>
     <div id="countdown" hidden></div>
     <div id="race-hint" hidden>Reach the golden beacon at each stop, in order. The clock stops at the last one.</div>
+    <div id="fps-meter" hidden aria-live="off">-- fps</div>
     <div id="keys" hidden>WASD move · Space jump (again in mid-air) · hold click or E to swing</div>
     <div class="chip" id="compass" hidden><i id="needle"></i><span id="compass-text"></span></div>
 
@@ -309,6 +316,7 @@
         <div class="row">
           <button id="cam-speed">Camera: Normal</button>
           <button id="invert-y">Look up/down: normal</button>
+          <button id="show-fps">Frame rate: hidden</button>
         </div>
         <div class="row">
           <button id="respawn">Back to start</button>
