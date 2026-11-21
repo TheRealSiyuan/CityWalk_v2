@@ -18,7 +18,9 @@ Verified work only. Newest first.
   link scan would catch a leak). Browser: 12 of 12 passed (re-join 5.1 s); new test checks the
   tags in the served page and that `/og-image.jpg` is served as a JPEG. CrazyGames build scan
   passed (2 files, no external links).
-- GitHub Actions result for today's push: see below.
+- GitHub Actions run 44873052406 (commit 256fb22): build, e2e and deploy all succeeded. Fetching
+  the live page from this environment was blocked by its network proxy, so the live tags were not
+  re-checked here.
 - Not verified: how WhatsApp, Discord, iMessage etc. actually render the card. That needs a
   human to paste a link.
 
