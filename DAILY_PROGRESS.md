@@ -2,6 +2,31 @@
 
 Verified work only. Newest first.
 
+## 2026-11-21
+
+**Implemented**
+- **Link previews.** The public build's page now carries Open Graph / Twitter card tags and a
+  1200×630 preview image (`og-image.jpg`: an in-game capture with the title, built by
+  `tools/make-og-image.py`). Room links and challenge links pasted into chat apps should show a
+  picture card ("CityWalk — swing through London") instead of a bare address, which matters
+  because friends joining by link is how the game finds players today. The CrazyGames and
+  itch.io builds get neither the tags nor the image (no external links there; zips unchanged).
+
+**Verified**
+- Build: 0 TS errors. Unit: 113 passed (5 new in `tests/socialmeta.test.ts`: only the default
+  build gets tags, absolute https image/page URLs, text escaping, bad base refused, the portal
+  link scan would catch a leak). Browser: 12 of 12 passed (re-join 5.1 s); new test checks the
+  tags in the served page and that `/og-image.jpg` is served as a JPEG. CrazyGames build scan
+  passed (2 files, no external links).
+- GitHub Actions result for today's push: see below.
+- Not verified: how WhatsApp, Discord, iMessage etc. actually render the card. That needs a
+  human to paste a link.
+
+**Money earned:** £0 (not yet published on a paying channel).
+
+**Next task:** owner playtest (frame-rate readout on) and fixes; keep watching the multiplayer
+test in CI.
+
 ## 2026-11-20
 
 **Implemented**

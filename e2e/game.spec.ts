@@ -753,3 +753,18 @@ test('settings: camera speed, inverted look, sound and frame rate are kept after
   await page.screenshot({ path: 'screenshots/settings-390x844.png' });
   expect(errors).toEqual([]);
 });
+
+test('link preview: the public build carries share-card tags and serves the preview image', async ({ page, request }) => {
+  await page.goto('/');
+  const og = await page.evaluate(() =>
+    Object.fromEntries([...document.querySelectorAll('meta[property^="og:"], meta[name^="twitter:"]')].map((m) => [m.getAttribute('property') ?? m.getAttribute('name'), m.getAttribute('content')])),
+  );
+  expect(og['og:title']).toContain('CityWalk');
+  expect(og['og:image']).toMatch(/^https:\/\/.+\/og-image\.jpg$/);
+  expect(og['twitter:card']).toBe('summary_large_image');
+  // The image the tag points at is part of this build, at the same path next to index.html.
+  const img = await request.get('/og-image.jpg');
+  expect(img.status()).toBe(200);
+  expect(img.headers()['content-type']).toContain('image/jpeg');
+  expect((await img.body()).length).toBeGreaterThan(20_000);
+});

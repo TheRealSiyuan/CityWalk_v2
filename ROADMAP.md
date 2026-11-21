@@ -31,7 +31,10 @@ Ordered by impact on getting real players and the first revenue.
 5. **Player options**: camera speed (Slow/Normal/Fast), inverted look and sound now saved on the
    device (done 2026-11-19, needs a feel check on a real phone). Next only if players ask:
    separate horizontal/vertical speed, left-handed button layout.
-6. **First-run polish**: daily-race card after a first tutorial (done 2026-11-01); "how races
+6. **Link previews** (done 2026-11-21): room and challenge links pasted into chat apps now show
+   a picture card with the title, public build only. Check how it looks the next time you share
+   a link (WhatsApp, Discord, iMessage); some apps cache an old preview for a while.
+7. **First-run polish**: daily-race card after a first tutorial (done 2026-11-01); "how races
    work" hint on the first countdown (done 2026-11-02); compass hides while the card shows
    (done 2026-11-03).
 

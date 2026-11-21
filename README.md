@@ -7,7 +7,10 @@ browser. Find all thirteen landmarks, learn a fact at each, and race between the
 a friend and they appear next to you.
 
 No menu, no login, no install, no backend, and no art/audio files: every
-building, character, shader and sound is generated in code.
+building, character, shader and sound is generated in code. (The one image in the public build,
+`og-image.jpg`, is the link-preview card chat apps show; it is an in-game capture with the title
+drawn in Poppins Bold, SIL Open Font License, made by `tools/make-og-image.py`. Portal builds
+leave it out.)
 
 ![Opening view: Big Ben across Westminster Bridge](screenshots/mobile-390x844.png)
 
