@@ -18,6 +18,10 @@ Verified work only. Newest first.
   and restarts from the finish card, and that the "(R)" hint shows on desktop; the race test
   checks it stays hidden on touch. First attempt failed my own new touch check (it read hidden
   text); fixed the check, not the game.
+- GitHub Actions run 44991870153 (commit 28e6d64): first attempt failed before any test ran
+  (the CI machine's package mirror, packages.microsoft.com, answered 403 while installing the test
+  browser; not our code, deploy was skipped). Re-ran the failed job once: build, e2e and deploy all
+  succeeded. Live.
 - Yesterday's record-deploy push: run 44873598426 (b0d40d3) succeeded.
 - Not verified: whether players find or like the key. Needs a human.
 
