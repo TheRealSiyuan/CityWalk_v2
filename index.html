@@ -250,6 +250,8 @@
       #fps-meter[hidden] { display: none; }
       body:has(#keys:not([hidden])) #fps-meter { bottom: calc(60px + var(--sab)); }
       body.desktop .act, body.desktop #joy-base { display: none; }
+      .key-hint { display: none; }
+      body.desktop .key-hint { display: inline; }
       body.racing #compass { display: none; }
 
       #loading {
@@ -277,7 +279,7 @@
       <div id="race-target" hidden></div>
       <div id="race-gap" hidden></div>
       <div id="race-next"></div>
-      <div id="race-actions"><button class="chip" id="race-restart">Restart</button><button class="chip" id="race-quit">Quit</button></div>
+      <div id="race-actions"><button class="chip" id="race-restart">Restart<span class="key-hint"> (R)</span></button><button class="chip" id="race-quit">Quit</button></div>
     </div>
     <div id="countdown" hidden></div>
     <div id="race-hint" hidden>Reach the golden beacon at each stop, in order. The clock stops at the last one.</div>
@@ -343,7 +345,7 @@
         <p id="done-best"></p>
         <p id="done-rival" hidden></p>
         <button id="done-share" hidden>Share today’s time</button>
-        <div class="row"><button class="primary" id="done-again">Race again</button><button id="done-routes">Other races</button><button id="done-close">Free roam</button></div>
+        <div class="row"><button class="primary" id="done-again">Race again<span class="key-hint"> (R)</span></button><button id="done-routes">Other races</button><button id="done-close">Free roam</button></div>
       </div>
     </div>
 

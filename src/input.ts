@@ -17,6 +17,7 @@ export class Input {
   onFirstGesture: (() => void) | null = null;
 
   private jumpQueued = false;
+  private restartQueued = false;
   private keys = new Set<string>();
   private joyId = -1;
   private joyX = 0;
@@ -81,6 +82,7 @@ export class Input {
         e.preventDefault();
       }
       if (e.code === 'KeyE') this.keySwing = true;
+      if (e.code === CONFIG.keys.restartRace) this.restartQueued = true;
     });
     window.addEventListener('keyup', (e) => {
       this.keys.delete(e.code);
@@ -199,6 +201,13 @@ export class Input {
     this.mx = x;
     this.my = y;
     this.swing = this.touchSwing || this.mouseSwing || this.keySwing;
+  }
+
+  /** A race-restart key press since the last call (each press counts once). */
+  consumeRestart(): boolean {
+    const r = this.restartQueued;
+    this.restartQueued = false;
+    return r;
   }
 
   consumeJump(): boolean {

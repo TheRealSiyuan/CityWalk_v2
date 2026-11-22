@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { LANDMARKS } from '../src/world/data';
 import { CONFIG } from '../src/config';
-import { ROUTES, Race, dailyRoute, dayKey, formatTime, targetResult, targetText, type BestStore } from '../src/race';
+import { ROUTES, Race, canQuickRestart, dailyRoute, dayKey, formatTime, targetResult, targetText, type BestStore } from '../src/race';
 
 const memStore = (): BestStore & { data: Record<string, number> } => {
   const data: Record<string, number> = {};
@@ -133,5 +133,21 @@ describe('racing a friend’s room time', () => {
     expect(targetResult('Sam', 80, 83.4)).toBe('You beat Sam by 3.4 s');
     expect(targetResult('Sam', 85.25, 83)).toBe('Sam was 2.3 s faster');
     expect(targetResult('Sam', 83.42, 83.4)).toBe('Dead level with Sam!');
+  });
+});
+
+describe('quick restart key', () => {
+  it('restarts during a countdown, a run, or from the finish card', () => {
+    expect(canQuickRestart('countdown', false)).toBe(true);
+    expect(canQuickRestart('running', false)).toBe(true);
+    expect(canQuickRestart('finished', false)).toBe(true);
+  });
+  it('does nothing in free roam or while the journal or route list is open', () => {
+    expect(canQuickRestart('idle', false)).toBe(false);
+    expect(canQuickRestart('running', true)).toBe(false);
+    expect(canQuickRestart('finished', true)).toBe(false);
+  });
+  it('is a key that does not clash with movement, jump or swing', () => {
+    expect(['KeyW', 'KeyA', 'KeyS', 'KeyD', 'Space', 'KeyE', 'ShiftLeft', 'ShiftRight']).not.toContain(CONFIG.keys.restartRace);
   });
 });

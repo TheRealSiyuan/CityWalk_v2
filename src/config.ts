@@ -177,6 +177,11 @@ export const CONFIG = {
     maxPixelRatio: 1.5,
     minPixelRatio: 0.65,
   },
+
+  // --- keyboard -------------------------------------------------------------
+  keys: {
+    restartRace: 'KeyR', // restart the current race (or race the same route again from the finish card)
+  },
 };
 
 export type Config = typeof CONFIG;

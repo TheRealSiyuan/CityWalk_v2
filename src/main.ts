@@ -12,7 +12,7 @@ import { LANDMARKS, SPAWN, type Landmark } from './world/data';
 import { challengeFromHash, decodeChallenge, encodeChallenge, rivalLine, type Challenge } from './challenge';
 import { GhostRecorder, decodeGhost, encodeGhost, ghostPose, liveDelta, splitDelta, type Ghost, type GhostPose } from './ghost';
 import { lookScale } from './settings';
-import { ROUTES, Race, dailyRoute, formatTime, raceShareText, roomResultText, routeById, targetResult, targetText, type Route } from './race';
+import { ROUTES, Race, canQuickRestart, dailyRoute, formatTime, raceShareText, roomResultText, routeById, targetResult, targetText, type Route } from './race';
 import { WATER_Y, groundHeight } from './world/river';
 import { parsePortal, portalRules } from './portal';
 import { AimLine } from './render/aimline';
@@ -525,6 +525,7 @@ function tick(dt: number, now: number): void {
     input.swing = true;
     input.lastLook = now; // keep the trailing camera from fighting the autopilot
   }
+  if (input.consumeRestart() && canQuickRestart(race.state, ui.menuOpen)) startRace(lastRoute, true);
   if (ui.panelOpen || race.state === 'countdown') {
     input.mx = input.my = 0;
     input.swing = false;

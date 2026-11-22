@@ -247,6 +247,11 @@ export class UI {
     $<HTMLInputElement>('name').value = name;
   }
 
+  /** The journal or the route list is open (the finish card does not count). */
+  get menuOpen(): boolean {
+    return !$('panel').hidden || !$('race-panel').hidden;
+  }
+
   get panelOpen(): boolean {
     return !$('panel').hidden || !$('race-panel').hidden || !$('race-done').hidden;
   }

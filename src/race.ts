@@ -96,6 +96,14 @@ export class Race {
   }
 }
 
+/**
+ * Whether the restart key should restart the race: during a countdown or a run, or from the
+ * finish card ("Race again"); never in free roam or while a menu (journal, route list) is open.
+ */
+export function canQuickRestart(state: RaceState, menuOpen: boolean): boolean {
+  return !menuOpen && state !== 'idle';
+}
+
 export function formatTime(t: number): string {
   const m = Math.floor(t / 60);
   const s = t - m * 60;

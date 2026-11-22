@@ -2,6 +2,30 @@
 
 Verified work only. Newest first.
 
+## 2026-11-22
+
+**Implemented**
+- **R to restart a race (desktop).** Pressing R during a countdown or a run restarts the race at
+  once, and on the finish card it does "Race again", so retrying a route for a better time no
+  longer needs the mouse. It does nothing in free roam or while the journal or route list is open,
+  and typing in the name field is ignored. The Restart and Race again buttons show "(R)" on
+  desktop only; touch layouts are unchanged. Key set in `src/config.ts` (`keys.restartRace`).
+
+**Verified**
+- Build: 0 TS errors. Unit: 116 passed (3 new in `tests/race.test.ts`: when the key restarts,
+  when it does nothing, no clash with movement/jump/swing keys). Browser: 12 of 12 passed; the
+  desktop test now checks R does nothing in free roam, returns a running race to a countdown,
+  and restarts from the finish card, and that the "(R)" hint shows on desktop; the race test
+  checks it stays hidden on touch. First attempt failed my own new touch check (it read hidden
+  text); fixed the check, not the game.
+- Yesterday's record-deploy push: run 44873598426 (b0d40d3) succeeded.
+- Not verified: whether players find or like the key. Needs a human.
+
+**Money earned:** £0 (not yet published on a paying channel).
+
+**Next task:** owner playtest (frame-rate readout on) and fixes; keep watching the multiplayer
+test in CI.
+
 ## 2026-11-21
 
 **Implemented**

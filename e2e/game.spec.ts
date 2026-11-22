@@ -321,6 +321,7 @@ test('race: pick a route, count down, take every checkpoint, finish and keep a p
   await expect(page.locator('#race-next')).toContainText('1/');
   await expect(page.locator('#race-gap')).toBeHidden(); // no ghost yet on a first run
 
+  await expect(page.locator('#race-restart .key-hint')).toBeHidden(); // no key hint on touch
   // restart puts the clock back to a countdown
   await page.locator('#race-restart').tap();
   await expect.poll(async () => (await page.evaluate(() => window.__citywalk.race)).state).toBe('countdown');
@@ -694,6 +695,29 @@ test('desktop: no touch buttons, key hints shown, WASD and Space work', async ({
   await expect.poll(async () => (await player(page)).roped, { timeout: 5000 }).toBe(true);
   await page.keyboard.up('KeyE');
   await page.screenshot({ path: 'screenshots/desktop-1280x720.png' });
+
+  // R restarts a race from the keyboard: nothing in free roam, back to a countdown mid-race,
+  // and "Race again" from the finish card; the buttons show the key on desktop only
+  await page.keyboard.press('KeyR');
+  await page.waitForTimeout(300);
+  expect((await page.evaluate(() => window.__citywalk.race)).state).toBe('idle');
+  await page.locator('#race-btn').click();
+  await page.locator('#routes button', { hasText: 'Westminster Dash' }).click();
+  await expect(page.locator('#race-restart')).toHaveText('Restart (R)');
+  await expect(page.locator('#race-restart .key-hint')).toBeVisible();
+  await expect.poll(async () => (await page.evaluate(() => window.__citywalk.race)).state, { timeout: 10_000 }).toBe('running');
+  await page.keyboard.press('KeyR');
+  await expect.poll(async () => (await page.evaluate(() => window.__citywalk.race)).state).toBe('countdown');
+  await expect.poll(async () => (await page.evaluate(() => window.__citywalk.race)).state, { timeout: 10_000 }).toBe('running');
+  for (const [x, z] of [[-311, 222], [-372, 270], [-610, 208], [-380, 40]]) {
+    await page.evaluate(([x, z]) => window.__citywalk.teleport(x, 0.5, z), [x, z]);
+    await page.waitForTimeout(400);
+  }
+  await expect(page.locator('#race-done')).toBeVisible();
+  await expect(page.locator('#done-again')).toHaveText('Race again (R)');
+  await page.keyboard.press('KeyR');
+  await expect(page.locator('#race-done')).toBeHidden();
+  await expect.poll(async () => (await page.evaluate(() => window.__citywalk.race)).state).toBe('countdown');
   expect(errors).toEqual([]);
   await ctx.close();
 });
