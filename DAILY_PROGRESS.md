@@ -21,6 +21,12 @@ Verified work only. Newest first.
   and the hold-Swing bot earns a medal but not gold on Westminster Dash and River Run).
   Browser: 12 of 12 passed; the race test now checks the finish card shows "Gold medal!" and the
   route list marks the best time gold (and leaves an unraced route unmarked).
+- GitHub Actions run 45120771220 (commit 939e8f7): first attempt **failed** in e2e, deploy
+  skipped. The failing test was yesterday's desktop R-restart test, not the medal checks: a race
+  countdown was still counting after 10 s (it normally takes 3 s). Likely cause, not proven: the
+  game clamps each frame to 0.1 s, so at very low frame rates on the CI machine game time runs
+  slow. Re-ran the failed job once: build, e2e and deploy all succeeded. Live. If it recurs, give
+  that wait more time or measure CI frame rate there.
 - Not verified: whether the targets feel fair or motivating to real players, and whether gold is
   reachable by a skilled human on every daily. Needs a human; tune `medals` in `src/config.ts`.
 
