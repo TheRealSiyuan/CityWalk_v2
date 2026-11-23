@@ -2,6 +2,33 @@
 
 Verified work only. Newest first.
 
+## 2026-11-23
+
+**Implemented**
+- **Race medals.** Every race now has gold, silver and bronze target times. The finish card says
+  which medal you earned and the time for the next one ("Silver medal · Gold: 0:35.0"; "Gold
+  medal!" at the top), and the route list marks your best medal beside each best time. Targets
+  come from the route's straight-line length and an average speed per tier (gold 18, silver 12,
+  bronze 7 m/s, in `src/config.ts` `medals`), so the daily route gets fair targets every day
+  without hand-tuning. Gives solo players a goal beyond "beat your own time".
+- Tuning basis: a bot that only holds Swing and steers at the next stop finished routes at 7–17
+  m/s (it got stuck on several dailies). Running alone tops out at 11 m/s in a perfect straight
+  line, so silver and gold need swinging.
+
+**Verified**
+- Build: 0 TS errors. Unit: 120 passed (4 new in `tests/medals.test.ts`: targets ordered on all
+  fixed routes and 30 dailies, running alone cannot reach silver, tier boundaries, finish text,
+  and the hold-Swing bot earns a medal but not gold on Westminster Dash and River Run).
+  Browser: 12 of 12 passed; the race test now checks the finish card shows "Gold medal!" and the
+  route list marks the best time gold (and leaves an unraced route unmarked).
+- Not verified: whether the targets feel fair or motivating to real players, and whether gold is
+  reachable by a skilled human on every daily. Needs a human; tune `medals` in `src/config.ts`.
+
+**Money earned:** £0 (not yet published on a paying channel).
+
+**Next task:** owner playtest (frame-rate readout on, try for gold on a route) and fixes; keep
+watching the multiplayer test in CI.
+
 ## 2026-11-22
 
 **Implemented**

@@ -30,6 +30,8 @@ anywhere except the existing GitHub Pages site.
 - Link-preview card (2026-11-21) is checked in the build and the test browser only; how each
   chat app renders it has not been seen. Its address is fixed to the GitHub Pages URL in
   `vite.config.ts` (`PUBLIC_URL`); change it there if the game moves.
+- Race medal targets (2026-11-23) are set from straight-line route length and bot runs, not from
+  human play; some dailies route around buildings or the river and may be harder than others.
 - Frame rate on real phones is unmeasured (tests use software rendering). Players can now see it
   in-game: journal → "Frame rate: shown".
 - A friend who connects just as the game re-joins the room (it does so while you are alone) can

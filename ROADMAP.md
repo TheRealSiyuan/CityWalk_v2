@@ -37,6 +37,9 @@ Ordered by impact on getting real players and the first revenue.
 7. **First-run polish**: daily-race card after a first tutorial (done 2026-11-01); "how races
    work" hint on the first countdown (done 2026-11-02); compass hides while the card shows
    (done 2026-11-03); R restarts a race on desktop (done 2026-11-22).
+8. **Race medals** (done 2026-11-23): gold/silver/bronze targets from route length, on the finish
+   card and route list. Needs a human check that gold is hard but reachable; tune `medals` in
+   `src/config.ts`.
 
 ## Next
 

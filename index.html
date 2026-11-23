@@ -234,6 +234,12 @@
       #done-best { margin: 0; font-weight: 700; opacity: 0.75; }
       #done-rival { margin: 6px 0 0; font-weight: 900; color: var(--teal); }
       #done-rival[hidden] { display: none; }
+      #done-medal { margin: 6px 0 0; font-weight: 900; }
+      #done-medal[hidden] { display: none; }
+      #done-medal.gold, #routes .pb.gold { color: #b8860b; }
+      #done-medal.silver, #routes .pb.silver { color: #6e7b85; }
+      #done-medal.bronze, #routes .pb.bronze { color: #9a5b2e; }
+      #routes .pb.medal::before { content: '●'; margin-right: 4px; }
       #done-share { margin-top: 12px; width: 100%; padding: 11px 10px; border-radius: 14px; font-weight: 800; background: var(--gold); }
       #done-share[hidden] { display: none; }
       #daily-badge { background: var(--coral); color: var(--cream); border-radius: 999px; padding: 2px 7px; font-size: 11px; font-weight: 900; letter-spacing: 0.03em; }
@@ -343,6 +349,7 @@
         <div class="kicker" id="done-kicker"></div>
         <div id="done-time"></div>
         <p id="done-best"></p>
+        <p id="done-medal" hidden></p>
         <p id="done-rival" hidden></p>
         <button id="done-share" hidden>Share today’s time</button>
         <div class="row"><button class="primary" id="done-again">Race again<span class="key-hint"> (R)</span></button><button id="done-routes">Other races</button><button id="done-close">Free roam</button></div>

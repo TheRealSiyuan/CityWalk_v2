@@ -207,3 +207,45 @@ export function targetResult(who: string, mine: number, theirs: number): string 
   if (gap === '0.0') return `Dead level with ${who}!`;
   return mine < theirs ? `You beat ${who} by ${gap} s` : `${who} was ${gap} s faster`;
 }
+
+export type Medal = 'gold' | 'silver' | 'bronze';
+const TIERS: Medal[] = ['gold', 'silver', 'bronze'];
+const MEDAL_NAME: Record<Medal, string> = { gold: 'Gold', silver: 'Silver', bronze: 'Bronze' };
+
+/** Metres of straight-line legs a route asks for: start to each stop in turn, minus each stop's radius. */
+export function routeLength(route: Route): number {
+  let d = 0;
+  let x = route.start.x;
+  let z = route.start.z;
+  for (const id of route.stops) {
+    const l = LANDMARKS.find((q) => q.id === id);
+    if (!l) continue;
+    d += Math.max(0, Math.hypot(l.x - x, l.z - z) - l.r);
+    x = l.x;
+    z = l.z;
+  }
+  return d;
+}
+
+/** Target time in whole seconds for each medal on this route (gold is the fastest). */
+export function medalTimes(route: Route): Record<Medal, number> {
+  const len = routeLength(route);
+  const t = (speed: number) => Math.max(1, Math.ceil(len / speed));
+  return { gold: t(CONFIG.medals.gold), silver: t(CONFIG.medals.silver), bronze: t(CONFIG.medals.bronze) };
+}
+
+/** The best medal a time earns on a route, or null if it beats none of the targets. */
+export function medalFor(route: Route, time: number): Medal | null {
+  const m = medalTimes(route);
+  return TIERS.find((tier) => time <= m[tier]) ?? null;
+}
+
+/** The finish-card line: the medal earned and the next target to chase. */
+export function medalLine(route: Route, time: number): string {
+  const m = medalTimes(route);
+  const got = medalFor(route, time);
+  if (got === 'gold') return 'Gold medal!';
+  const next: Medal = got === 'silver' ? 'gold' : got === 'bronze' ? 'silver' : 'bronze';
+  const chase = `${MEDAL_NAME[next]}: ${formatTime(m[next])}`;
+  return got ? `${MEDAL_NAME[got]} medal · ${chase}` : `No medal yet · ${chase}`;
+}

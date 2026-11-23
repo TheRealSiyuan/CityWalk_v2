@@ -32,7 +32,7 @@ leave it out.)
 - Fall in the Thames and you are put back on the nearest bank.
 - Tap **0/13 found** for the journal, your name tag, sound, **Back to start**, and to replay the tutorial.
 - **Races:** three timed landmark routes with a countdown, a beacon over the next stop and
-  personal bests saved on your device.
+  personal bests saved on your device. Each route has gold, silver and bronze target times.
 - **Share** opens the native share sheet (or copies the link). Anyone opening
   it joins your room, up to 8 players. When someone in the room finishes a race, everyone
   else sees their time, with a "Race it" button to run the same route.

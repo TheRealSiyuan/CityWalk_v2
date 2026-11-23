@@ -337,6 +337,9 @@ test('race: pick a route, count down, take every checkpoint, finish and keep a p
   await expect(page.locator('#race-done')).toBeVisible();
   await expect(page.locator('#done-kicker')).toContainText('new personal best');
   await expect(page.locator('#done-share')).toHaveText('Challenge a friend'); // fixed routes share a ghost too
+  // a teleported run is far inside the gold target
+  await expect(page.locator('#done-medal')).toHaveText('Gold medal!');
+  await expect(page.locator('#done-medal')).toHaveClass('gold');
   await page.screenshot({ path: 'screenshots/race-finish.png' });
   const best = await page.evaluate(() => localStorage.getItem('citywalk.best.westminster'));
   expect(Number(best)).toBeGreaterThan(0);
@@ -344,6 +347,8 @@ test('race: pick a route, count down, take every checkpoint, finish and keep a p
   // the route list now shows that best time
   await page.locator('#done-routes').tap();
   await expect(page.locator('#routes button', { hasText: 'Westminster Dash' }).locator('.pb')).toHaveText(/\d:\d\d\.\d/);
+  await expect(page.locator('#routes button', { hasText: 'Westminster Dash' }).locator('.pb')).toHaveClass(/\bgold\b/);
+  await expect(page.locator('#routes button', { hasText: 'City Sprint' }).locator('.pb')).not.toHaveClass(/medal/); // not raced yet
 
   // the best run was saved as a ghost; racing again replays it alongside you
   const saved = await page.evaluate(() => JSON.parse(localStorage.getItem('citywalk.ghost.westminster') ?? 'null'));

@@ -12,7 +12,7 @@ import { LANDMARKS, SPAWN, type Landmark } from './world/data';
 import { challengeFromHash, decodeChallenge, encodeChallenge, rivalLine, type Challenge } from './challenge';
 import { GhostRecorder, decodeGhost, encodeGhost, ghostPose, liveDelta, splitDelta, type Ghost, type GhostPose } from './ghost';
 import { lookScale } from './settings';
-import { ROUTES, Race, canQuickRestart, dailyRoute, formatTime, raceShareText, roomResultText, routeById, targetResult, targetText, type Route } from './race';
+import { ROUTES, Race, canQuickRestart, dailyRoute, formatTime, medalFor, medalLine, raceShareText, roomResultText, routeById, targetResult, targetText, type Route } from './race';
 import { WATER_Y, groundHeight } from './world/river';
 import { parsePortal, portalRules } from './portal';
 import { AimLine } from './render/aimline';
@@ -174,7 +174,9 @@ const race = new Race(
           : roomTarget && roomTarget.route === routeId
             ? targetResult(roomTarget.who, t, roomTarget.t)
             : '';
-      ui.raceFinished(name, formatTime(t), best !== null ? formatTime(best) : '', isNew, share, !!code, vs);
+      const medal = race.route ? medalLine(race.route, t) : '';
+      const tier = race.route ? (medalFor(race.route, t) ?? '') : '';
+      ui.raceFinished(name, formatTime(t), best !== null ? formatTime(best) : '', isNew, share, !!code, vs, medal, tier);
       refreshDailyBadge();
     },
   },
@@ -243,7 +245,11 @@ const openRaces = () => {
   ui.showRoutes(routes, (id) => {
     const b = race.bestFor(id);
     return b === null ? null : formatTime(b);
-  }, (id) => startRace(routes.find((r) => r.id === id) ?? ROUTES[0]));
+  }, (id) => startRace(routes.find((r) => r.id === id) ?? ROUTES[0]), (id) => {
+    const b = race.bestFor(id);
+    const r = routes.find((q) => q.id === id);
+    return b === null || !r ? null : medalFor(r, b);
+  });
 };
 document.getElementById('race-btn')!.addEventListener('click', openRaces);
 document.getElementById('race-close')!.addEventListener('click', () => ui.hideRoutes());

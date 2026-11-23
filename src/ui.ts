@@ -257,7 +257,7 @@ export class UI {
   }
 
   // --- races ------------------------------------------------------------------
-  showRoutes(routes: { id: string; name: string; stops: string[] }[], best: (id: string) => string | null, pick: (id: string) => void): void {
+  showRoutes(routes: { id: string; name: string; stops: string[] }[], best: (id: string) => string | null, pick: (id: string) => void, medal: (id: string) => string | null = () => null): void {
     const ol = $('routes');
     ol.textContent = '';
     for (const r of routes) {
@@ -270,6 +270,11 @@ export class UI {
       const pb = document.createElement('span');
       pb.className = 'pb';
       pb.textContent = best(r.id) ?? 'New';
+      const m = medal(r.id);
+      if (m) {
+        pb.classList.add('medal', m);
+        pb.title = `${m[0].toUpperCase()}${m.slice(1)} medal`;
+      }
       b.append(name, pb, via);
       if (r.id.startsWith('daily-')) {
         li.className = 'daily';
@@ -357,12 +362,16 @@ export class UI {
    * `shareText` shows a button that shares it, labelled for a ghost link
    * when `challenge` is set. `rival` says how the run compares with a friend's.
    */
-  raceFinished(route: string, time: string, best: string, isNew: boolean, shareText = '', challenge = false, rival = ''): void {
+  raceFinished(route: string, time: string, best: string, isNew: boolean, shareText = '', challenge = false, rival = '', medal = '', medalTier = ''): void {
     this.doneShare = shareText;
     $('done-share').hidden = !shareText;
     $('done-share').textContent = challenge ? 'Challenge a friend' : 'Share today’s time';
     $('done-rival').hidden = !rival;
     $('done-rival').textContent = rival;
+    const md = $('done-medal');
+    md.hidden = !medal;
+    md.textContent = medal;
+    md.className = medalTier;
     $('card').classList.remove('on');
     $('done-kicker').textContent = isNew ? `${route} · new personal best` : route;
     $('done-time').textContent = time;

@@ -95,6 +95,17 @@ export const CONFIG = {
 
   // --- daily challenge ---------------------------------------------------
   // one generated route per UTC day, the same for every player
+  // Race medals. Each tier is an average speed in m/s over the route's straight-line legs (start →
+  // each stop, minus the stop's radius), so fixed routes and every daily get fair targets without
+  // hand-tuning. Measured 2026-11-23 with a hold-Swing bot that just steers at the next stop:
+  // 7–17 m/s on the routes it finished. Running alone tops out at 11 m/s on a perfect straight
+  // line, so silver and gold need swinging. Times are rounded up to whole seconds.
+  medals: {
+    gold: 18,
+    silver: 12,
+    bronze: 7,
+  },
+
   daily: {
     stops: 4, // landmarks per daily route
     minLeg: 150, // metres: each stop is at least this far from the previous point
