@@ -23,6 +23,8 @@ Verified work only. Newest first.
   test now measures with the chip showing. First full run failed that hint test (the new row
   pushed the HUD into the hint); fixed the layout, not the test. Looked at the screenshots: chip
   reads clearly next to the ghost gap on a 390×844 phone.
+- GitHub Actions run 45337337741 (commit 80b7706): build, e2e and deploy all succeeded on the first
+  attempt. Live. The e2e job took 11 min (usually about 5); not investigated.
 - Seen while checking screenshots, not fixed: when the day's daily starts inside a landmark you
   have not found (today: Trafalgar Square), the landmark fact card pops up over the race HUD and
   hint during the countdown. Added to the roadmap.
