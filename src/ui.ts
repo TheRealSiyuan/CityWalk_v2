@@ -303,6 +303,7 @@ export class UI {
     if (!on) $('countdown').hidden = true;
     if (!on) this.raceGap(null);
     if (!on) this.raceTarget(null);
+    if (!on) this.raceMedal(null);
     if (!on) this.hideRaceHint();
   }
 
@@ -336,6 +337,19 @@ export class UI {
   /** Greys the target out once the clock has gone past the friend's time. */
   raceTargetPassed(passed: boolean): void {
     $('race-target').classList.toggle('passed', passed);
+  }
+
+  /** The medal still in reach during a run ("Silver 0:52.0"): null hides it. Only touches the DOM on change. */
+  raceMedal(pace: { tier: string; text: string; passed: boolean } | null): void {
+    const el = $('race-medal');
+    const key = pace ? `${pace.tier}|${pace.text}|${pace.passed}` : '';
+    if (el.dataset.key === key) return;
+    el.dataset.key = key;
+    el.hidden = pace === null;
+    if (!pace) return;
+    el.textContent = pace.text;
+    el.className = pace.passed ? `${pace.tier} passed` : pace.tier;
+    el.title = pace.passed ? 'Medal target passed' : `On pace for ${pace.text.split(' ')[0].toLowerCase()}`;
   }
 
   /** Gap to the ghost you are racing: null hides it. */

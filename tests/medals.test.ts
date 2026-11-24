@@ -3,7 +3,7 @@ import { CONFIG } from '../src/config';
 import { Player } from '../src/player/controller';
 import { buildWorld } from '../src/world/city';
 import { LANDMARKS } from '../src/world/data';
-import { ROUTES, Race, dailyRoute, formatTime, medalFor, medalLine, medalTimes, routeLength } from '../src/race';
+import { ROUTES, Race, dailyRoute, formatTime, medalFor, medalLine, medalPace, medalTimes, routeLength } from '../src/race';
 
 const westminster = ROUTES.find((r) => r.id === 'westminster')!;
 
@@ -59,4 +59,18 @@ describe('race medals', () => {
       expect(medal).not.toBe('gold');
     }
   }, 120000);
+
+  it('live pace chip shows the fastest medal still in reach, then bronze struck out', () => {
+    const m = medalTimes(westminster);
+    expect(medalPace(m, 0)).toEqual({ tier: 'gold', text: `Gold ${formatTime(m.gold)}`, passed: false });
+    expect(medalPace(m, m.gold).tier).toBe('gold'); // equal to the target still earns it, as on the finish card
+    expect(medalPace(m, m.gold + 0.1)).toEqual({ tier: 'silver', text: `Silver ${formatTime(m.silver)}`, passed: false });
+    expect(medalPace(m, m.silver + 0.1).tier).toBe('bronze');
+    expect(medalPace(m, m.bronze + 0.1)).toEqual({ tier: 'bronze', text: `Bronze ${formatTime(m.bronze)}`, passed: true });
+    // the chip always agrees with the medal the finish card would give at that time
+    for (let t = 0; t < m.bronze + 5; t += 0.7) {
+      const p = medalPace(m, t);
+      expect(p.passed ? null : p.tier).toBe(medalFor(westminster, t));
+    }
+  });
 });

@@ -12,7 +12,7 @@ import { LANDMARKS, SPAWN, type Landmark } from './world/data';
 import { challengeFromHash, decodeChallenge, encodeChallenge, rivalLine, type Challenge } from './challenge';
 import { GhostRecorder, decodeGhost, encodeGhost, ghostPose, liveDelta, splitDelta, type Ghost, type GhostPose } from './ghost';
 import { lookScale } from './settings';
-import { ROUTES, Race, canQuickRestart, dailyRoute, formatTime, medalFor, medalLine, raceShareText, roomResultText, routeById, targetResult, targetText, type Route } from './race';
+import { ROUTES, Race, canQuickRestart, dailyRoute, formatTime, medalFor, medalLine, medalPace, medalTimes, raceShareText, roomResultText, routeById, targetResult, targetText, type Route } from './race';
 import { WATER_Y, groundHeight } from './world/river';
 import { parsePortal, portalRules } from './portal';
 import { AimLine } from './render/aimline';
@@ -124,6 +124,7 @@ const ghostKey = (id: string) => `citywalk.ghost.${id}`;
 const ghostRec = new GhostRecorder();
 let ghost: Ghost | null = null;
 let splits: number[] = [];
+let raceMedals: ReturnType<typeof medalTimes> | null = null; // medal targets of the current race
 let gapClock = 0; // seconds until the HUD gap to the ghost refreshes
 const ghostNow: GhostPose = { x: 0, y: 0, z: 0, yaw: 0, anim: 0, speed: 0, anchor: null };
 function saveGhost(routeId: string, g: Ghost): void {
@@ -223,6 +224,7 @@ function startRace(route: Route, keepTarget = false): void {
   const label = vsFriend ? 'Friend' : 'Your best';
   if (label !== ghostLabel) ghostAvatar.setName((ghostLabel = label));
   race.start(route);
+  raceMedals = medalTimes(route);
   ui.raceHud(true);
   ui.raceHint();
   ui.raceGap(null);
@@ -597,6 +599,8 @@ function tick(dt: number, now: number): void {
       const d = Math.hypot(stop.x - player.pos.x, stop.z - player.pos.z);
       ui.raceTick(formatTime(race.time), `${race.next + 1}/${total} · ${stop.name} · ${Math.round(d / 5) * 5} m`);
       if (roomTarget) ui.raceTargetPassed(race.time > roomTarget.t);
+      // one goal at a time: the medal chip gives way to a friend's time you chose to race
+      ui.raceMedal(!roomTarget && raceMedals ? medalPace(raceMedals, race.time) : null);
       // live gap to your best run, refreshed a few times a second so it reads steadily
       gapClock -= dt;
       if (gapClock <= 0) {

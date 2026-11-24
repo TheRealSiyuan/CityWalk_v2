@@ -249,3 +249,12 @@ export function medalLine(route: Route, time: number): string {
   const chase = `${MEDAL_NAME[next]}: ${formatTime(m[next])}`;
   return got ? `${MEDAL_NAME[got]} medal · ${chase}` : `No medal yet · ${chase}`;
 }
+
+/**
+ * The medal still in reach at this point of a run, for the live HUD chip: the fastest tier whose
+ * target the clock has not passed yet. Once even bronze has gone, it stays on bronze, `passed`.
+ */
+export function medalPace(times: Record<Medal, number>, time: number): { tier: Medal; text: string; passed: boolean } {
+  const tier = TIERS.find((t) => time <= times[t]) ?? 'bronze';
+  return { tier, text: `${MEDAL_NAME[tier]} ${formatTime(times[tier])}`, passed: time > times[tier] };
+}

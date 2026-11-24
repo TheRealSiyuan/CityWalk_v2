@@ -281,6 +281,7 @@ test('multiplayer: two browsers on the same room link see each other move', asyn
   await b.bringToFront();
   await expect(b.locator('#race-target')).toBeVisible();
   await expect(b.locator('#race-target')).toHaveText(/^Beat .+ · \d+:\d\d\.\d$/);
+  await expect(b.locator('#race-medal')).toBeHidden(); // one goal at a time: the friend's time
   expect((await b.evaluate(() => window.__citywalk.race)).target?.route).toBe('westminster');
   await expect.poll(async () => (await b.evaluate(() => window.__citywalk.race)).state, { timeout: 10_000 }).toBe('running');
   for (const [x, z] of (await b.evaluate(() => window.__citywalk.race)).stops) {
@@ -314,6 +315,10 @@ test('race: pick a route, count down, take every checkpoint, finish and keep a p
   await page.locator('#routes button', { hasText: 'Westminster Dash' }).tap();
   await expect(page.locator('#race-hud')).toBeVisible();
   await expect(page.locator('#countdown')).toBeVisible();
+  // the medal chip names the gold target from the countdown on
+  await expect(page.locator('#race-medal')).toBeVisible();
+  await expect(page.locator('#race-medal')).toHaveText(/^Gold \d+:\d\d\.\d$/);
+  await expect(page.locator('#race-medal')).toHaveClass('gold');
   await expect.poll(async () => (await page.evaluate(() => window.__citywalk.race)).state, { timeout: 10_000 }).toBe('running');
   const t0 = (await page.evaluate(() => window.__citywalk.race)).time;
   await page.waitForTimeout(800);
@@ -339,6 +344,7 @@ test('race: pick a route, count down, take every checkpoint, finish and keep a p
   await expect(page.locator('#done-share')).toHaveText('Challenge a friend'); // fixed routes share a ghost too
   // a teleported run is far inside the gold target
   await expect(page.locator('#done-medal')).toHaveText('Gold medal!');
+  await expect(page.locator('#race-medal')).toBeHidden(); // the HUD chip goes with the race HUD
   await expect(page.locator('#done-medal')).toHaveClass('gold');
   await page.screenshot({ path: 'screenshots/race-finish.png' });
   const best = await page.evaluate(() => localStorage.getItem('citywalk.best.westminster'));
@@ -472,6 +478,7 @@ test('first race: a how-races-work hint shows once, clear of the HUD and the cou
   await page.locator('#next-go').tap();
   await expect(hint).toBeVisible();
   await expect(hint).toContainText('beacon');
+  await expect(page.locator('#race-medal')).toBeVisible(); // measure with the medal chip's row in the HUD
   const box = (await hint.boundingBox())!;
   const hud = (await page.locator('#race-hud').boundingBox())!;
   expect(box.y).toBeGreaterThanOrEqual(hud.y + hud.height); // below Restart/Quit

@@ -2,6 +2,37 @@
 
 Verified work only. Newest first.
 
+## 2026-11-24
+
+**Implemented**
+- **Live medal chip in the race HUD.** From the countdown on, a chip under the clock names the
+  fastest medal still in reach and its time ("Gold 0:35.0"). When the clock passes that target it
+  drops to the next tier ("Silver 0:52.0", grey chip, then bronze); past bronze it stays on bronze,
+  struck through. So players know the goal before GO and see mid-run whether gold is still on,
+  instead of only learning the targets on the finish card. It agrees with the finish card at every
+  time (unit-tested). It hides while you race a friend's time from your room ("Beat …" chip), so
+  there is one goal at a time.
+- Layout: the friend-target, medal and ghost-gap chips now share one row so the HUD grows by at
+  most one chip row; the first-race "how races work" hint moved down 32 px to stay clear of it.
+
+**Verified**
+- Build: 0 TS errors. Unit: 121 passed (1 new in `tests/medals.test.ts`: tier changes at each
+  target, bronze struck after, chip matches `medalFor` across a run). Browser: 12 of 12 passed;
+  the race test checks the chip shows "Gold m:ss.s" in gold during the countdown and hides with
+  the HUD; the multiplayer test checks it hides while racing a friend's time; the first-race hint
+  test now measures with the chip showing. First full run failed that hint test (the new row
+  pushed the HUD into the hint); fixed the layout, not the test. Looked at the screenshots: chip
+  reads clearly next to the ghost gap on a 390×844 phone.
+- Seen while checking screenshots, not fixed: when the day's daily starts inside a landmark you
+  have not found (today: Trafalgar Square), the landmark fact card pops up over the race HUD and
+  hint during the countdown. Added to the roadmap.
+- Not verified: whether the chip motivates or distracts real players. Needs a human.
+
+**Money earned:** £0 (not yet published on a paying channel).
+
+**Next task:** hold the landmark fact card until a race ends when you discover a landmark mid-race;
+owner playtest; keep watching the multiplayer test in CI.
+
 ## 2026-11-23
 
 **Implemented**

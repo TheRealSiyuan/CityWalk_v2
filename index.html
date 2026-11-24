@@ -180,12 +180,20 @@
         font-weight: 900; font-size: 34px; color: var(--cream); font-variant-numeric: tabular-nums; letter-spacing: 0.01em;
         text-shadow: 0 3px 0 rgba(58, 44, 37, 0.45), 0 0 18px rgba(58, 44, 37, 0.35);
       }
+      /* target, medal and ghost gap share one row so the HUD grows no taller; the row collapses when all are hidden */
+      #race-chips { display: flex; gap: 6px; justify-content: center; }
+      #race-chips:not(:has(> :not([hidden]))) { display: none; }
       #race-gap { border-radius: 999px; padding: 3px 10px; font-weight: 900; font-size: 14px; font-variant-numeric: tabular-nums; color: #fff; background: #c8553d; }
       #race-gap[hidden] { display: none; }
       #race-gap.ahead { background: #3f8f5a; }
       #race-target { border-radius: 999px; padding: 3px 10px; font-weight: 900; font-size: 13px; font-variant-numeric: tabular-nums; background: var(--gold); white-space: nowrap; }
       #race-target[hidden] { display: none; }
       #race-target.passed { opacity: 0.55; text-decoration: line-through; }
+      #race-medal { border-radius: 999px; padding: 3px 10px; font-weight: 900; font-size: 13px; font-variant-numeric: tabular-nums; white-space: nowrap; color: var(--ink); background: var(--gold); }
+      #race-medal[hidden] { display: none; }
+      #race-medal.silver { background: #d3dadf; }
+      #race-medal.bronze { background: #dfa77a; }
+      #race-medal.passed { opacity: 0.55; text-decoration: line-through; }
       #race-next { background: var(--paper); border-radius: 999px; padding: 6px 12px; font-weight: 800; font-size: 13px; white-space: nowrap; }
       #race-actions { display: flex; gap: 6px; pointer-events: auto; }
       #race-actions .chip { padding: 6px 12px; font-size: 13px; }
@@ -195,7 +203,7 @@
       }
       #countdown[hidden] { display: none; }
       #race-hint {
-        position: fixed; left: 50%; top: calc(186px + var(--sat)); transform: translateX(-50%); width: min(330px, calc(100vw - 36px)); text-align: center; pointer-events: none;
+        position: fixed; left: 50%; top: calc(218px + var(--sat)); transform: translateX(-50%); width: min(330px, calc(100vw - 36px)); text-align: center; pointer-events: none;
         background: var(--paper); border-radius: 18px; padding: 9px 14px; font-weight: 800; font-size: 14px; line-height: 1.3; box-shadow: 0 5px 0 rgba(58, 44, 37, 0.14), 0 12px 28px rgba(58, 44, 37, 0.22); z-index: 3;
       }
       #race-hint[hidden] { display: none; }
@@ -282,8 +290,7 @@
     </div>
     <div id="race-hud" hidden>
       <div id="race-time">0:00.0</div>
-      <div id="race-target" hidden></div>
-      <div id="race-gap" hidden></div>
+      <div id="race-chips"><div id="race-target" hidden></div><div id="race-medal" hidden></div><div id="race-gap" hidden></div></div>
       <div id="race-next"></div>
       <div id="race-actions"><button class="chip" id="race-restart">Restart<span class="key-hint"> (R)</span></button><button class="chip" id="race-quit">Quit</button></div>
     </div>
