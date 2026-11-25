@@ -338,8 +338,11 @@ test('race: pick a route, count down, take every checkpoint, finish and keep a p
   for (const id of route) {
     await page.evaluate(([x, z]) => window.__citywalk.teleport(x, 0.5, z), where[id]);
     await page.waitForTimeout(400);
+    // landmarks found mid-race keep their fact card back so it cannot cover the race clock
+    await expect(page.locator('#card')).not.toHaveClass(/\bon\b/);
   }
   await expect(page.locator('#race-done')).toBeVisible();
+  await expect(page.locator('#card')).not.toHaveClass(/\bon\b/); // nor the finish card
   await expect(page.locator('#done-kicker')).toContainText('new personal best');
   await expect(page.locator('#done-share')).toHaveText('Challenge a friend'); // fixed routes share a ghost too
   // a teleported run is far inside the gold target
@@ -352,6 +355,7 @@ test('race: pick a route, count down, take every checkpoint, finish and keep a p
 
   // the route list now shows that best time
   await page.locator('#done-routes').tap();
+  await expect(page.locator('#card')).not.toHaveClass(/\bon\b/); // still held under the route list
   await expect(page.locator('#routes button', { hasText: 'Westminster Dash' }).locator('.pb')).toHaveText(/\d:\d\d\.\d/);
   await expect(page.locator('#routes button', { hasText: 'Westminster Dash' }).locator('.pb')).toHaveClass(/\bgold\b/);
   await expect(page.locator('#routes button', { hasText: 'City Sprint' }).locator('.pb')).not.toHaveClass(/medal/); // not raced yet
@@ -374,6 +378,9 @@ test('race: pick a route, count down, take every checkpoint, finish and keep a p
   await expect(page.locator('#toast')).toContainText(/[+−]\d+\.\d s/);
   await page.screenshot({ path: 'screenshots/race-ghost.png' });
   await page.locator('#race-quit').tap();
+  // back in free roam, the held card shows the latest find and counts the rest
+  await expect(page.locator('#card')).toHaveClass(/\bon\b/);
+  await expect(page.locator('#card-kicker')).toContainText(/more on that run/);
   await expect.poll(async () => (await page.evaluate(() => window.__citywalk.ghost)).visible).toBe(false);
   await expect(page.locator('#race-gap')).toBeHidden();
   expect(errors).toEqual([]);
@@ -407,8 +414,11 @@ test('daily challenge: listed first, starts a 4-stop route for today', async ({ 
   for (const [x, z] of stops) {
     await page.evaluate(([x, z]) => window.__citywalk.teleport(x, 0.5, z), [x, z]);
     await page.waitForTimeout(400);
+    // landmarks found mid-race keep their fact card back so it cannot cover the race clock
+    await expect(page.locator('#card')).not.toHaveClass(/\bon\b/);
   }
   await expect(page.locator('#race-done')).toBeVisible();
+  await expect(page.locator('#card')).not.toHaveClass(/\bon\b/); // nor the finish card
   await expect(page.locator('#done-share')).toBeVisible();
   await page.evaluate(() => {
     const w = window as unknown as { __shared: string[] };
@@ -724,8 +734,11 @@ test('desktop: no touch buttons, key hints shown, WASD and Space work', async ({
   for (const [x, z] of [[-311, 222], [-372, 270], [-610, 208], [-380, 40]]) {
     await page.evaluate(([x, z]) => window.__citywalk.teleport(x, 0.5, z), [x, z]);
     await page.waitForTimeout(400);
+    // landmarks found mid-race keep their fact card back so it cannot cover the race clock
+    await expect(page.locator('#card')).not.toHaveClass(/\bon\b/);
   }
   await expect(page.locator('#race-done')).toBeVisible();
+  await expect(page.locator('#card')).not.toHaveClass(/\bon\b/); // nor the finish card
   await expect(page.locator('#done-again')).toHaveText('Race again (R)');
   await page.keyboard.press('KeyR');
   await expect(page.locator('#race-done')).toBeHidden();

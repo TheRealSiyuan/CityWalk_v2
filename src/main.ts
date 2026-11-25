@@ -454,14 +454,17 @@ function updateLandmarks(dt: number): void {
   const p = player.pos;
   let nearest: Landmark | null = null;
   let nd = Infinity;
+  // a fact card would cover the race clock or the finish card: hold it until the screen is free
+  const hold = race.active || ui.panelOpen;
   for (const l of LANDMARKS) {
     const d = Math.hypot(p.x - l.x, p.z - l.z);
-    if (d < l.r && ui.discover(l)) sfx.discover();
+    if (d < l.r && ui.discover(l, hold) && !hold) sfx.discover();
     if (!ui.found.has(l.id) && d < nd) {
       nd = d;
       nearest = l;
     }
   }
+  if (!hold && ui.releaseHeldCard()) sfx.discover();
   compassTimer -= dt;
   if (compassTimer <= 0) {
     compassTimer = 0.1;

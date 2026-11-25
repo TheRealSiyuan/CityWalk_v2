@@ -1,5 +1,6 @@
 import { CONFIG } from './config';
 import { LANDMARKS, type Landmark } from './world/data';
+import { CardHold, cardKicker } from './cardhold';
 import { camSpeedLabel, fpsLabel, nextCamSpeed, parseSettings, type Settings } from './settings';
 
 const $ = <T extends HTMLElement = HTMLElement>(id: string): T => document.getElementById(id) as T;
@@ -69,6 +70,7 @@ export class UI {
   /** Saved player options; main.ts reads camSpeed/invertY every frame. */
   settings: Settings = parseSettings(store.get('citywalk.settings'));
   private cardTimer = 0;
+  private heldCards = new CardHold();
   private toastTimer = 0;
   private tutStep = -1;
   private tutTime = 0;
@@ -159,20 +161,35 @@ export class UI {
     $('count').textContent = `${this.found.size}/${LANDMARKS.length}`;
   }
 
-  /** Returns true if this is a new discovery. */
-  discover(l: Landmark): boolean {
+  /**
+   * Returns true if this is a new discovery. With `hold` (a race or a menu is on screen) the find
+   * is saved and counted but its card waits until `releaseHeldCard()`.
+   */
+  discover(l: Landmark, hold = false): boolean {
     if (this.found.has(l.id)) return false;
     this.found.add(l.id);
     store.set('citywalk.found', JSON.stringify([...this.found]));
     this.renderProgress();
-    const all = this.found.size === LANDMARKS.length;
-    $('card-kicker').textContent = all ? `All ${LANDMARKS.length} found. London explored!` : `Landmark ${this.found.size} of ${LANDMARKS.length}`;
+    if (hold) this.heldCards.hold(l);
+    else this.showCard(l, 0);
+    return true;
+  }
+
+  /** Shows the card held back during a race, if any. Returns true when one was shown. */
+  releaseHeldCard(): boolean {
+    const held = this.heldCards.release();
+    if (!held) return false;
+    this.showCard(held.landmark, held.others);
+    return true;
+  }
+
+  private showCard(l: Landmark, others: number): void {
+    $('card-kicker').textContent = cardKicker(this.found.size, LANDMARKS.length, others);
     $('card-name').textContent = l.name;
     $('card-fact').textContent = l.fact;
     $('card').classList.add('on');
     clearTimeout(this.cardTimer);
     this.cardTimer = window.setTimeout(() => $('card').classList.remove('on'), 7500);
-    return true;
   }
 
   toast(msg: string, ms = 1800): void {

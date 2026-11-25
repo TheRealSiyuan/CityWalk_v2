@@ -39,9 +39,9 @@ Ordered by impact on getting real players and the first revenue.
 7. **First-run polish**: daily-race card after a first tutorial (done 2026-11-01); "how races
    work" hint on the first countdown (done 2026-11-02); compass hides while the card shows
    (done 2026-11-03); R restarts a race on desktop (done 2026-11-22).
-8. **Landmark card over the race HUD** (seen 2026-11-24): when a race starts inside a landmark you
-   have not found (today's daily starts at Trafalgar Square), its fact card covers the clock and
-   hint during the countdown. Hold the card until the race ends. Top small fix next run.
+8. **Landmark card over the race HUD** (seen 2026-11-24, fixed 2026-11-25): landmarks found
+   during a race or under the finish card now save at once but hold their fact card until you are
+   back in free roam; the latest find shows, with "+N more on that run". Needs a look on a phone.
 9. **Race medals** (done 2026-11-23; live "Gold 0:35.0" chip in the HUD done 2026-11-24): gold/silver/bronze targets from route length, on the finish
    card and route list. Needs a human check that gold is hard but reachable; tune `medals` in
    `src/config.ts`.

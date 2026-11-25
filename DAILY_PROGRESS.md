@@ -2,6 +2,29 @@
 
 Verified work only. Newest first.
 
+## 2026-11-25
+
+**Implemented**
+- **Landmark fact cards no longer cover the race.** A landmark found during a countdown or run, or
+  while the finish card or route list is open, is saved and counted at once (the "found" counter
+  updates) but its fact card waits. When you are back in free roam the most recent find shows, with
+  "+N more on that run" when several were found, and the discovery chime plays then. Fixes today's
+  daily (starts inside Trafalgar Square), where the card covered the clock and hint during the
+  countdown. Outside races nothing changes.
+
+**Verified**
+- Build: 0 TS errors. Unit: 124 passed (3 new in `tests/cardhold.test.ts`). Browser: 12 of 12
+  passed; the race test now checks no card shows at any checkpoint, over the finish card or under
+  the route list, and that quitting the next race shows the held card with "more on that run".
+  Checked the test catches the bug: with the hold disabled it fails at the first checkpoint.
+  Looked at `screenshots/race-finish.png`: finish card clear.
+- Not verified: how the delayed card feels to a real player. Needs a human.
+
+**Money earned:** £0 (not yet published on a paying channel).
+
+**Next task:** owner playtest; keep watching the multiplayer test in CI; otherwise the slow-join
+question (roadmap item 0).
+
 ## 2026-11-24
 
 **Implemented**
