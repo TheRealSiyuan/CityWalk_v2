@@ -18,6 +18,8 @@ Verified work only. Newest first.
   the route list, and that quitting the next race shows the held card with "more on that run".
   Checked the test catches the bug: with the hold disabled it fails at the first checkpoint.
   Looked at `screenshots/race-finish.png`: finish card clear.
+- GitHub Actions run 45556513307 (commit dc68b6b): build, e2e and deploy all succeeded on the first
+  attempt. Live. Removed the issue from `RELEASE.md` known issues.
 - Not verified: how the delayed card feels to a real player. Needs a human.
 
 **Money earned:** £0 (not yet published on a paying channel).

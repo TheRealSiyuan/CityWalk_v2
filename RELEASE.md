@@ -32,8 +32,6 @@ anywhere except the existing GitHub Pages site.
   `vite.config.ts` (`PUBLIC_URL`); change it there if the game moves.
 - Race medal targets (2026-11-23) are set from straight-line route length and bot runs, not from
   human play; some dailies route around buildings or the river and may be harder than others.
-- If a race starts inside a landmark you have not found yet, its fact card covers the race clock
-  during the countdown (found 2026-11-24, not yet fixed).
 - Frame rate on real phones is unmeasured (tests use software rendering). Players can now see it
   in-game: journal → "Frame rate: shown".
 - A friend who connects just as the game re-joins the room (it does so while you are alone) can
