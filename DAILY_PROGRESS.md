@@ -16,6 +16,8 @@ Verified work only. Newest first.
   race test checks every route shows a gold goal before any race, that it sits below the time and
   inside its card on a 390×844 phone, that Westminster's goal goes after a gold run and City
   Sprint's stays. Looked at `screenshots/route-list.png`: readable, no overlap.
+- GitHub Actions run 45764420379 (commit 8cc5fb1): build, e2e and deploy all succeeded on the first
+  attempt. Live. CI warns that its actions target the deprecated Node.js 20 (still runs); not changed.
 - Not verified: whether players notice or care. Needs a human.
 
 **Money earned:** £0 (not yet published on a paying channel).
