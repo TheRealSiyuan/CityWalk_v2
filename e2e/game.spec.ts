@@ -311,6 +311,20 @@ test('race: pick a route, count down, take every checkpoint, finish and keep a p
   await page.locator('#tut-skip').tap();
   await page.locator('#race-btn').tap();
   await expect(page.locator('#race-panel')).toBeVisible();
+  // every unraced route names its gold target, under the "New" label, inside the card
+  const wmGoal = page.locator('#routes button', { hasText: 'Westminster Dash' }).locator('.goal');
+  await expect(wmGoal).toHaveText(/^Gold \d+:\d\d\.\d$/);
+  await expect(wmGoal).toHaveClass(/\bgold\b/);
+  await expect(page.locator('#routes .goal')).toHaveCount(await page.locator('#routes button').count());
+  for (const row of await page.locator('#routes button').all()) {
+    const card = (await row.boundingBox())!;
+    const pb = (await row.locator('.pb').boundingBox())!;
+    const goal = (await row.locator('.goal').boundingBox())!;
+    expect(goal.y).toBeGreaterThanOrEqual(pb.y + pb.height - 1); // below the time, not over it
+    expect(goal.x + goal.width).toBeLessThanOrEqual(card.x + card.width);
+    expect(goal.y + goal.height).toBeLessThanOrEqual(card.y + card.height);
+  }
+  await page.screenshot({ path: 'screenshots/route-list.png' });
   // the daily challenge is listed first; this test runs the fixed Westminster Dash
   await page.locator('#routes button', { hasText: 'Westminster Dash' }).tap();
   await expect(page.locator('#race-hud')).toBeVisible();
@@ -359,6 +373,8 @@ test('race: pick a route, count down, take every checkpoint, finish and keep a p
   await expect(page.locator('#routes button', { hasText: 'Westminster Dash' }).locator('.pb')).toHaveText(/\d:\d\d\.\d/);
   await expect(page.locator('#routes button', { hasText: 'Westminster Dash' }).locator('.pb')).toHaveClass(/\bgold\b/);
   await expect(page.locator('#routes button', { hasText: 'City Sprint' }).locator('.pb')).not.toHaveClass(/medal/); // not raced yet
+  await expect(page.locator('#routes button', { hasText: 'Westminster Dash' }).locator('.goal')).toHaveCount(0); // gold held: nothing to chase
+  await expect(page.locator('#routes button', { hasText: 'City Sprint' }).locator('.goal')).toHaveText(/^Gold /);
 
   // the best run was saved as a ghost; racing again replays it alongside you
   const saved = await page.evaluate(() => JSON.parse(localStorage.getItem('citywalk.ghost.westminster') ?? 'null'));

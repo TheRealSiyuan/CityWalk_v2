@@ -251,6 +251,18 @@ export function medalLine(route: Route, time: number): string {
 }
 
 /**
+ * The goal shown beside a route in the route list: the next medal to chase above your best time,
+ * or gold on a route you have not raced. Null once you hold gold (nothing left to chase).
+ */
+export function routeGoal(route: Route, best: number | null): { tier: Medal; text: string } | null {
+  const m = medalTimes(route);
+  const got = best === null ? null : medalFor(route, best);
+  if (got === 'gold') return null;
+  const tier: Medal = best === null || got === 'silver' ? 'gold' : got === 'bronze' ? 'silver' : 'bronze';
+  return { tier, text: `${MEDAL_NAME[tier]} ${formatTime(m[tier])}` };
+}
+
+/**
  * The medal still in reach at this point of a run, for the live HUD chip: the fastest tier whose
  * target the clock has not passed yet. Once even bronze has gone, it stays on bronze, `passed`.
  */

@@ -3,7 +3,7 @@ import { CONFIG } from '../src/config';
 import { Player } from '../src/player/controller';
 import { buildWorld } from '../src/world/city';
 import { LANDMARKS } from '../src/world/data';
-import { ROUTES, Race, dailyRoute, formatTime, medalFor, medalLine, medalPace, medalTimes, routeLength } from '../src/race';
+import { ROUTES, Race, dailyRoute, formatTime, medalFor, medalLine, medalPace, medalTimes, routeGoal, routeLength } from '../src/race';
 
 const westminster = ROUTES.find((r) => r.id === 'westminster')!;
 
@@ -71,6 +71,22 @@ describe('race medals', () => {
     for (let t = 0; t < m.bronze + 5; t += 0.7) {
       const p = medalPace(m, t);
       expect(p.passed ? null : p.tier).toBe(medalFor(westminster, t));
+    }
+  });
+});
+
+describe('routeGoal (route list)', () => {
+  it('chases gold on an unraced route, the next tier above a best, and nothing once gold is held', () => {
+    const r = ROUTES[0];
+    const m = medalTimes(r);
+    expect(routeGoal(r, null)).toEqual({ tier: 'gold', text: `Gold ${formatTime(m.gold)}` });
+    expect(routeGoal(r, m.bronze + 5)?.tier).toBe('bronze');
+    expect(routeGoal(r, m.bronze)?.tier).toBe('silver');
+    expect(routeGoal(r, m.silver)?.tier).toBe('gold');
+    expect(routeGoal(r, m.gold)).toBeNull();
+    // always agrees with the finish card's "next" target
+    for (const t of [m.bronze + 1, m.bronze, m.silver + 0.5, m.silver]) {
+      expect(medalLine(r, t)).toContain(`${routeGoal(r, t)!.text.replace(' ', ': ')}`);
     }
   });
 });

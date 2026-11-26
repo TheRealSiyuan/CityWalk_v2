@@ -43,7 +43,7 @@ Ordered by impact on getting real players and the first revenue.
    during a race or under the finish card now save at once but hold their fact card until you are
    back in free roam; the latest find shows, with "+N more on that run". Needs a look on a phone.
 9. **Race medals** (done 2026-11-23; live "Gold 0:35.0" chip in the HUD done 2026-11-24): gold/silver/bronze targets from route length, on the finish
-   card and route list. Needs a human check that gold is hard but reachable; tune `medals` in
+   card and route list (the list names the next medal to chase, done 2026-11-26). Needs a human check that gold is hard but reachable; tune `medals` in
    `src/config.ts`.
 
 ## Next

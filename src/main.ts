@@ -12,7 +12,7 @@ import { LANDMARKS, SPAWN, type Landmark } from './world/data';
 import { challengeFromHash, decodeChallenge, encodeChallenge, rivalLine, type Challenge } from './challenge';
 import { GhostRecorder, decodeGhost, encodeGhost, ghostPose, liveDelta, splitDelta, type Ghost, type GhostPose } from './ghost';
 import { lookScale } from './settings';
-import { ROUTES, Race, canQuickRestart, dailyRoute, formatTime, medalFor, medalLine, medalPace, medalTimes, raceShareText, roomResultText, routeById, targetResult, targetText, type Route } from './race';
+import { ROUTES, Race, canQuickRestart, dailyRoute, formatTime, medalFor, medalLine, medalPace, medalTimes, raceShareText, roomResultText, routeById, routeGoal, targetResult, targetText, type Route } from './race';
 import { WATER_Y, groundHeight } from './world/river';
 import { parsePortal, portalRules } from './portal';
 import { AimLine } from './render/aimline';
@@ -251,6 +251,9 @@ const openRaces = () => {
     const b = race.bestFor(id);
     const r = routes.find((q) => q.id === id);
     return b === null || !r ? null : medalFor(r, b);
+  }, (id) => {
+    const r = routes.find((q) => q.id === id);
+    return r ? routeGoal(r, race.bestFor(id)) : null;
   });
 };
 document.getElementById('race-btn')!.addEventListener('click', openRaces);

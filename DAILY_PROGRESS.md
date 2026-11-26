@@ -2,6 +2,27 @@
 
 Verified work only. Newest first.
 
+## 2026-11-26
+
+**Implemented**
+- **Route list names the next medal to chase.** Each route in the race list now shows a small
+  "Next: Gold 1:22.0" line under the time: gold on a route you have not raced, otherwise the next
+  tier above your best (same target the finish card names). It disappears once you hold gold. So
+  players see a goal before picking a route, not only after finishing one.
+
+**Verified**
+- Build: 0 TS errors. Unit: 125 passed (1 new in `tests/medals.test.ts`: tier choice for no time,
+  each medal and gold, and agreement with the finish card's target). Browser: 12 of 12 passed; the
+  race test checks every route shows a gold goal before any race, that it sits below the time and
+  inside its card on a 390×844 phone, that Westminster's goal goes after a gold run and City
+  Sprint's stays. Looked at `screenshots/route-list.png`: readable, no overlap.
+- Not verified: whether players notice or care. Needs a human.
+
+**Money earned:** £0 (not yet published on a paying channel).
+
+**Next task:** owner playtest; keep watching the multiplayer test in CI; otherwise the slow-join
+question (roadmap item 0).
+
 ## 2026-11-25
 
 **Implemented**

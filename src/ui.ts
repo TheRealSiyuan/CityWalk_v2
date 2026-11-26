@@ -274,7 +274,7 @@ export class UI {
   }
 
   // --- races ------------------------------------------------------------------
-  showRoutes(routes: { id: string; name: string; stops: string[] }[], best: (id: string) => string | null, pick: (id: string) => void, medal: (id: string) => string | null = () => null): void {
+  showRoutes(routes: { id: string; name: string; stops: string[] }[], best: (id: string) => string | null, pick: (id: string) => void, medal: (id: string) => string | null = () => null, goal: (id: string) => { tier: string; text: string } | null = () => null): void {
     const ol = $('routes');
     ol.textContent = '';
     for (const r of routes) {
@@ -293,6 +293,14 @@ export class UI {
         pb.title = `${m[0].toUpperCase()}${m.slice(1)} medal`;
       }
       b.append(name, pb, via);
+      // the next medal to chase, so the list itself says what to aim for
+      const g = goal(r.id);
+      if (g) {
+        const el = document.createElement('span');
+        el.className = `goal ${g.tier}`;
+        el.textContent = g.text;
+        b.append(el);
+      }
       if (r.id.startsWith('daily-')) {
         li.className = 'daily';
         const tag = document.createElement('em');
