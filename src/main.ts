@@ -520,13 +520,15 @@ let autopilot: { stops: Landmark[]; i: number } | null = null;
 
 function frame(nowMs: number): void {
   requestAnimationFrame(frame);
-  const dt = Math.min(0.1, Math.max(0, (nowMs - last) / 1000));
+  const realDt = Math.max(0, (nowMs - last) / 1000);
+  const dt = Math.min(0.1, realDt);
   last = nowMs;
   if (paused) return;
-  tick(dt, nowMs / 1000);
+  tick(dt, nowMs / 1000, realDt);
 }
 
-function tick(dt: number, now: number): void {
+/** `realDt`: real seconds since the last frame, before the 0.1 s cap (the race countdown uses it). */
+function tick(dt: number, now: number, realDt = dt): void {
   input.poll();
   if (autopilot) {
     const stop = autopilot.stops[autopilot.i];
@@ -583,7 +585,7 @@ function tick(dt: number, now: number): void {
   aimLine.update({ x: rp.x, y: rp.y + 1.75, z: rp.z }, player.aim, !!player.rope);
   updateCamera(dt, now);
   updateLandmarks(dt);
-  race.update(dt, player.pos.x, player.pos.z);
+  race.update(dt, player.pos.x, player.pos.z, realDt);
   if (race.state === 'running') {
     ghostRec.record(race.time, { x: player.pos.x, y: player.pos.y, z: player.pos.z, yaw: player.yaw, anim: player.anim, speed: player.speed, anchor: player.rope ? player.rope.visual : null });
   }

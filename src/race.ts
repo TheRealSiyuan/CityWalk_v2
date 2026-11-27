@@ -68,10 +68,15 @@ export class Race {
     this.route = null;
   }
 
-  update(dt: number, x: number, z: number): void {
+  /**
+   * Advance the race by `dt` of game time. `realDt` is the real time since the last call (frames
+   * cap game time at 0.1 s); the countdown follows it so "3, 2, 1" stays three real seconds at a
+   * low frame rate. The run itself is timed in game time, like the movement it measures.
+   */
+  update(dt: number, x: number, z: number, realDt = dt): void {
     if (this.state === 'countdown') {
       const before = Math.ceil(this.count);
-      this.count -= dt;
+      this.count -= Math.min(Math.max(dt, realDt), CONFIG.countdownMaxStep);
       const after = Math.ceil(this.count);
       if (this.count <= 0) {
         this.state = 'running';

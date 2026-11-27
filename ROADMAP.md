@@ -21,6 +21,8 @@ Ordered by impact on getting real players and the first revenue.
    2026-11-19: CI green for that fix (run 44247361134). Keep watching.
    2026-11-23: a different flake: the desktop test's race countdown took over 10 s on CI (run
    45120771220, green on re-run). Probably low CI frame rate (frames are capped at 0.1 s).
+   2026-11-26: same flake again (run 45765027926, deploy skipped). 2026-11-27: fixed at the cause,
+   the countdown now runs on real seconds instead of capped game time. Watch CI.
 1. **Owner playtest on phone + desktop**, fix anything it surfaces. Turn on journal → "Frame rate:
    shown" (added 2026-11-20) and note the fps number in busy spots (Westminster, the City) so the
    quality presets can be tuned from real data.

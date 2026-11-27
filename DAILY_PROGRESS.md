@@ -2,6 +2,33 @@
 
 Verified work only. Newest first.
 
+## 2026-11-27
+
+**Implemented**
+- **Race countdown runs on real seconds.** Frames cap game time at 0.1 s, so below 10 fps the
+  "3, 2, 1" stretched: at 3 fps it took about 10 real seconds. It now follows the real clock (one
+  stall, e.g. a hidden tab, counts at most 0.5 s, `countdownMaxStep` in `src/config.ts`). Nothing
+  can move during the countdown, so this changes no physics; the race clock still runs on game time.
+  Helps slow phones, and is the cause of the CI flake in the desktop test (run 45120771220 on
+  2026-11-23 and run 45765027926 on 2026-11-26, both "state not running after 10 s").
+
+**Verified**
+- Build: 0 TS errors. Unit: 127 passed (2 new in `tests/race.test.ts`: a 3 fps countdown ends in
+  9–10 frames instead of 30 with the run clock still on game time; a 30 s stall does not skip it;
+  callers that pass only game time behave as before). Both new tests fail on the old code.
+  Browser: 12 of 12 passed locally.
+- Deploy: see below.
+- Not verified: whether CI stops flaking (needs several runs), or how it feels on a slow phone.
+
+**Correction:** the 2026-11-26 entry said its CI run succeeded. True for that commit, but the
+follow-up docs commit's run (45765027926) failed e2e on this flake, so its deploy was skipped. The
+live game was unaffected (that commit changed only docs).
+
+**Money earned:** £0 (not yet published on a paying channel).
+
+**Next task:** watch CI for the flake; owner playtest; otherwise the slow-join question (roadmap
+item 0).
+
 ## 2026-11-26
 
 **Implemented**

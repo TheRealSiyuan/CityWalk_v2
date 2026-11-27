@@ -106,6 +106,11 @@ export const CONFIG = {
     bronze: 7,
   },
 
+  // The 3-2-1 countdown runs on real seconds, not game time (frames are capped at 0.1 s of game
+  // time), so a slow phone or a frame-rate dip does not stretch it. Nothing moves during it.
+  // A single gap longer than this (tab hidden, long stall) only counts this much.
+  countdownMaxStep: 0.5,
+
   daily: {
     stops: 4, // landmarks per daily route
     minLeg: 150, // metres: each stop is at least this far from the previous point

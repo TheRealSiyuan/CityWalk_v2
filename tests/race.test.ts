@@ -137,6 +137,43 @@ describe('racing a friend’s room time', () => {
 });
 
 describe('quick restart key', () => {
+  it('counts the countdown in real seconds at a low frame rate, but times the run in game time', () => {
+    const race = new Race(memStore());
+    race.start(ROUTES[0]);
+    // 3 fps: each frame is 0.1 s of game time (the cap) but a third of a real second
+    let frames = 0;
+    while (race.state === 'countdown' && frames < 100) {
+      race.update(0.1, 0, 0, 1 / 3);
+      frames++;
+    }
+    expect(race.state).toBe('running');
+    // about 3 real seconds (9 frames, or 10 with float rounding), not 30 frames (10 s) as before
+    expect(frames).toBeGreaterThanOrEqual(9);
+    expect(frames).toBeLessThanOrEqual(10);
+    expect(race.time).toBe(0);
+    race.update(0.1, 9999, 9999, 1 / 3);
+    expect(race.time).toBeCloseTo(0.1); // the run clock still follows game time
+  });
+
+  it('does not skip the countdown after one long stall, and still works without real time', () => {
+    const race = new Race(memStore());
+    race.start(ROUTES[0]);
+    race.update(0.1, 0, 0, 30); // tab hidden for 30 s
+    expect(race.state).toBe('countdown');
+    // only countdownMaxStep of it counted: the rest of the countdown still has to run
+    const left = 3 - CONFIG.countdownMaxStep;
+    for (let i = 0; i < Math.floor(left / 0.1) - 1; i++) race.update(0.1, 0, 0, 0.1);
+    expect(race.state).toBe('countdown');
+    for (let i = 0; i < 3; i++) race.update(0.1, 0, 0, 0.1);
+    expect(race.state).toBe('running');
+    const old = new Race(memStore());
+    old.start(ROUTES[0]);
+    for (let i = 0; i < 29; i++) old.update(0.1, 0, 0); // callers that pass game time only
+    expect(old.state).toBe('countdown');
+    old.update(0.1, 0, 0);
+    expect(old.state).toBe('running');
+  });
+
   it('restarts during a countdown, a run, or from the finish card', () => {
     expect(canQuickRestart('countdown', false)).toBe(true);
     expect(canQuickRestart('running', false)).toBe(true);
