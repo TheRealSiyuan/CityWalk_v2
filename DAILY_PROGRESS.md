@@ -17,7 +17,8 @@ Verified work only. Newest first.
   9–10 frames instead of 30 with the run clock still on game time; a 30 s stall does not skip it;
   callers that pass only game time behave as before). Both new tests fail on the old code.
   Browser: 12 of 12 passed locally.
-- Deploy: see below.
+- GitHub Actions run 45948358220 (commit a94652b): build, e2e and deploy all succeeded on the first
+  attempt. Live.
 - Not verified: whether CI stops flaking (needs several runs), or how it feels on a slow phone.
 
 **Correction:** the 2026-11-26 entry said its CI run succeeded. True for that commit, but the
