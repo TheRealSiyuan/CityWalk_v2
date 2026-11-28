@@ -19,7 +19,9 @@ Verified work only. Newest first.
 - Browser suite locally: 11 of 12 passed twice; the mobile render check failed both times with a
   blank first frame (1 colour). It is not caused by this change: run alone 4 times it failed 1 of 4
   on unchanged `main` and passed 4 of 4 with this change. It has passed in every CI run so far, and
-  deploy waits for CI's browser tests, so I pushed to `main`. CI result is recorded below.
+  deploy waits for CI's browser tests, so I pushed to `main`.
+- GitHub Actions run 46114290982 (commit 70b1c40): build, e2e (including that render check) and
+  deploy all succeeded on the first attempt. Live.
 - Not verified: whether the upgrade moment feels rewarding. Needs a human.
 
 **Money earned:** £0 (not yet published on a paying channel).
