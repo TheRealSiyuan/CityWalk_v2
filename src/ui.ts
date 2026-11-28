@@ -401,7 +401,7 @@ export class UI {
    * `shareText` shows a button that shares it, labelled for a ghost link
    * when `challenge` is set. `rival` says how the run compares with a friend's.
    */
-  raceFinished(route: string, time: string, best: string, isNew: boolean, shareText = '', challenge = false, rival = '', medal = '', medalTier = ''): void {
+  raceFinished(route: string, time: string, best: string, isNew: boolean, shareText = '', challenge = false, rival = '', medal = '', medalTier = '', medalNew = false): void {
     this.doneShare = shareText;
     $('done-share').hidden = !shareText;
     $('done-share').textContent = challenge ? 'Challenge a friend' : 'Share today’s time';
@@ -411,6 +411,11 @@ export class UI {
     md.hidden = !medal;
     md.textContent = medal;
     md.className = medalTier;
+    // a medal better than any held before pops in (restarted so a second upgrade replays it)
+    if (medalNew && medalTier) {
+      void md.offsetWidth;
+      md.classList.add('new');
+    }
     $('card').classList.remove('on');
     $('done-kicker').textContent = isNew ? `${route} · new personal best` : route;
     $('done-time').textContent = time;

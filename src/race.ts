@@ -245,14 +245,30 @@ export function medalFor(route: Route, time: number): Medal | null {
   return TIERS.find((tier) => time <= m[tier]) ?? null;
 }
 
-/** The finish-card line: the medal earned and the next target to chase. */
-export function medalLine(route: Route, time: number): string {
+/**
+ * The medal this run newly earned: better than the medal of `prevBest` (the best time before this
+ * run, null if never raced), else null. A first medal on a route counts as new.
+ */
+export function medalUpgrade(route: Route, prevBest: number | null, time: number): Medal | null {
+  const got = medalFor(route, time);
+  if (!got) return null;
+  const had = prevBest === null ? null : medalFor(route, prevBest);
+  return had === null || TIERS.indexOf(got) < TIERS.indexOf(had) ? got : null;
+}
+
+/**
+ * The finish-card line: the medal earned and the next target to chase. With `prevBest` (the best
+ * time before this run) a medal better than any held before reads "New silver medal!".
+ */
+export function medalLine(route: Route, time: number, prevBest?: number | null): string {
   const m = medalTimes(route);
   const got = medalFor(route, time);
-  if (got === 'gold') return 'Gold medal!';
+  const isNew = prevBest !== undefined && medalUpgrade(route, prevBest, time) !== null;
+  const name = got ? (isNew ? `New ${got} medal!` : `${MEDAL_NAME[got]} medal`) : '';
+  if (got === 'gold') return isNew ? name : 'Gold medal!';
   const next: Medal = got === 'silver' ? 'gold' : got === 'bronze' ? 'silver' : 'bronze';
   const chase = `${MEDAL_NAME[next]}: ${formatTime(m[next])}`;
-  return got ? `${MEDAL_NAME[got]} medal · ${chase}` : `No medal yet · ${chase}`;
+  return got ? `${name} · ${chase}` : `No medal yet · ${chase}`;
 }
 
 /**

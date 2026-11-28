@@ -3,7 +3,7 @@ import { CONFIG } from '../src/config';
 import { Player } from '../src/player/controller';
 import { buildWorld } from '../src/world/city';
 import { LANDMARKS } from '../src/world/data';
-import { ROUTES, Race, dailyRoute, formatTime, medalFor, medalLine, medalPace, medalTimes, routeGoal, routeLength } from '../src/race';
+import { ROUTES, Race, dailyRoute, formatTime, medalFor, medalLine, medalPace, medalTimes, medalUpgrade, routeGoal, routeLength } from '../src/race';
 
 const westminster = ROUTES.find((r) => r.id === 'westminster')!;
 
@@ -88,5 +88,27 @@ describe('routeGoal (route list)', () => {
     for (const t of [m.bronze + 1, m.bronze, m.silver + 0.5, m.silver]) {
       expect(medalLine(r, t)).toContain(`${routeGoal(r, t)!.text.replace(' ', ': ')}`);
     }
+  });
+
+  it('names a medal as new only when it beats the medal of the previous best', () => {
+    const m = medalTimes(westminster);
+    // first run on a route: any medal is new, no medal is not
+    expect(medalUpgrade(westminster, null, m.bronze)).toBe('bronze');
+    expect(medalUpgrade(westminster, null, m.bronze + 10)).toBeNull();
+    // upgrades from no medal, bronze and silver
+    expect(medalUpgrade(westminster, m.bronze + 10, m.bronze)).toBe('bronze');
+    expect(medalUpgrade(westminster, m.bronze, m.silver)).toBe('silver');
+    expect(medalUpgrade(westminster, m.silver, m.gold)).toBe('gold');
+    expect(medalUpgrade(westminster, m.bronze + 10, m.gold)).toBe('gold');
+    // same tier again (even a faster time) or a slower run: nothing new
+    expect(medalUpgrade(westminster, m.silver, m.silver - 0.5)).toBeNull();
+    expect(medalUpgrade(westminster, m.gold, 1)).toBeNull();
+    expect(medalUpgrade(westminster, m.gold, m.bronze)).toBeNull();
+    // the finish-card line says so
+    expect(medalLine(westminster, m.silver, m.bronze)).toBe(`New silver medal! · Gold: ${formatTime(m.gold)}`);
+    expect(medalLine(westminster, m.gold, m.silver)).toBe('New gold medal!');
+    expect(medalLine(westminster, m.gold, null)).toBe('New gold medal!');
+    expect(medalLine(westminster, m.silver - 0.5, m.silver)).toBe(`Silver medal · Gold: ${formatTime(m.gold)}`);
+    expect(medalLine(westminster, m.bronze + 10, m.bronze)).toBe(`No medal yet · Bronze: ${formatTime(m.bronze)}`);
   });
 });

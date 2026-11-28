@@ -2,6 +2,31 @@
 
 Verified work only. Newest first.
 
+## 2026-11-28
+
+**Implemented**
+- **The finish card says when you earn a better medal.** A run that earns a medal better than any
+  you held on that route now reads "New silver medal! · Gold: 1:22.0" (or "New gold medal!"), and
+  the line pops in (no animation with reduced motion). A first medal on a route counts as new.
+  Repeating the same medal, even faster, reads as before ("Silver medal · Gold: …"). Medals come
+  from your saved best, so nothing new is stored.
+
+**Verified**
+- Build: 0 TS errors. Unit: 128 passed (1 new in `tests/medals.test.ts`: first medal, each upgrade,
+  same tier faster, slower run, and the finish-card text for each). Browser: the race test now
+  checks the first gold reads "New gold medal!" with the pop class. Looked at
+  `screenshots/race-finish.png`: clear, no overlap.
+- Browser suite locally: 11 of 12 passed twice; the mobile render check failed both times with a
+  blank first frame (1 colour). It is not caused by this change: run alone 4 times it failed 1 of 4
+  on unchanged `main` and passed 4 of 4 with this change. It has passed in every CI run so far, and
+  deploy waits for CI's browser tests, so I pushed to `main`. CI result is recorded below.
+- Not verified: whether the upgrade moment feels rewarding. Needs a human.
+
+**Money earned:** £0 (not yet published on a paying channel).
+
+**Next task:** owner playtest; otherwise the slow-join question (roadmap item 0), or the local
+blank-first-frame failure in the mobile render check if it ever shows in CI.
+
 ## 2026-11-27
 
 **Implemented**

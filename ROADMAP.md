@@ -23,6 +23,7 @@ Ordered by impact on getting real players and the first revenue.
    45120771220, green on re-run). Probably low CI frame rate (frames are capped at 0.1 s).
    2026-11-26: same flake again (run 45765027926, deploy skipped). 2026-11-27: fixed at the cause,
    the countdown now runs on real seconds instead of capped game time. Watch CI.
+   2026-11-28: CI green on both runs since the fix (45948358220, 45948839415). Keep watching.
 1. **Owner playtest on phone + desktop**, fix anything it surfaces. Turn on journal → "Frame rate:
    shown" (added 2026-11-20) and note the fps number in busy spots (Westminster, the City) so the
    quality presets can be tuned from real data.
@@ -45,7 +46,7 @@ Ordered by impact on getting real players and the first revenue.
    during a race or under the finish card now save at once but hold their fact card until you are
    back in free roam; the latest find shows, with "+N more on that run". Needs a look on a phone.
 9. **Race medals** (done 2026-11-23; live "Gold 0:35.0" chip in the HUD done 2026-11-24): gold/silver/bronze targets from route length, on the finish
-   card and route list (the list names the next medal to chase, done 2026-11-26). Needs a human check that gold is hard but reachable; tune `medals` in
+   card and route list (the list names the next medal to chase, done 2026-11-26). Finish card says "New silver medal!" on an upgrade (done 2026-11-28). Needs a human check that gold is hard but reachable; tune `medals` in
    `src/config.ts`.
 
 ## Next

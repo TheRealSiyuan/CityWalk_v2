@@ -254,6 +254,9 @@
       #done-rival[hidden] { display: none; }
       #done-medal { margin: 6px 0 0; font-weight: 900; }
       #done-medal[hidden] { display: none; }
+      #done-medal.new { animation: medal-pop 0.6s ease-out; }
+      @keyframes medal-pop { 0% { transform: scale(0.6); opacity: 0; } 60% { transform: scale(1.15); opacity: 1; } 100% { transform: scale(1); } }
+      @media (prefers-reduced-motion: reduce) { #done-medal.new { animation: none; } }
       #done-medal.gold, #routes .pb.gold { color: #b8860b; }
       #done-medal.silver, #routes .pb.silver { color: #6e7b85; }
       #done-medal.bronze, #routes .pb.bronze { color: #9a5b2e; }

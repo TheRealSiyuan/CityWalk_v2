@@ -12,7 +12,7 @@ import { LANDMARKS, SPAWN, type Landmark } from './world/data';
 import { challengeFromHash, decodeChallenge, encodeChallenge, rivalLine, type Challenge } from './challenge';
 import { GhostRecorder, decodeGhost, encodeGhost, ghostPose, liveDelta, splitDelta, type Ghost, type GhostPose } from './ghost';
 import { lookScale } from './settings';
-import { ROUTES, Race, canQuickRestart, dailyRoute, formatTime, medalFor, medalLine, medalPace, medalTimes, raceShareText, roomResultText, routeById, routeGoal, targetResult, targetText, type Route } from './race';
+import { ROUTES, Race, canQuickRestart, dailyRoute, formatTime, medalFor, medalLine, medalUpgrade, medalPace, medalTimes, raceShareText, roomResultText, routeById, routeGoal, targetResult, targetText, type Route } from './race';
 import { WATER_Y, groundHeight } from './world/river';
 import { parsePortal, portalRules } from './portal';
 import { AimLine } from './render/aimline';
@@ -125,6 +125,7 @@ const ghostRec = new GhostRecorder();
 let ghost: Ghost | null = null;
 let splits: number[] = [];
 let raceMedals: ReturnType<typeof medalTimes> | null = null; // medal targets of the current race
+let prevBest: number | null = null; // best time on the current route before this run (for "New medal!")
 let gapClock = 0; // seconds until the HUD gap to the ghost refreshes
 const ghostNow: GhostPose = { x: 0, y: 0, z: 0, yaw: 0, anim: 0, speed: 0, anchor: null };
 function saveGhost(routeId: string, g: Ghost): void {
@@ -175,9 +176,10 @@ const race = new Race(
           : roomTarget && roomTarget.route === routeId
             ? targetResult(roomTarget.who, t, roomTarget.t)
             : '';
-      const medal = race.route ? medalLine(race.route, t) : '';
+      const medal = race.route ? medalLine(race.route, t, prevBest) : '';
       const tier = race.route ? (medalFor(race.route, t) ?? '') : '';
-      ui.raceFinished(name, formatTime(t), best !== null ? formatTime(best) : '', isNew, share, !!code, vs, medal, tier);
+      const upgraded = !!race.route && medalUpgrade(race.route, prevBest, t) !== null;
+      ui.raceFinished(name, formatTime(t), best !== null ? formatTime(best) : '', isNew, share, !!code, vs, medal, tier, upgraded);
       refreshDailyBadge();
     },
   },
@@ -223,6 +225,7 @@ function startRace(route: Route, keepTarget = false): void {
   ghost = vsFriend ? rival!.ghost : decodeGhost(store.get(ghostKey(route.id)));
   const label = vsFriend ? 'Friend' : 'Your best';
   if (label !== ghostLabel) ghostAvatar.setName((ghostLabel = label));
+  prevBest = race.bestFor(route.id);
   race.start(route);
   raceMedals = medalTimes(route);
   ui.raceHud(true);

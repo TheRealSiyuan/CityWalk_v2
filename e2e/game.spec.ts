@@ -359,10 +359,10 @@ test('race: pick a route, count down, take every checkpoint, finish and keep a p
   await expect(page.locator('#card')).not.toHaveClass(/\bon\b/); // nor the finish card
   await expect(page.locator('#done-kicker')).toContainText('new personal best');
   await expect(page.locator('#done-share')).toHaveText('Challenge a friend'); // fixed routes share a ghost too
-  // a teleported run is far inside the gold target
-  await expect(page.locator('#done-medal')).toHaveText('Gold medal!');
+  // a teleported run is far inside the gold target; a first medal on the route is a new one
+  await expect(page.locator('#done-medal')).toHaveText('New gold medal!');
   await expect(page.locator('#race-medal')).toBeHidden(); // the HUD chip goes with the race HUD
-  await expect(page.locator('#done-medal')).toHaveClass('gold');
+  await expect(page.locator('#done-medal')).toHaveClass('gold new');
   await page.screenshot({ path: 'screenshots/race-finish.png' });
   const best = await page.evaluate(() => localStorage.getItem('citywalk.best.westminster'));
   expect(Number(best)).toBeGreaterThan(0);
